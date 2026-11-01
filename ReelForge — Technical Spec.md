@@ -498,7 +498,13 @@ Start with four short spikes that remove the biggest unknowns, then build the ba
 
 **Spikes (each a throwaway script and a one-paragraph finding)**
 
-- [ ] **S1 Draw Things API:** exact routes and parameters; can it do Kontext edits with a reference image; how to select models; speed per 576×1024 image.
+- [x] **S1 Draw Things API:** exact routes and parameters; can it do Kontext edits with a reference image; how to select models; speed per 576×1024 image.
+  - **Finding (Nov 1, 2026, Draw Things with `flux_1_kontext_dev_q8p.ckpt`, API server on 127.0.0.1:7860, no secret):** works; Draw Things stays the primary image adapter, mflux stays the fallback.
+  - Routes: `POST /sdapi/v1/txt2img` and `POST /sdapi/v1/img2img` (404 on GET); `GET /sdapi/v1/options` and `GET /` return 200 (`GET /` returns the app's current generation config as JSON). No `/docs`, `/openapi.json`, `sd-models` or `progress` routes, so `health()` uses `GET /` and cannot read progress; use elapsed time.
+  - Request: JSON with `prompt`, `width`, `height`, `steps`, `seed`, `strength`, `batch_count`, `batch_size`, `model`, `init_images` (base64). Response: `{"images": ["<base64>", …]}`. An unknown `model` returns HTTP 422; a valid model file name is accepted.
+  - Kontext edit: master image as `init_images[0]` with an instruction prompt keeps the character identical and changes the scene (verified at 576×1024).
+  - Speed on the reference Mac at 576×1024, 20 steps: txt2img about 55–60 s per image; edit about 100 s. `batch_count=4` took 222 s for 4 images and `batch_size=2` took 121 s for 2, so batching gives no speed-up; run candidates as separate calls (progress per image, cancel between images).
+  - Open: a second entry in `init_images` is accepted (one image returned, 52 s at 10 steps) but whether it is used as a second reference, for product placement, is not yet checked; Mode B (manual overlay) stays the safe path for packs with fine text.
 - [ ] **S2 LTX a2v:** a2v with an image + 3 s Hindi line at 320×576; image-conditioning flags; peak memory; render time; lip-sync quality on a cartoon face.
 - [ ] **S3 Hindi TTS bake-off:** same 5 lines through Voxtral, Kokoro, Qwen3-TTS and a cloned voice; pick defaults; confirm licenses.
 - [ ] **S4 Memory choreography:** Draw Things open + LTX render on 24 GB; does Draw Things release memory when idle, or must it be quit?
