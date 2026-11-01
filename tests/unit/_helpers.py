@@ -40,3 +40,29 @@ def spec_for(pid: str, **over: object) -> ArtifactSpec:
     }
     kw.update(over)
     return ArtifactSpec(**kw)  # type: ignore[arg-type]
+
+
+def make_ctx(tmp_path: Path, **over: object):
+    from reelforge.config import Settings
+    from reelforge.context import AppContext
+
+    async def unload() -> None:
+        return None
+
+    settings = Settings(
+        data_root=tmp_path / "data",
+        worker_poll_s=0.05,
+        sample_interval_s=0.1,
+        preflight_wait_s=0.0,
+        health_poll_s=3600.0,
+        **over,  # type: ignore[arg-type]
+    )
+    return AppContext.create(
+        settings, available_gb=lambda: 64.0, ollama_unload=unload, doctor=lambda: _empty_report()
+    )
+
+
+def _empty_report():
+    from reelforge.doctor import DoctorReport
+
+    return DoctorReport(checks=[])
