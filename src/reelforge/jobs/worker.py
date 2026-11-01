@@ -12,6 +12,7 @@ import structlog
 from reelforge.adapters.base import AdapterError, CancelToken, TransientError
 from reelforge.adapters.runner import CommandResult, current_log_path, current_observer
 from reelforge.artifacts.service import generate_artifact
+from reelforge.cast.generate import cast_generate
 from reelforge.db.models import Job, utcnow
 from reelforge.jobs.preflight import preflight
 from reelforge.story.structure import structure_story
@@ -26,6 +27,7 @@ Handler = Callable[["AppContext", Job, Callable[[int, str], None], CancelToken],
 HANDLERS: dict[str, Handler] = {
     "artifact.generate": generate_artifact,
     "story.structure": structure_story,
+    "cast.generate": cast_generate,
 }
 MAX_ATTEMPTS = 2
 
