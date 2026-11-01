@@ -35,6 +35,7 @@ class Settings(BaseModel):
     ui_port: int = Field(default=7401, ge=1, le=65535)
     data_root: Path = Field(default_factory=_default_data_root)
     backend: Literal["mock"] = "mock"
+    llm_backend: Literal["mock", "ollama"] = "mock"
     models_path: Path = PACKAGED_MODELS
     ollama_url: str = "http://127.0.0.1:11434"
     drawthings_url: str = "http://127.0.0.1:7860"
@@ -82,6 +83,7 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "health_poll_s": "health_poll_s",
         "worker_poll_s": "worker_poll_s",
         "max_light_jobs": "max_light_jobs",
+        "llm_backend": "llm_backend",
     },
 }
 _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {

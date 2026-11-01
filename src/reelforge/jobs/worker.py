@@ -14,6 +14,7 @@ from reelforge.adapters.runner import CommandResult, current_log_path, current_o
 from reelforge.artifacts.service import generate_artifact
 from reelforge.db.models import Job, utcnow
 from reelforge.jobs.preflight import preflight
+from reelforge.story.structure import structure_story
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -22,7 +23,10 @@ log = structlog.get_logger()
 
 Handler = Callable[["AppContext", Job, Callable[[int, str], None], CancelToken], Awaitable[None]]
 
-HANDLERS: dict[str, Handler] = {"artifact.generate": generate_artifact}
+HANDLERS: dict[str, Handler] = {
+    "artifact.generate": generate_artifact,
+    "story.structure": structure_story,
+}
 MAX_ATTEMPTS = 2
 
 

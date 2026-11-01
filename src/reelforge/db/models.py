@@ -1,4 +1,4 @@
-"""SQLAlchemy 2 declarative models (14 tables)."""
+"""SQLAlchemy 2 declarative models (15 tables)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from sqlalchemy import (
     String,
     Text,
     TypeDecorator,
+    UniqueConstraint,
 )
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -73,6 +74,9 @@ class Project(Base):
 
 class StoryVersion(Base):
     __tablename__ = "story_versions"
+    __table_args__ = (
+        UniqueConstraint("project_id", "version", name="uq_story_versions_project_version"),
+    )
 
     id: Mapped[str] = _pk()
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
@@ -80,6 +84,24 @@ class StoryVersion(Base):
     yaml_text: Mapped[str] = mapped_column(Text, default="")
     is_current: Mapped[bool] = mapped_column(Boolean, default=False)
     approved_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    created_at: Mapped[datetime] = _created()
+
+
+class StoryChange(Base):
+    """Dependency record: which scene/character an approved-story edit touched."""
+
+    __tablename__ = "story_changes"
+    __table_args__ = (Index("ix_story_changes_owner", "project_id", "owner_type", "owner_id"),)
+
+    id: Mapped[str] = _pk()
+    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    story_version_id: Mapped[str] = mapped_column(
+        ForeignKey("story_versions.id", ondelete="CASCADE")
+    )
+    owner_type: Mapped[str] = mapped_column(String(32))
+    owner_id: Mapped[str] = mapped_column(String(64))
+    kinds: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = _created()
 
 
 class Voice(Base):
@@ -219,6 +241,7 @@ class Job(Base):
     peak_rss_mb: Mapped[float | None] = mapped_column(Float, nullable=True)
     exit_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
 
 class Approval(Base):

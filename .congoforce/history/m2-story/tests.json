@@ -1,0 +1,115 @@
+{
+  "acceptance": [
+    {
+      "criterion": "AC-1",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "story:structure on mock saves valid 2-char/5-scene version; PUT re-save moves current flag; empty storyline 422"
+    },
+    {
+      "criterion": "AC-1",
+      "file": "tests/acceptance/test_m2_story_files.py",
+      "tests": 1,
+      "expect_red": true,
+      "description": "parse_story/story_to_yaml round trip"
+    },
+    {
+      "criterion": "AC-2",
+      "file": "tests/acceptance/test_m2_story_files.py",
+      "tests": 10,
+      "expect_red": true,
+      "description": "unknown field and invalid values reported with field paths, all at once; empty/syntax errors"
+    },
+    {
+      "criterion": "AC-2",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "PUT and import return 422 naming fields, no version created; empty/malformed/413/404"
+    },
+    {
+      "criterion": "AC-3",
+      "file": "tests/acceptance/test_m2_story_files.py",
+      "tests": 1,
+      "expect_red": true,
+      "description": "load then dump is string-equal, comments and order kept"
+    },
+    {
+      "criterion": "AC-3",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 1,
+      "expect_red": true,
+      "description": "PUT stores the raw text exactly and writes story.yaml"
+    },
+    {
+      "criterion": "AC-4",
+      "file": "tests/acceptance/test_m2_story_llm.py",
+      "tests": 4,
+      "expect_red": true,
+      "description": "invalid output: exactly 2 LLM calls, repair prompt holds errors; failure leaves no version; valid repair saves"
+    },
+    {
+      "criterion": "AC-5",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "edit after approve returns DRAFT and marks only the edited scene/character stale; identical meaning leaves nothing stale"
+    },
+    {
+      "criterion": "AC-6",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "import creates version with zero LLM calls; export bytes identical; 404 without story"
+    },
+    {
+      "criterion": "AC-7",
+      "file": "tests/acceptance/test_m2_story_llm.py",
+      "tests": 6,
+      "expect_red": true,
+      "description": "gap questions strip invented values, no version saved; suggested flag set, cleared on save; answers in prompt"
+    },
+    {
+      "criterion": "AC-9",
+      "file": "tests/acceptance/test_m2_story_llm.py",
+      "tests": 11,
+      "expect_red": true,
+      "description": "mock LLM, backend selection, Ollama adapter request shape via stub transport, health, adapter error handling"
+    },
+    {
+      "criterion": "AC-10",
+      "file": "tests/acceptance/test_m2_story_files.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "unsafe tag rejected; JSON schema from story_json_schema"
+    },
+    {
+      "criterion": "AC-10",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "unsafe tag 422 on PUT and import; schema endpoint"
+    },
+    {
+      "criterion": "AC-11",
+      "file": "tests/acceptance/test_m2_story_api.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "approve marks current version approved, idempotent, 409 cases"
+    },
+    {
+      "criterion": "AC-12",
+      "file": "tests/acceptance/test_m2_story_llm.py",
+      "tests": 6,
+      "expect_red": true,
+      "description": "scene count, duration, look, speaker rules trigger repair; server sets target/language/version"
+    }
+  ],
+  "untestable": [
+    {
+      "criterion": "AC-8",
+      "reason": "UI test is vitest-only, which the pytest-based tracking cannot run; it is written in web/tests/acceptance/story.test.tsx (3 tests, red today) and run by the standard test command (pnpm test)"
+    }
+  ]
+}
