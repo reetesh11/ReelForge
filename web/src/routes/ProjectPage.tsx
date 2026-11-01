@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { NotFoundError, useProject, useStages } from "@/api/queries";
 import { StoryUnavailableError, useStory } from "@/api/story";
 import { StageStepper } from "@/components/StageStepper";
+import { StoryEditor } from "@/story/StoryEditor";
 import { StoryInput } from "@/story/StoryInput";
 
 export function ProjectPage() {
@@ -29,7 +30,7 @@ export function ProjectPage() {
         <p>Couldn't load the story.</p>
       ) : null}
       {story.data === null ? <StoryInput projectId={projectId} /> : null}
-      {story.data ? <p>Story editor</p> : null}
+      {story.data ? <StoryEditor projectId={projectId} story={story.data} /> : null}
     </section>
   );
 }
