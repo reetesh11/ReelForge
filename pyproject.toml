@@ -1,0 +1,65 @@
+[project]
+name = "reelforge"
+version = "0.1.0"
+description = "ReelForge: local-first reel production"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "websockets>=13",
+  "typer>=0.12",
+  "structlog>=24",
+  "pydantic>=2",
+  "sqlalchemy>=2",
+  "alembic>=1.13",
+  "psutil>=6",
+  "python-ulid>=3",
+  "httpx>=0.27",
+]
+
+[project.scripts]
+reelforge = "reelforge.cli:app"
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio>=0.24",
+  "ruff>=0.6",
+  "pyright>=1.1.380",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/reelforge"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["src/reelforge/db/migrations/versions", "tests/acceptance", "web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "B011"]
+"src/reelforge/adapters/runner.py" = ["S603", "S607"]
+"src/reelforge/doctor.py" = ["S603", "S607"]
+"src/reelforge/jobs/queue.py" = ["S603", "S607"]
+
+[tool.pyright]
+include = ["src", "tests"]
+exclude = ["**/__pycache__", "**/.venv", "tests/acceptance"]
+typeCheckingMode = "basic"
+strict = ["src"]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+reportMissingTypeStubs = false
