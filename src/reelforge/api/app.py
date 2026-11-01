@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from reelforge import __version__
 from reelforge.api import (
+    routes_cast,
     routes_jobs,
     routes_library,
     routes_media,
@@ -77,6 +78,7 @@ def create_app(ctx: AppContext, *, start_worker: bool = True) -> FastAPI:
     app.include_router(routes_projects.build_router(ctx))
     app.include_router(routes_story.build_router(ctx))
     app.include_router(routes_jobs.build_router(ctx))
+    app.include_router(routes_cast.build_router(ctx))
     app.include_router(routes_library.build_router(ctx))
     app.include_router(routes_media.build_router(ctx))
     app.include_router(ws.build_router(ctx))

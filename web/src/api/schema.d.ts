@@ -179,6 +179,108 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/cast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Cast */
+        get: operations["get_cast_api_v1_projects__project_id__cast_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cast/{key}:approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_api_v1_projects__project_id__cast__key__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cast/{key}:generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate */
+        post: operations["generate_api_v1_projects__project_id__cast__key__generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cast/{key}:reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen */
+        post: operations["reopen_api_v1_projects__project_id__cast__key__reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cast/{key}:upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload */
+        post: operations["upload_api_v1_projects__project_id__cast__key__upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cast/{key}:use-library": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Use Library */
+        post: operations["use_library_api_v1_projects__project_id__cast__key__use_library_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/stages": {
         parameters: {
             query?: never;
@@ -454,6 +556,175 @@ export interface components {
             cache_hit: boolean;
             /** Job Id */
             job_id: string | null;
+        };
+        /** Body_upload_api_v1_projects__project_id__cast__key__upload_post */
+        Body_upload_api_v1_projects__project_id__cast__key__upload_post: {
+            /** File */
+            file: string;
+        };
+        /** CastActionOut */
+        CastActionOut: {
+            /** Approved Count */
+            approved_count: number;
+            character: components["schemas"]["CastItemOut"];
+            /**
+             * Project Stage
+             * @enum {string}
+             */
+            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            /** Total */
+            total: number;
+        };
+        /** CastApproveRequest */
+        CastApproveRequest: {
+            /** Candidate Id */
+            candidate_id: string;
+        };
+        /** CastBackendOut */
+        CastBackendOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "mock" | "draw_things";
+            /** Mflux Available */
+            mflux_available: boolean;
+            /** Port */
+            port: number;
+            /** Reachable */
+            reachable: boolean;
+        };
+        /** CastCandidateOut */
+        CastCandidateOut: {
+            /** Height */
+            height: number | null;
+            /** Id */
+            id: string;
+            /** Image Url */
+            image_url: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "generated" | "refine" | "upload";
+            /** License */
+            license?: string | null;
+            /** License Url */
+            license_url?: string | null;
+            /** Model */
+            model: string;
+            /** Model Key */
+            model_key: string;
+            /** Prompt */
+            prompt: string;
+            /** Seed */
+            seed: number;
+            /** Width */
+            width: number | null;
+        };
+        /** CastGenerateRequest */
+        CastGenerateRequest: {
+            /** Backend */
+            backend?: ("draw_things" | "mflux") | null;
+            /** Look Text */
+            look_text?: string | null;
+            refine?: components["schemas"]["CastRefine"] | null;
+            /**
+             * Regenerate
+             * @default false
+             */
+            regenerate: boolean;
+            /** Seed */
+            seed?: number | null;
+        };
+        /** CastItemOut */
+        CastItemOut: {
+            /** Aliases */
+            aliases: string[];
+            /** Approved */
+            approved: boolean;
+            /** Bible Line */
+            bible_line: string;
+            /**
+             * Bible Source
+             * @enum {string}
+             */
+            bible_source: "llm" | "user" | "raw" | "";
+            /** Candidates */
+            candidates: components["schemas"]["CastCandidateOut"][];
+            /** Error */
+            error?: string | null;
+            /** Job Id */
+            job_id?: string | null;
+            /** Key */
+            key: string;
+            /** Library Character Id */
+            library_character_id?: string | null;
+            /** Look */
+            look: string;
+            /** Master Artifact Id */
+            master_artifact_id?: string | null;
+            /** Master Sha256 */
+            master_sha256?: string | null;
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
+            progress?: components["schemas"]["CastProgressOut"] | null;
+            /** Seed */
+            seed?: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "empty" | "generating" | "ready" | "approved" | "failed" | "stopped";
+            /** Variant Of Library Id */
+            variant_of_library_id?: string | null;
+            /** Voice Reference */
+            voice_reference: string;
+        };
+        /** CastOut */
+        CastOut: {
+            /** Approved Count */
+            approved_count: number;
+            /** Characters */
+            characters: components["schemas"]["CastItemOut"][];
+            image_backend: components["schemas"]["CastBackendOut"];
+            /** Licence Warning */
+            licence_warning?: string | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            /** Total */
+            total: number;
+        };
+        /** CastProgressOut */
+        CastProgressOut: {
+            /** Completed */
+            completed: number;
+            /** Elapsed S */
+            elapsed_s: number;
+            /** Message */
+            message: string;
+            /** Total */
+            total: number;
+        };
+        /** CastRefine */
+        CastRefine: {
+            /** From Candidate */
+            from_candidate: string;
+            /**
+             * Instruction
+             * @default
+             */
+            instruction: string;
+        };
+        /** CastUseLibraryRequest */
+        CastUseLibraryRequest: {
+            /** Character Id */
+            character_id: string;
         };
         /** CheckOut */
         CheckOut: {
@@ -1285,6 +1556,213 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArtifactResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cast_api_v1_projects__project_id__cast_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_api_v1_projects__project_id__cast__key__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastApproveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_v1_projects__project_id__cast__key__generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reopen_api_v1_projects__project_id__cast__key__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_api_v1_projects__project_id__cast__key__upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_api_v1_projects__project_id__cast__key__upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastItemOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    use_library_api_v1_projects__project_id__cast__key__use_library_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastUseLibraryRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastActionOut"];
                 };
             };
             /** @description Validation Error */
