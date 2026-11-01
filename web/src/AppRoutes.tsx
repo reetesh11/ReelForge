@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { useEventStream } from "@/api/events";
 import { ReconnectBanner } from "@/components/ReconnectBanner";
+import { ProjectsPage } from "@/routes/ProjectsPage";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -21,7 +22,7 @@ export function AppRoutes() {
       <main className="page">
         <Routes>
           <Route path="/" element={<Navigate to="/projects" replace />} />
-          <Route path="/projects" element={<Placeholder title="Projects" />} />
+          <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:projectId" element={<Placeholder title="Project" />} />
           <Route path="/settings" element={<Placeholder title="Settings & status" />} />
         </Routes>
