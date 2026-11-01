@@ -1,0 +1,48 @@
+flowchart LR
+  cli["cli.py (Typer: doctor, up)"]:::new
+  startup["startup.py (run_up, serve)"]:::new
+  cfg["config.py + models_registry.py + models.toml"]:::new
+  ctx["context.py AppContext"]:::new
+  doctor["doctor.py (11 checks)"]:::new
+  api["api/app.py (REST, media, ws)"]:::new
+  bus["events.py EventBus"]:::new
+  worker["jobs/worker.py Worker"]:::new
+  queue["jobs/queue.py JobQueue"]:::new
+  lease["jobs/lease.py + preflight.py"]:::new
+  runner["adapters/runner.py run_command"]:::new
+  mock["adapters/mock.py + mock_child.py"]:::new
+  stubs["adapters/ltx, mlx_audio, drawthings, ollama (health stubs)"]:::new
+  store["artifacts/store.py ArtifactStore"]:::new
+  db[("SQLite WAL: 14 tables + alembic")]:::new
+  fs[("data root: projects/, cache/tmp, logs/")]:::new
+  web["web/ React shell"]:::new
+  ws["useEventStream hook"]:::new
+  cli --> cfg
+  cli --> doctor
+  cli --> startup
+  startup --> ctx
+  startup --> api
+  ctx --> db
+  ctx --> store
+  ctx --> queue
+  ctx --> bus
+  api --> queue
+  api --> doctor
+  api --> bus
+  api --> db
+  worker --> queue
+  worker --> lease
+  worker --> mock
+  mock --> runner
+  doctor --> stubs
+  lease --> db
+  queue --> db
+  worker --> store
+  store --> db
+  store --> fs
+  queue --> bus
+  store --> bus
+  web -->|REST /api/v1, /media| api
+  web --> ws
+  ws -->|/ws/events| api
+  classDef new fill:#d1fae5,stroke:#059669
