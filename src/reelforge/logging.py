@@ -42,8 +42,11 @@ class _TeeLogger:
 
     def msg(self, message: str) -> None:
         for f in self._files:
-            f.write(message + "\n")
-            f.flush()
+            try:
+                f.write(message + "\n")
+                f.flush()
+            except (ValueError, OSError):
+                continue
 
     log = debug = info = warn = warning = error = critical = exception = fatal = msg
 
