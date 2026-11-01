@@ -70,6 +70,16 @@ def canned_story() -> dict[str, Any]:
     }
 
 
+def _canned_bible_line(messages: list[ChatMessage]) -> str:
+    fields: dict[str, str] = {}
+    for line in messages[-1]["content"].splitlines():
+        label, _, value = line.partition(": ")
+        fields[label] = value
+    name = fields.get("Character name", "")
+    look = fields.get("Look", "").rstrip(".")
+    return f"Character: {name}. Look: {look}."
+
+
 class MockLlm:
     name = "mock-llm"
 
@@ -86,6 +96,8 @@ class MockLlm:
         heavy_next: bool = False,
     ) -> str:
         self.calls.append([dict(m) for m in messages])
+        if "bible_line" in schema.get("properties", {}):
+            return json.dumps({"bible_line": _canned_bible_line(messages)})
         if not self.responses:
             return json.dumps({"story": canned_story(), "questions": []})
         index = min(len(self.calls) - 1, len(self.responses) - 1)
