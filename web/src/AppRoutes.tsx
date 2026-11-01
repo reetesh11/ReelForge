@@ -1,4 +1,6 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { useEventStream } from "@/api/events";
+import { ReconnectBanner } from "@/components/ReconnectBanner";
 
 function Placeholder({ title }: { title: string }) {
   return (
@@ -9,6 +11,7 @@ function Placeholder({ title }: { title: string }) {
 }
 
 export function AppRoutes() {
+  const { connected } = useEventStream();
   return (
     <div className="layout">
       <nav aria-label="Main" className="nav">
@@ -23,6 +26,7 @@ export function AppRoutes() {
           <Route path="/settings" element={<Placeholder title="Settings & status" />} />
         </Routes>
       </main>
+      <ReconnectBanner connected={connected} />
     </div>
   );
 }
