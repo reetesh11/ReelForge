@@ -35,6 +35,7 @@ class HealthReport(BaseModel):
     ok: bool
     version: str | None = None
     detail: str
+    fix: str | None = None
 
 
 ProgressCb = Callable[[int, str], None]
