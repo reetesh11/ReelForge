@@ -8,7 +8,9 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from reelforge.adapters.base import Adapter
+from reelforge.adapters.llm import LlmClient
 from reelforge.adapters.mock import MockAdapter
+from reelforge.adapters.mock_llm import MockLlm
 from reelforge.adapters.ollama import OllamaAdapter
 from reelforge.artifacts.store import ArtifactStore
 from reelforge.config import Settings
@@ -37,6 +39,7 @@ class AppContext:
     worker: Worker
     health: HealthMonitor
     adapter: Adapter
+    llm: LlmClient
     available_gb: Callable[[], float]
     ollama_unload: Callable[[], Awaitable[None]]
     doctor: Callable[[], DoctorReport] | None
@@ -50,6 +53,7 @@ class AppContext:
         available_gb: Callable[[], float] | None = None,
         ollama_unload: Callable[[], Awaitable[None]] | None = None,
         doctor: Callable[[], DoctorReport] | None = None,
+        llm: LlmClient | None = None,
         migrate: bool = True,
     ) -> AppContext:
         root = settings.data_root
@@ -72,9 +76,16 @@ class AppContext:
             sample_interval_s=settings.sample_interval_s,
         )
         self.available_gb = available_gb or default_available_gb
+        llm_model = self.registry.get("llm").id if "llm" in self.registry.keys() else None
         if ollama_unload is None:
-            llm = self.registry.get("llm").id if "llm" in self.registry.keys() else None
-            ollama_unload = OllamaAdapter(settings.ollama_url, llm).unload
+            ollama_unload = OllamaAdapter(settings.ollama_url, llm_model).unload
+        if llm is None:
+            llm = (
+                MockLlm()
+                if settings.llm_backend == "mock"
+                else OllamaAdapter(settings.ollama_url, llm_model)
+            )
+        self.llm = llm
         self.ollama_unload = ollama_unload
         self.doctor = doctor
         self.health = HealthMonitor(self.run_doctor, self.bus)

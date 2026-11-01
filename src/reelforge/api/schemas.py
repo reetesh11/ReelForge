@@ -97,6 +97,7 @@ class JobOut(BaseModel):
     peak_rss_mb: float | None
     command: list[Any] | None
     payload: dict[str, Any]
+    result: dict[str, Any] | None = None
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
@@ -113,3 +114,67 @@ class CheckOut(BaseModel):
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded", "fail"]
     checks: list[CheckOut]
+
+
+class AffectedItem(BaseModel):
+    owner_type: Literal["scene", "character"]
+    owner_id: str
+    kinds: list[str]
+
+
+class StoryVersionSummary(BaseModel):
+    id: str
+    version: int
+    is_current: bool
+    approved_at: datetime | None
+    created_at: datetime
+
+
+class StoryVersionOut(StoryVersionSummary):
+    affected: list[AffectedItem] = []
+
+
+class StoryVersionDetail(StoryVersionOut):
+    yaml_text: str
+
+
+class StoryErrorOut(BaseModel):
+    path: str
+    message: str
+    line: int | None
+    column: int | None
+
+
+class StoryInvalidOut(BaseModel):
+    detail: str
+    errors: list[StoryErrorOut]
+
+
+class StaleItem(BaseModel):
+    artifact_id: str
+    owner_type: str
+    owner_id: str
+    kind: str
+
+
+class StaleOut(BaseModel):
+    items: list[StaleItem]
+
+
+class StoryAnswer(BaseModel):
+    path: str
+    question: str
+    answer: str
+
+
+class StructureRequest(BaseModel):
+    storyline: str
+    characters: str | None = None
+    locations: str | None = None
+    product: str | None = None
+    dialogue: str | None = None
+    style: str | None = None
+    language: Literal["hindi", "english", "hinglish"] | None = None
+    target_seconds: int = Field(default=12, ge=1, le=60)
+    library_picks: list[str] = []
+    answers: list[StoryAnswer] = []
