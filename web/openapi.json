@@ -691,6 +691,29 @@
         "title": "StaleOut",
         "type": "object"
       },
+      "StoryAnswer": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "question",
+          "answer"
+        ],
+        "title": "StoryAnswer",
+        "type": "object"
+      },
       "StoryErrorOut": {
         "properties": {
           "column": {
@@ -899,6 +922,113 @@
           "created_at"
         ],
         "title": "StoryVersionSummary",
+        "type": "object"
+      },
+      "StructureRequest": {
+        "properties": {
+          "answers": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/StoryAnswer"
+            },
+            "title": "Answers",
+            "type": "array"
+          },
+          "characters": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Characters"
+          },
+          "dialogue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dialogue"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "enum": [
+                  "hindi",
+                  "english",
+                  "hinglish"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "library_picks": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Library Picks",
+            "type": "array"
+          },
+          "locations": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locations"
+          },
+          "product": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product"
+          },
+          "storyline": {
+            "title": "Storyline",
+            "type": "string"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Style"
+          },
+          "target_seconds": {
+            "default": 12,
+            "maximum": 60.0,
+            "minimum": 1.0,
+            "title": "Target Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "storyline"
+        ],
+        "title": "StructureRequest",
         "type": "object"
       },
       "ValidationError": {
@@ -1769,6 +1899,58 @@
           }
         },
         "summary": "Import Story",
+        "tags": [
+          "story"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/story:structure": {
+      "post": {
+        "operationId": "structure_story_api_v1_projects__project_id__story_structure_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StructureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Structure Story",
         "tags": [
           "story"
         ]

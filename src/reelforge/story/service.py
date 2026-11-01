@@ -6,15 +6,18 @@ import os
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func, select
 
-from reelforge.context import AppContext
 from reelforge.db.models import Artifact, Job, Project, StoryChange, StoryVersion, utcnow
 from reelforge.story.errors import StoryInvalid
 from reelforge.story.schema import Story
 from reelforge.story.staleness import Affected, ChangeRow, diff_stories, is_stale
 from reelforge.story.yamlio import parse_story
+
+if TYPE_CHECKING:
+    from reelforge.context import AppContext
 
 MAX_STORY_BYTES = 1_048_576
 STRUCTURE_JOB = "story.structure"

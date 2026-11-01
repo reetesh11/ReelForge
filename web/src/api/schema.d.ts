@@ -263,6 +263,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/story:structure": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Structure Story */
+        post: operations["structure_story_api_v1_projects__project_id__story_structure_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/story/schema": {
         parameters: {
             query?: never;
@@ -551,6 +568,15 @@ export interface components {
             /** Items */
             items: components["schemas"]["StaleItem"][];
         };
+        /** StoryAnswer */
+        StoryAnswer: {
+            /** Answer */
+            answer: string;
+            /** Path */
+            path: string;
+            /** Question */
+            question: string;
+        };
         /** StoryErrorOut */
         StoryErrorOut: {
             /** Column */
@@ -628,6 +654,38 @@ export interface components {
             is_current: boolean;
             /** Version */
             version: number;
+        };
+        /** StructureRequest */
+        StructureRequest: {
+            /**
+             * Answers
+             * @default []
+             */
+            answers: components["schemas"]["StoryAnswer"][];
+            /** Characters */
+            characters?: string | null;
+            /** Dialogue */
+            dialogue?: string | null;
+            /** Language */
+            language?: ("hindi" | "english" | "hinglish") | null;
+            /**
+             * Library Picks
+             * @default []
+             */
+            library_picks: string[];
+            /** Locations */
+            locations?: string | null;
+            /** Product */
+            product?: string | null;
+            /** Storyline */
+            storyline: string;
+            /** Style */
+            style?: string | null;
+            /**
+             * Target Seconds
+             * @default 12
+             */
+            target_seconds: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -1233,6 +1291,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StoryInvalidOut"];
+                };
+            };
+        };
+    };
+    structure_story_api_v1_projects__project_id__story_structure_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StructureRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

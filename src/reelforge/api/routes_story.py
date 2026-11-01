@@ -7,9 +7,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
+from reelforge.api.routes_jobs import job_body
 from reelforge.api.routes_projects import project_out
 from reelforge.api.schemas import (
     AffectedItem,
+    JobOut,
     ProjectOut,
     StaleItem,
     StaleOut,
@@ -17,6 +19,7 @@ from reelforge.api.schemas import (
     StoryVersionDetail,
     StoryVersionOut,
     StoryVersionSummary,
+    StructureRequest,
 )
 from reelforge.context import AppContext
 from reelforge.db.models import Project, StoryVersion
@@ -160,6 +163,18 @@ def build_router(ctx: AppContext) -> APIRouter:
                 for i in service.stale_items(ctx, project_id)
             ]
         )
+
+    @router.post("/projects/{project_id}/story:structure", status_code=202, response_model=JobOut)
+    async def structure_story(project_id: str, body: StructureRequest) -> JSONResponse:
+        require_project(project_id)
+        if not body.storyline.strip():
+            raise HTTPException(422, "storyline is required")
+        job = ctx.queue.enqueue(
+            type=service.STRUCTURE_JOB,
+            project_id=project_id,
+            payload={**body.model_dump(), "stage": "story"},
+        )
+        return JSONResponse(job_body(job), status_code=202)
 
     @router.get("/story/schema")
     async def story_schema() -> dict[str, Any]:
