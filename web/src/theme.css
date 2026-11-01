@@ -317,3 +317,58 @@ textarea {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875rem;
 }
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.4rem;
+}
+
+.tile.selected {
+  border-color: var(--accent);
+}
+
+.tile img,
+.master {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.master {
+  max-width: 220px;
+}
+
+.dialog {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.dialog .enlarged {
+  max-width: 320px;
+  height: auto;
+}
+
+.compare {
+  display: flex;
+  gap: 1rem;
+}
+
+.notice.amber {
+  border-color: var(--amber);
+}
+
+.badge.green {
+  border-color: var(--green);
+}

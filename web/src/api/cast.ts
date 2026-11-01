@@ -7,7 +7,7 @@ export type CastItem = components["schemas"]["CastItemOut"];
 export type CastCandidate = components["schemas"]["CastCandidateOut"];
 export type CastAction = components["schemas"]["CastActionOut"];
 export type CastBackend = components["schemas"]["CastBackendOut"];
-export type GenerateBody = components["schemas"]["CastGenerateRequest"];
+export type GenerateBody = Partial<components["schemas"]["CastGenerateRequest"]>;
 export type Job = components["schemas"]["JobOut"];
 
 /** The server has no cast API for this project yet (older backend, or the story is not approved). */
@@ -58,7 +58,7 @@ export function useGenerate(projectId: string) {
     mutationFn: async ({ key, body }: { key: string; body: GenerateBody }): Promise<Job> => {
       const { data, error } = await api.POST("/api/v1/projects/{project_id}/cast/{key}:generate", {
         params: { path: { project_id: projectId, key } },
-        body,
+        body: { regenerate: false, ...body },
       });
       if (!data) throw new Error(detailFrom(error, "could not start generating"));
       return data;
