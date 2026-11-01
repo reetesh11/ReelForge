@@ -8,7 +8,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import select
 
@@ -104,10 +104,11 @@ def require(ctx: AppContext, cid: str) -> Character:
 def artifact_meta(ctx: AppContext, artifact: Artifact) -> dict[str, str]:
     """model_id and licence of an artifact, read from its sidecar."""
     path = ctx.store.absolute_path(artifact).with_suffix(".json")
-    try:
-        side = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        side = {}
+    side: dict[str, Any] = {}
+    with contextlib.suppress(OSError, ValueError):
+        parsed: Any = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(parsed, dict):
+            side = cast("dict[str, Any]", parsed)
     return {key: str(side.get(key) or "") for key in ("model_id", "license", "license_url")}
 
 
