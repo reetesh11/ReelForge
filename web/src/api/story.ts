@@ -26,6 +26,9 @@ export class StoryInvalidError extends Error {
   }
 }
 
+/** The server has no story API (older backend): the stage is not available yet. */
+export class StoryUnavailableError extends Error {}
+
 export function formatStoryError(e: StoryErrorItem): string {
   const where = e.line !== null ? ` (line ${e.line})` : "";
   return `${e.path ? `${e.path}: ` : ""}${e.message}${where}`;
@@ -72,10 +75,14 @@ export function useStory(projectId: string) {
   return useQuery({
     queryKey: queryKeys.story(projectId),
     queryFn: async (): Promise<StoryDetail | null> => {
-      const { data, response } = await api.GET("/api/v1/projects/{project_id}/story", {
+      const { data, error, response } = await api.GET("/api/v1/projects/{project_id}/story", {
         params: { path: { project_id: projectId } },
       });
-      if (response.status === 404) return null;
+      if (response.status === 404) {
+        const detail = (error as { detail?: unknown } | undefined)?.detail;
+        if (detail === "no story yet") return null;
+        throw new StoryUnavailableError("story stage is not available");
+      }
       if (!data) throw new Error("could not load the story");
       return data;
     },
