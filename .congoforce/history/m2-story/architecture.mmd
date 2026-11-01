@@ -1,0 +1,25 @@
+flowchart LR
+  ui[web/src/story UI]:::new -->|PUT story, story:structure, story:approve| rs[api/routes_story.py]:::new
+  ui -->|GET story/schema| rs
+  ui -->|poll GET jobs/id| rj[api/routes_jobs.py]:::changed
+  rs --> svc[story/service.py]:::new
+  rs --> pj[api/routes_projects.py]
+  svc --> yio[story/yamlio.py ruamel]:::new
+  yio --> sch[story/schema.py Pydantic]:::new
+  svc --> diff[story/staleness.py]:::new
+  svc --> db[(story_versions, story_changes, projects, jobs.result)]:::changed
+  svc --> files[projects/data_dir/story.yaml]:::new
+  rs -->|enqueue story.structure| q[jobs/queue.py]
+  q --> w[jobs/worker.py HANDLERS]:::changed
+  w --> st[story/structure.py]:::new
+  st --> pr[story/prompts/*.md]:::new
+  st --> llm{{adapters/llm.py LlmClient}}:::new
+  llm --> mock[adapters/mock_llm.py MockLlm]:::new
+  llm --> oll[adapters/ollama.py chat + health]:::changed
+  st --> svc
+  ctx[context.py AppContext llm=]:::changed --> llm
+  cfg[config.py llm_backend]:::changed --> ctx
+  reg[models.toml llm]:::changed --> oll
+  stale[GET projects/id/stale]:::new --> diff
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706
