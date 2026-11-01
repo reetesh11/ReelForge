@@ -56,6 +56,7 @@ class Worker:
     async def start(self) -> None:
         if self._main is None:
             self._shutting_down = False
+            self.ctx.lease.lock = asyncio.Lock()
             self._main = asyncio.create_task(self._loop())
 
     async def stop(self) -> None:

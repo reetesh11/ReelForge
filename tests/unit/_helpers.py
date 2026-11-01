@@ -66,3 +66,11 @@ def _empty_report():
     from reelforge.doctor import DoctorReport
 
     return DoctorReport(checks=[])
+
+
+def make_client(ctx, *, start_worker: bool = True):
+    from fastapi.testclient import TestClient
+
+    from reelforge.api.app import create_app
+
+    return TestClient(create_app(ctx, start_worker=start_worker))
