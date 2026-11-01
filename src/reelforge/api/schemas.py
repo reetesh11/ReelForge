@@ -97,6 +97,7 @@ class JobOut(BaseModel):
     peak_rss_mb: float | None
     command: list[Any] | None
     payload: dict[str, Any]
+    result: dict[str, Any] | None = None
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None

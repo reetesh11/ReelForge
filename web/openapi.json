@@ -359,6 +359,18 @@
             ],
             "title": "Project Id"
           },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
           "started_at": {
             "anyOf": [
               {

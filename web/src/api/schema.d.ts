@@ -309,6 +309,10 @@ export interface components {
             progress: number;
             /** Project Id */
             project_id: string | null;
+            /** Result */
+            result?: {
+                [key: string]: unknown;
+            } | null;
             /** Started At */
             started_at: string | null;
             /**
