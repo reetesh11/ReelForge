@@ -1,0 +1,25 @@
+# Model registry. Model IDs live here and nowhere else in the source tree.
+
+[models.image]
+id = "flux_1_schnell_q5p.ckpt"
+revision = "unpinned"
+license = "Apache-2.0"
+license_url = "https://huggingface.co/black-forest-labs/FLUX.1-schnell"
+
+[models.video]
+id = "dgrauet/ltx-2.3-mlx-q4"
+revision = "unpinned"
+license = "LTX-2 Community License"
+license_url = "https://huggingface.co/Lightricks/LTX-2"
+
+[models.tts]
+id = "mlx-community/Kokoro-82M-bf16"
+revision = "unpinned"
+license = "Apache-2.0"
+license_url = "https://huggingface.co/hexgrad/Kokoro-82M"
+
+[models.llm]
+id = "qwen3:8b"
+revision = "unpinned"
+license = "Apache-2.0"
+license_url = "https://huggingface.co/Qwen/Qwen3-8B"
