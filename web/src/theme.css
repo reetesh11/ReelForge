@@ -1,0 +1,180 @@
+:root {
+  --bg: #0f1115;
+  --surface: #181b22;
+  --border: #2a2f3a;
+  --text: #e6e8ee;
+  --muted: #9aa3b2;
+  --accent: #7c9cff;
+  --green: #34c759;
+  --amber: #f5a623;
+  --red: #ff5a5f;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7fa;
+    --surface: #ffffff;
+    --border: #d9dde5;
+    --text: #14171f;
+    --muted: #5b6475;
+    --accent: #3556d6;
+    color-scheme: light;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.nav {
+  width: 220px;
+  padding: 1.5rem 1rem;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav a {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.nav a.active {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.page {
+  flex: 1;
+  padding: 2rem;
+  max-width: 960px;
+}
+
+.banner {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--amber);
+  color: #111;
+}
+
+.list {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.row .meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.skeleton {
+  height: 3rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface), var(--border), var(--surface));
+  opacity: 0.6;
+}
+
+.stepper {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+
+.stepper li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.stepper li[aria-disabled="true"] {
+  opacity: 0.5;
+}
+
+.badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.dot.green {
+  background: var(--green);
+}
+
+.dot.amber {
+  background: var(--amber);
+}
+
+.dot.red {
+  background: var(--red);
+}
+
+button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+input[type="text"] {
+  font: inherit;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
