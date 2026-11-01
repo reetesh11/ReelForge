@@ -17,7 +17,7 @@ test("project list and stage stepper render", async ({ page, request }) => {
   await expect(page).toHaveURL(new RegExp(`/projects/${project.id}`));
   const stages = page.getByRole("list", { name: "Stages" }).getByRole("listitem");
   await expect(stages).toHaveCount(6);
-  await expect(page.getByText("This stage arrives in a later milestone.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Structure my story" })).toBeVisible();
 });
 
 test("job progress reaches the UI over the websocket without polling jobs", async ({ page, request }) => {
