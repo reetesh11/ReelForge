@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from reelforge import __version__
 from reelforge.api import routes_jobs, routes_media, routes_projects, routes_story, ws
 from reelforge.api.schemas import CheckOut, HealthOut
+from reelforge.cast.licence import licence_warning
 from reelforge.context import AppContext
 
 log = structlog.get_logger()
@@ -53,13 +54,18 @@ def create_app(ctx: AppContext, *, start_worker: bool = True) -> FastAPI:
         allow_headers=["*"],
     )
 
-    @app.get("/health", tags=["health"])
+    @app.get("/health", tags=["health"], response_model_exclude_unset=True)
     async def health() -> HealthOut:
         report = await asyncio.to_thread(ctx.run_doctor)
-        return HealthOut(
+        out = HealthOut(
             status=report.overall,
             checks=[CheckOut(**c.model_dump()) for c in report.checks],
         )
+        if "image" in ctx.registry.keys():
+            warning = licence_warning(ctx.registry.get("image"))
+            if warning is not None:
+                out.image_licence_warning = warning
+        return out
 
     app.include_router(routes_projects.build_router(ctx))
     app.include_router(routes_story.build_router(ctx))

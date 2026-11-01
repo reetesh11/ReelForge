@@ -114,6 +114,7 @@ class CheckOut(BaseModel):
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded", "fail"]
     checks: list[CheckOut]
+    image_licence_warning: str | None = None
 
 
 class AffectedItem(BaseModel):

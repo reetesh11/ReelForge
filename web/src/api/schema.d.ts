@@ -430,6 +430,8 @@ export interface components {
         HealthOut: {
             /** Checks */
             checks: components["schemas"]["CheckOut"][];
+            /** Image Licence Warning */
+            image_licence_warning?: string | null;
             /**
              * Status
              * @enum {string}

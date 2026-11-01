@@ -246,6 +246,17 @@
             "title": "Checks",
             "type": "array"
           },
+          "image_licence_warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Licence Warning"
+          },
           "status": {
             "enum": [
               "ok",
