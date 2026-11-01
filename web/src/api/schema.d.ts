@@ -72,6 +72,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/library/characters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Characters */
+        get: operations["list_characters_api_v1_library_characters_get"];
+        put?: never;
+        /** Create Character */
+        post: operations["create_character_api_v1_library_characters_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/library/characters/{cid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Character */
+        get: operations["get_character_api_v1_library_characters__cid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Character */
+        patch: operations["patch_character_api_v1_library_characters__cid__patch"];
+        trace?: never;
+    };
+    "/api/v1/library/characters/{cid}/master": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Master */
+        get: operations["get_master_api_v1_library_characters__cid__master_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -491,6 +544,82 @@ export interface components {
             /** Type */
             type: string;
         };
+        /**
+         * LibraryCharacterOut
+         * @description Documentation model: responses are plain dicts with empty keys omitted.
+         */
+        LibraryCharacterOut: {
+            /** Aliases */
+            aliases: string[];
+            /** Created At */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** License */
+            license?: string | null;
+            /** License Url */
+            license_url?: string | null;
+            /** Look Text */
+            look_text: string;
+            /** Master Image Url */
+            master_image_url?: string | null;
+            /** Master Sha256 */
+            master_sha256?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Model Id */
+            model_id?: string | null;
+            /** Name */
+            name: string;
+            /** Parent Character Id */
+            parent_character_id?: string | null;
+            /** Seed */
+            seed?: number | null;
+            /** Tags */
+            tags: string[];
+            /** Voice Reference */
+            voice_reference: string;
+        };
+        /** LibraryCreate */
+        LibraryCreate: {
+            /**
+             * Aliases
+             * @default []
+             */
+            aliases: string[];
+            /** Look Text */
+            look_text: string;
+            /** Master Artifact Id */
+            master_artifact_id?: string | null;
+            /** Name */
+            name: string;
+            /** Seed */
+            seed?: number | null;
+            /**
+             * Tags
+             * @default []
+             */
+            tags: string[];
+            /**
+             * Voice Reference
+             * @default
+             */
+            voice_reference: string;
+        };
+        /**
+         * LibraryPatch
+         * @description Only name, aliases and tags; any other key is rejected with 400 by the route.
+         */
+        LibraryPatch: {
+            /** Aliases */
+            aliases?: string[] | null;
+            /** Name */
+            name?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** ProjectCreate */
         ProjectCreate: {
             /** Title */
@@ -823,6 +952,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_characters_api_v1_library_characters_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryCharacterOut"][];
+                };
+            };
+        };
+    };
+    create_character_api_v1_library_characters_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryCharacterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_character_api_v1_library_characters__cid__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryCharacterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_character_api_v1_library_characters__cid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LibraryPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryCharacterOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_master_api_v1_library_characters__cid__master_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

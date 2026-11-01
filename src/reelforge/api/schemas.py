@@ -179,3 +179,43 @@ class StructureRequest(BaseModel):
     target_seconds: int = Field(default=12, ge=1, le=60)
     library_picks: list[str] = []
     answers: list[StoryAnswer] = []
+
+
+class LibraryCharacterOut(BaseModel):
+    """Documentation model: responses are plain dicts with empty keys omitted."""
+
+    id: str
+    name: str
+    aliases: list[str]
+    look_text: str
+    master_image_url: str | None = None
+    master_sha256: str | None = None
+    seed: int | None = None
+    model: str | None = None
+    model_id: str | None = None
+    created_at: str
+    tags: list[str]
+    voice_reference: str
+    license: str | None = None
+    license_url: str | None = None
+    parent_character_id: str | None = None
+
+
+class LibraryCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    aliases: list[str] = []
+    look_text: str
+    tags: list[str] = []
+    seed: int | None = None
+    voice_reference: str = ""
+    master_artifact_id: str | None = None
+
+
+class LibraryPatch(BaseModel):
+    """Only name, aliases and tags; any other key is rejected with 400 by the route."""
+
+    model_config = ConfigDict(extra="allow")
+
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    aliases: list[str] | None = None
+    tags: list[str] | None = None
