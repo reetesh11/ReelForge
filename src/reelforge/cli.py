@@ -18,7 +18,7 @@ Host = Annotated[str | None, typer.Option("--host", help="Bind host (loopback on
 ApiPort = Annotated[int | None, typer.Option("--api-port", help="API port.")]
 UiPort = Annotated[int | None, typer.Option("--ui-port", help="UI dev server port.")]
 DataRoot = Annotated[Path | None, typer.Option("--data-root", help="Data root folder.")]
-Backend = Annotated[str | None, typer.Option("--backend", help="Backend (mock).")]
+Backend = Annotated[str | None, typer.Option("--backend", help="Backend (mock or real).")]
 ModelsPath = Annotated[Path | None, typer.Option("--models-path", help="Path to models.toml.")]
 OllamaUrl = Annotated[str | None, typer.Option("--ollama-url", help="Ollama URL.")]
 DrawThingsUrl = Annotated[str | None, typer.Option("--drawthings-url", help="Draw Things URL.")]

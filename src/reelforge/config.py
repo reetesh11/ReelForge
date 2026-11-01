@@ -34,7 +34,7 @@ class Settings(BaseModel):
     api_port: int = Field(default=7400, ge=1, le=65535)
     ui_port: int = Field(default=7401, ge=1, le=65535)
     data_root: Path = Field(default_factory=_default_data_root)
-    backend: Literal["mock"] = "mock"
+    backend: Literal["mock", "real"] = "mock"
     llm_backend: Literal["mock", "ollama"] = "mock"
     models_path: Path = PACKAGED_MODELS
     ollama_url: str = "http://127.0.0.1:11434"
@@ -47,6 +47,9 @@ class Settings(BaseModel):
     health_poll_s: float = 15.0
     worker_poll_s: float = 0.2
     max_light_jobs: int = Field(default=4, ge=1)
+    image_fallback: Literal["none", "mflux"] = "none"
+    mflux_command: Path | None = None
+    max_upload_mb: int = Field(default=10, ge=1)
 
     @field_validator("host")
     @classmethod
@@ -55,7 +58,7 @@ class Settings(BaseModel):
             raise ValueError(f"must be exactly {LOOPBACK_HOST} (loopback only), got {value!r}")
         return value
 
-    @field_validator("data_root", "models_path", "ltx_path", "mlx_audio_path")
+    @field_validator("data_root", "models_path", "ltx_path", "mlx_audio_path", "mflux_command")
     @classmethod
     def _expand(cls, value: Path | None) -> Path | None:
         return value.expanduser() if value is not None else None
@@ -84,6 +87,8 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "worker_poll_s": "worker_poll_s",
         "max_light_jobs": "max_light_jobs",
         "llm_backend": "llm_backend",
+        "image_fallback": "image_fallback",
+        "max_upload_mb": "max_upload_mb",
     },
 }
 _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {
@@ -91,6 +96,7 @@ _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {
     ("services", "drawthings"): {"url": "drawthings_url"},
     ("tools", "ltx"): {"project_path": "ltx_path"},
     ("tools", "mlx_audio"): {"project_path": "mlx_audio_path"},
+    ("tools", "mflux"): {"command": "mflux_command"},
 }
 
 
