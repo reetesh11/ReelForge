@@ -48,6 +48,15 @@ export function SettingsPage() {
               </li>,
             ];
           })}
+          {health.data.image_licence_warning ? (
+            <li aria-label="Image model licence: amber" className="row">
+              <span>
+                <span className="dot amber" aria-hidden="true" />
+                Image model licence
+              </span>
+              <span className="meta">{health.data.image_licence_warning}</span>
+            </li>
+          ) : null}
         </ul>
       )}
     </section>

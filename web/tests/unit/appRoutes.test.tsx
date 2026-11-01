@@ -19,7 +19,7 @@ it("renders the main navigation and redirects / to /projects", async () => {
     </QueryClientProvider>,
   );
   const nav = screen.getByRole("navigation", { name: "Main" });
-  expect(within(nav).getAllByRole("link").map((l) => l.textContent)).toEqual(["Projects", "Settings & status"]);
+  expect(within(nav).getAllByRole("link").map((l) => l.textContent)).toEqual(["Projects", "Settings & status", "Library"]);
   expect(await screen.findByRole("heading", { name: "Projects" })).toBeTruthy();
   vi.unstubAllGlobals();
 });
