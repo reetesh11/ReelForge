@@ -167,13 +167,21 @@ def check_mlx_audio(settings: Settings) -> CheckResult:
 
 
 def check_draw_things(settings: Settings) -> CheckResult:
-    rep = DrawThingsAdapter(settings.drawthings_url).check()
+    model_id: str | None = None
+    try:
+        registry = load_models(settings.models_path)
+        if "image" in registry.keys():
+            model_id = registry.get("image").id
+    except (OSError, ValueError):
+        model_id = None
+    rep = DrawThingsAdapter(settings.drawthings_url, model_id=model_id).check()
     return _result(
         "draw_things",
         rep.ok,
         "blocking",
         rep.detail,
-        "Open Draw Things and enable its HTTP API server (Settings > Advanced > API Server).",
+        rep.fix
+        or "Open Draw Things and enable its HTTP API server (Settings > Advanced > API Server).",
     )
 
 

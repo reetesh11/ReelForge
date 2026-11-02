@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { NotFoundError, useProject, useStages } from "@/api/queries";
 import { StoryUnavailableError, useStory } from "@/api/story";
+import { CastScreen } from "@/cast/CastScreen";
 import { StageStepper } from "@/components/StageStepper";
 import { StoryEditor } from "@/story/StoryEditor";
 import { StoryInput } from "@/story/StoryInput";
@@ -31,6 +32,7 @@ export function ProjectPage() {
       ) : null}
       {story.data === null ? <StoryInput projectId={projectId} /> : null}
       {story.data ? <StoryEditor projectId={projectId} story={story.data} /> : null}
+      {project.data.stage !== "DRAFT" ? <CastScreen projectId={projectId} /> : null}
     </section>
   );
 }

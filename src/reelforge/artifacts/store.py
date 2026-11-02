@@ -39,6 +39,8 @@ class ArtifactSpec(BaseModel):
     height: int | None = None
     duration_s: float | None = None
     model_id: str = ""
+    license: str = ""
+    license_url: str = ""
 
 
 def _sha256_file(path: Path) -> str:
@@ -208,6 +210,10 @@ class ArtifactStore:
                     "sha256": sha,
                     "created_at": row.created_at.isoformat(),
                 }
+                if spec.license:
+                    sidecar["license"] = spec.license
+                if spec.license_url:
+                    sidecar["license_url"] = spec.license_url
                 sidecar_tmp = self.cache_tmp / f"{new_id()}.part"
                 moved.append(sidecar_tmp)
                 sidecar_tmp.write_text(json.dumps(sidecar, indent=2, sort_keys=True))

@@ -114,6 +114,7 @@ class CheckOut(BaseModel):
 class HealthOut(BaseModel):
     status: Literal["ok", "degraded", "fail"]
     checks: list[CheckOut]
+    image_licence_warning: str | None = None
 
 
 class AffectedItem(BaseModel):
@@ -178,3 +179,130 @@ class StructureRequest(BaseModel):
     target_seconds: int = Field(default=12, ge=1, le=60)
     library_picks: list[str] = []
     answers: list[StoryAnswer] = []
+
+
+class LibraryCharacterOut(BaseModel):
+    """Documentation model: responses are plain dicts with empty keys omitted."""
+
+    id: str
+    name: str
+    aliases: list[str]
+    look_text: str
+    master_image_url: str | None = None
+    master_sha256: str | None = None
+    seed: int | None = None
+    model: str | None = None
+    model_id: str | None = None
+    created_at: str
+    tags: list[str]
+    voice_reference: str
+    license: str | None = None
+    license_url: str | None = None
+    parent_character_id: str | None = None
+
+
+class LibraryCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    aliases: list[str] = []
+    look_text: str
+    tags: list[str] = []
+    seed: int | None = None
+    voice_reference: str = ""
+    master_artifact_id: str | None = None
+
+
+class LibraryPatch(BaseModel):
+    """Only name, aliases and tags; any other key is rejected with 400 by the route."""
+
+    model_config = ConfigDict(extra="allow")
+
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    aliases: list[str] | None = None
+    tags: list[str] | None = None
+
+
+class CastRefine(BaseModel):
+    from_candidate: str
+    instruction: str = ""
+
+
+class CastGenerateRequest(BaseModel):
+    look_text: str | None = None
+    seed: int | None = None
+    regenerate: bool = False
+    refine: CastRefine | None = None
+    backend: Literal["draw_things", "mflux"] | None = None
+
+
+class CastApproveRequest(BaseModel):
+    candidate_id: str
+
+
+class CastUseLibraryRequest(BaseModel):
+    character_id: str
+
+
+class CastCandidateOut(BaseModel):
+    id: str
+    kind: Literal["generated", "refine", "upload"]
+    prompt: str
+    seed: int
+    model: str
+    model_key: str
+    license: str | None = None
+    license_url: str | None = None
+    image_url: str
+    width: int | None
+    height: int | None
+
+
+class CastProgressOut(BaseModel):
+    completed: int
+    total: int
+    elapsed_s: float
+    message: str
+
+
+class CastItemOut(BaseModel):
+    key: str
+    name: str
+    aliases: list[str]
+    look: str
+    bible_line: str
+    bible_source: Literal["llm", "user", "raw", ""]
+    note: str | None = None
+    state: Literal["empty", "generating", "ready", "approved", "failed", "stopped"]
+    job_id: str | None = None
+    progress: CastProgressOut | None = None
+    error: str | None = None
+    candidates: list[CastCandidateOut]
+    approved: bool
+    master_artifact_id: str | None = None
+    master_sha256: str | None = None
+    seed: int | None = None
+    voice_reference: str
+    library_character_id: str | None = None
+    variant_of_library_id: str | None = None
+
+
+class CastBackendOut(BaseModel):
+    kind: Literal["mock", "draw_things"]
+    reachable: bool
+    port: int
+    mflux_available: bool
+
+
+class CastOut(BaseModel):
+    stage: StageName
+    approved_count: int
+    total: int
+    image_backend: CastBackendOut
+    licence_warning: str | None = None
+    characters: list[CastItemOut]
+
+
+class CastActionOut(BaseModel):
+    project_stage: StageName
+    approved_count: int
+    total: int
+    character: CastItemOut

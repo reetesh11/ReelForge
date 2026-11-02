@@ -1,0 +1,48 @@
+flowchart LR
+  ui["web/src/cast/CastScreen.tsx"]:::new
+  lib_ui["web/src/library/LibraryPage.tsx"]:::new
+  settings_ui["web/src/routes/SettingsPage.tsx"]:::changed
+  rc["api/routes_cast.py"]:::new
+  rl["api/routes_library.py"]:::new
+  rh["api/app.py health"]:::changed
+  rj["api/routes_jobs.py cancel"]
+  cs["cast/service.py"]:::new
+  cg["cast/generate.py"]:::new
+  cb["cast/backends.py"]:::new
+  cx["cast/licence.py, prompts.py, uploads.py"]:::new
+  ls["library/service.py"]:::new
+  wk["jobs/worker.py HANDLERS"]:::changed
+  st["artifacts/store.py"]:::changed
+  dt["adapters/drawthings.py"]:::changed
+  mf["adapters/mflux.py"]:::new
+  mk["adapters/mock.py via ctx.adapter"]
+  llm["adapters/mock_llm.py / ollama"]:::changed
+  doc["doctor.py draw_things check"]:::changed
+  db[("reelforge.db: cast_slots, characters, project_characters")]:::changed
+  fs[("library/characters/cid, uploads/")]:::new
+  ui -->|"cast/key:generate, :approve, :upload"| rc
+  lib_ui --> rl
+  settings_ui --> rh
+  ui -->|"cancel"| rj
+  rc --> cs
+  rl --> ls
+  cs --> ls
+  cs --> st
+  rc -->|"enqueue cast.generate"| wk
+  wk --> cg
+  cg --> cx
+  cg --> llm
+  cg --> cb
+  cg --> st
+  cb --> dt
+  cb --> mf
+  cb --> mk
+  rh --> cx
+  doc --> dt
+  cs --> db
+  cg --> db
+  ls --> db
+  ls --> fs
+  st --> fs
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706

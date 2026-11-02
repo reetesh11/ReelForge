@@ -1,4 +1,4 @@
-"""SQLAlchemy 2 declarative models (15 tables)."""
+"""SQLAlchemy 2 declarative models (16 tables)."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from sqlalchemy import (
     Text,
     TypeDecorator,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -132,6 +133,41 @@ class Character(Base):
     parent_character_id: Mapped[str | None] = mapped_column(
         ForeignKey("characters.id", ondelete="SET NULL"), nullable=True
     )
+    seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    model_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    model_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    license: Mapped[str] = mapped_column(Text, default="", server_default="")
+    license_url: Mapped[str] = mapped_column(Text, default="", server_default="")
+    master_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    master_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    voice_reference: Mapped[str] = mapped_column(Text, default="", server_default="")
+    created_at: Mapped[datetime] = mapped_column(
+        UTCDateTime, default=utcnow, server_default=func.current_timestamp()
+    )
+
+
+class CastSlot(Base):
+    """Per project and story character: bible line, seeds, candidates and approval."""
+
+    __tablename__ = "cast_slots"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    story_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    bible_line: Mapped[str] = mapped_column(Text, default="", server_default="")
+    bible_source: Mapped[str] = mapped_column(String(8), default="", server_default="")
+    look_source: Mapped[str] = mapped_column(Text, default="", server_default="")
+    base_seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    next_seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    candidate_ids: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    approved_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
+    approved_candidate_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
+    origin: Mapped[str] = mapped_column(String(8), default="", server_default="")
+    variant_of_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
+    seed: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    voice_reference: Mapped[str] = mapped_column(Text, default="", server_default="")
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
 
 
 class ProjectCharacter(Base):
