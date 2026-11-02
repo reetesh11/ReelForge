@@ -5,7 +5,7 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ModelEntry(BaseModel):
@@ -16,6 +16,7 @@ class ModelEntry(BaseModel):
     revision: str
     license: str = ""
     license_url: str = ""
+    steps: int | None = Field(default=None, gt=0)
 
 
 class ModelRegistry:

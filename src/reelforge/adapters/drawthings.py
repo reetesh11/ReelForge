@@ -137,12 +137,15 @@ class DrawThingsAdapter:
         params = task.params
         width = int(params.get("width", DEFAULT_WIDTH))
         height = int(params.get("height", DEFAULT_HEIGHT))
+        steps = params["steps"] if "steps" in params else task.model.steps
+        if steps is None:
+            steps = DEFAULT_STEPS
         body: dict[str, object] = {
             "prompt": task.prompt,
             "seed": task.seed,
             "width": width,
             "height": height,
-            "steps": int(params.get("steps", DEFAULT_STEPS)),
+            "steps": int(steps),
             "model": task.model.id,
         }
         path = "/sdapi/v1/txt2img"
