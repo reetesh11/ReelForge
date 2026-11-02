@@ -1,0 +1,74 @@
+{
+  "acceptance": [
+    {
+      "criterion": "AC-1",
+      "file": "tests/acceptance/test_m3b_kontext.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "probe is 128x128 at 1 step; size-strict stub passes a known model"
+    },
+    {
+      "criterion": "AC-1",
+      "file": "tests/acceptance/test_m3b_unchanged.py",
+      "tests": 2,
+      "expect_red": false,
+      "description": "unknown model gives exact failure message; timeout counts as ok (already working, must not change)"
+    },
+    {
+      "criterion": "AC-2",
+      "file": "tests/acceptance/test_m3b_kontext.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "steps precedence for txt2img and img2img; ModelEntry/load_models steps field and validation"
+    },
+    {
+      "criterion": "AC-3",
+      "file": "tests/acceptance/test_m3b_kontext.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "packaged image entry; cast generate and refine send Kontext model and steps 20 to stub"
+    },
+    {
+      "criterion": "AC-4",
+      "file": "tests/acceptance/test_m3b_kontext.py",
+      "tests": 1,
+      "expect_red": true,
+      "description": "packaged registry: /health and cast licence warning, sidecars record licence, approval succeeds"
+    },
+    {
+      "criterion": "AC-5",
+      "file": "tests/acceptance/test_m3b_unchanged.py",
+      "tests": 1,
+      "expect_red": false,
+      "description": "explicit permissive models.toml: no warning in health or cast, approval works (green today and after)"
+    },
+    {
+      "criterion": "AC-5",
+      "file": "tests/acceptance/test_m3_unchanged.py",
+      "tests": 3,
+      "expect_red": false,
+      "description": "revised R7 test: health has no licence key for explicit permissive model"
+    },
+    {
+      "criterion": "AC-5",
+      "file": "tests/acceptance/test_m3_cast_approve.py",
+      "tests": 9,
+      "expect_red": false,
+      "description": "revised R7 test: no cast warning for explicit permissive model"
+    }
+  ],
+  "untestable": [
+    {
+      "criterion": "AC-6",
+      "reason": "toolchain gate run by the pipeline; web/e2e/cast.spec.ts was revised to click Approve anyway"
+    },
+    {
+      "criterion": "AC-7",
+      "reason": "docs wording; checked by reading docs/manual-checks.md M3 rows 2, 4, 11"
+    },
+    {
+      "criterion": "AC-8",
+      "reason": "manual on the reference Mac with real Draw Things"
+    }
+  ]
+}
