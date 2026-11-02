@@ -18,7 +18,7 @@ def test_generation_runs_through_mflux_when_draw_things_is_down(tmp_path, monkey
     real_popen = subprocess.Popen
 
     def popen(*a, **k):
-        assert not k.get("shell"), "shell=True is forbidden"
+        assert not k.get("shell"), "shell execution is forbidden"
         return real_popen(*a, **k)
 
     monkeypatch.setattr(subprocess, "Popen", popen)
