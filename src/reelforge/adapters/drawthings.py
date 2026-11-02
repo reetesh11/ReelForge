@@ -64,8 +64,8 @@ class DrawThingsAdapter:
         body = {
             "prompt": "health check",
             "seed": 0,
-            "width": 64,
-            "height": 64,
+            "width": 128,  # Draw Things rejects anything below 128 with 422
+            "height": 128,
             "steps": 1,
             "model": model_id,
         }

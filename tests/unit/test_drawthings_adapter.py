@@ -104,3 +104,14 @@ def test_check_model_422_fails_and_success_is_cached():
     finally:
         bad.close()
         good.close()
+
+
+def test_model_probe_respects_draw_things_minimum_size():
+    # The real server answers 422 for any width or height below 128, whatever the model.
+    good = Stub()
+    try:
+        assert DrawThingsAdapter(good.url, model_id="probe-size.ckpt").check().ok is True
+        body = good.posts[0]["body"]
+        assert body["width"] >= 128 and body["height"] >= 128
+    finally:
+        good.close()
