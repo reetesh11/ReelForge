@@ -115,3 +115,43 @@ def test_model_probe_respects_draw_things_minimum_size():
         assert body["width"] >= 128 and body["height"] >= 128
     finally:
         good.close()
+
+
+def _task_steps(
+    entry_steps: int | None, input_paths: list | None = None, **params: Any
+) -> TaskSpec:
+    model = ModelEntry(key="image", id="m.ckpt", revision="r", license="mit", steps=entry_steps)
+    return TaskSpec(
+        kind="image", prompt="p", seed=3, params=params, model=model, input_paths=input_paths or []
+    )
+
+
+def test_probe_is_128_one_step():
+    s = Stub()
+    try:
+        assert DrawThingsAdapter(s.url, model_id="probe-128.ckpt").check().ok is True
+        body = s.posts[0]["body"]
+        assert (body["width"], body["height"], body["steps"]) == (128, 128, 1)
+    finally:
+        s.close()
+
+
+@pytest.mark.parametrize(
+    ("entry", "params", "expected"),
+    [(20, {}, 20), (20, {"steps": 8}, 8), (None, {}, 4)],
+)
+async def test_body_steps_precedence(stub, tmp_path, entry, params, expected):
+    await DrawThingsAdapter(stub.url).run(
+        _task_steps(entry, **params), tmp_path, lambda p, m: None, CancelToken()
+    )
+    assert stub.posts[0]["body"]["steps"] == expected
+
+
+async def test_img2img_uses_entry_steps(stub, tmp_path):
+    img = tmp_path / "in.png"
+    img.write_bytes(PNG)
+    await DrawThingsAdapter(stub.url).run(
+        _task_steps(20, [img]), tmp_path, lambda p, m: None, CancelToken()
+    )
+    assert stub.posts[0]["path"] == "/sdapi/v1/img2img"
+    assert stub.posts[0]["body"]["steps"] == 20
