@@ -36,22 +36,44 @@ def story_text(duration: float = 4.0) -> str:
     return json.dumps(d, ensure_ascii=False)
 
 
+_MEMORY: dict[int, dict[str, float]] = {}
+PLENTY_GB = 64.0
+
+
 def voice_world(tmp_path, available_gb: float = 64.0, unload=None, **over):
+    """A world whose free memory is `available_gb` for the voice job.
+
+    Casting images needs far more memory than the low values the memory tests use, so
+    `cast_approved` lifts the limit while it approves the cast and then restores it.
+    """
     settings = make_settings(tmp_path, **over)
+    box = {"gb": float(available_gb)}
     ctx = make_ctx(
-        settings, adapter=RecAdapter(settings), available_gb=available_gb, unload=unload
+        settings,
+        adapter=RecAdapter(settings),
+        available_gb=lambda: box["gb"],
+        unload=unload,
     )
+    _MEMORY[id(ctx)] = box
     return ctx, make_client(ctx)
 
 
 def cast_approved(client, ctx, title: str = "Voice tale", text: str | None = None) -> str:
-    pid = create_project(client, title)["id"]
-    assert put(client, pid, text or story_text()).status_code == 200
-    r = client.post(f"/api/v1/projects/{pid}/story:approve")
-    assert r.status_code == 200, r.text
-    gen_and_approve(client, ctx, pid, "tomato", seed=11)
-    gen_and_approve(client, ctx, pid, "potato", seed=12)
-    assert client.get(f"/api/v1/projects/{pid}").json()["stage"] == "CAST_APPROVED"
+    box = _MEMORY.get(id(ctx))
+    limit = box["gb"] if box else None
+    if box:
+        box["gb"] = PLENTY_GB
+    try:
+        pid = create_project(client, title)["id"]
+        assert put(client, pid, text or story_text()).status_code == 200
+        r = client.post(f"/api/v1/projects/{pid}/story:approve")
+        assert r.status_code == 200, r.text
+        gen_and_approve(client, ctx, pid, "tomato", seed=11)
+        gen_and_approve(client, ctx, pid, "potato", seed=12)
+        assert client.get(f"/api/v1/projects/{pid}").json()["stage"] == "CAST_APPROVED"
+    finally:
+        if box and limit is not None:
+            box["gb"] = limit
     return pid
 
 
@@ -71,7 +93,9 @@ def line_of(client, pid: str, scene_id: str) -> dict[str, Any]:
 
 def set_presets(client, pid: str) -> None:
     for key, vid in (("tomato", "ravi"), ("potato", "asha")):
-        r = client.post(f"{base(pid)}/voices/characters/{key}:set", json={"mode": "preset", "voice_id": vid})
+        r = client.post(
+            f"{base(pid)}/voices/characters/{key}:set", json={"mode": "preset", "voice_id": vid}
+        )
         assert r.status_code == 200, r.text
 
 
@@ -105,7 +129,8 @@ def approve_all(client, pid: str) -> dict[str, Any]:
 def wav_bytes(seconds: float, rate: int = 24000, freq: float = 440.0, amp: float = 0.5) -> bytes:
     n = int(seconds * rate)
     frames = b"".join(
-        struct.pack("<h", int(amp * 32767 * math.sin(2 * math.pi * freq * i / rate))) for i in range(n)
+        struct.pack("<h", int(amp * 32767 * math.sin(2 * math.pi * freq * i / rate)))
+        for i in range(n)
     )
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:
