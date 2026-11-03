@@ -19,6 +19,14 @@ ImageMemGb = Annotated[
     float | None,
     typer.Option("--image-mem-gb", help="Memory (GB) an image job needs free before it starts."),
 ]
+VoiceMemGb = Annotated[
+    float | None,
+    typer.Option("--voice-mem-gb", help="Memory (GB) a voice job needs free before it starts."),
+]
+VoiceModel = Annotated[
+    str | None,
+    typer.Option("--voice-model", help="Voice model (omnivoice or kokoro)."),
+]
 ApiPort = Annotated[int | None, typer.Option("--api-port", help="API port.")]
 UiPort = Annotated[int | None, typer.Option("--ui-port", help="UI dev server port.")]
 DataRoot = Annotated[Path | None, typer.Option("--data-root", help="Data root folder.")]
@@ -64,6 +72,8 @@ def doctor(
     ollama_url: OllamaUrl = None,
     drawthings_url: DrawThingsUrl = None,
     image_mem_gb: ImageMemGb = None,
+    voice_mem_gb: VoiceMemGb = None,
+    voice_model: VoiceModel = None,
     config: ConfigFile = None,
 ) -> None:
     """Check that this machine can run ReelForge."""
@@ -77,6 +87,8 @@ def doctor(
         ollama_url=ollama_url,
         drawthings_url=drawthings_url,
         image_mem_gb=image_mem_gb,
+        voice_mem_gb=voice_mem_gb,
+        voice_model=voice_model,
         config=config,
     )
     report = run_doctor(settings)
@@ -99,6 +111,8 @@ def up(
     ollama_url: OllamaUrl = None,
     drawthings_url: DrawThingsUrl = None,
     image_mem_gb: ImageMemGb = None,
+    voice_mem_gb: VoiceMemGb = None,
+    voice_model: VoiceModel = None,
     config: ConfigFile = None,
 ) -> None:
     """Run doctor, migrate, recover interrupted jobs, then serve the API and worker."""
@@ -112,6 +126,8 @@ def up(
         ollama_url=ollama_url,
         drawthings_url=drawthings_url,
         image_mem_gb=image_mem_gb,
+        voice_mem_gb=voice_mem_gb,
+        voice_model=voice_model,
         config=config,
     )
     raise typer.Exit(run_up(settings, allow_degraded=allow_degraded))

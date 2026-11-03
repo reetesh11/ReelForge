@@ -15,6 +15,12 @@ fails with "Only X GB free, job needs Y GB. Close other apps, or lower image_mem
 config.toml."; close other apps or lower the value, then click Retry. Restart `reelforge up`
 after changing it.
 
+Voice memory: a voice job waits until `voice_mem_gb` GB are free (default 4.0). Set it with
+`voice_mem_gb = 4.0` under `[limits]` in config.toml, the `REELFORGE_VOICE_MEM_GB` environment
+variable, or `--voice-mem-gb` on `reelforge up` / `reelforge doctor`. The voice model (OmniVoice
+by default, Kokoro as the fallback) is set with `voice_model` under `[runtime]`,
+`REELFORGE_VOICE_MODEL`, `--voice-model`, or the Settings page.
+
 | # | Step | Expect | Result |
 | --- | --- | --- | --- |
 | 1 | `reelforge doctor` | The `draw_things` check passes and names no missing model. | |

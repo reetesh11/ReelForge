@@ -51,6 +51,8 @@ class Settings(BaseModel):
     mflux_command: Path | None = None
     max_upload_mb: int = Field(default=10, ge=1)
     image_mem_gb: float = Field(default=6.0, gt=0, allow_inf_nan=False)
+    voice_model: Literal["omnivoice", "kokoro"] = "omnivoice"
+    voice_mem_gb: float = Field(default=4.0, gt=0, allow_inf_nan=False)
 
     @field_validator("host")
     @classmethod
@@ -90,8 +92,9 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "llm_backend": "llm_backend",
         "image_fallback": "image_fallback",
         "max_upload_mb": "max_upload_mb",
+        "voice_model": "voice_model",
     },
-    "limits": {"image_mem_gb": "image_mem_gb"},
+    "limits": {"image_mem_gb": "image_mem_gb", "voice_mem_gb": "voice_mem_gb"},
 }
 _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {
     ("services", "ollama"): {"url": "ollama_url"},
