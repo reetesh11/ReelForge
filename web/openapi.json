@@ -1149,6 +1149,16 @@
             "title": "Tags",
             "type": "array"
           },
+          "voice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "voice_reference": {
             "title": "Voice Reference",
             "type": "string"
@@ -2672,6 +2682,46 @@
           }
         },
         "summary": "Get Master",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/api/v1/library/characters/{cid}/voice-reference": {
+      "get": {
+        "operationId": "get_voice_reference_api_v1_library_characters__cid__voice_reference_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cid",
+            "required": true,
+            "schema": {
+              "title": "Cid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Voice Reference",
         "tags": [
           "library"
         ]

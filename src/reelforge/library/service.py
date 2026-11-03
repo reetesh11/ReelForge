@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import select
 
-from reelforge.db.models import Artifact, Character, utcnow
+from reelforge.db.models import Artifact, Character, Voice, utcnow
 from reelforge.ids import new_id
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ def library_dir(ctx: AppContext, cid: str) -> Path:
     return ctx.settings.data_root / "library" / "characters" / cid
 
 
-def to_record(ch: Character) -> dict[str, Any]:
+def to_record(ch: Character, voice: dict[str, Any] | None = None) -> dict[str, Any]:
     """The LibraryCharacter JSON; also the exact content of character.json."""
     rec: dict[str, Any] = {
         "id": ch.id,
@@ -56,7 +56,133 @@ def to_record(ch: Character) -> dict[str, Any]:
         "parent_character_id": ch.parent_character_id,
     }
     rec.update({k: v for k, v in optional.items() if v not in (None, "")})
+    if voice is not None:
+        rec["voice"] = voice
     return rec
+
+
+def record(ctx: AppContext, ch: Character) -> dict[str, Any]:
+    """`to_record` plus the character's voice (only when it has one)."""
+    return to_record(ch, voice_record(ctx, ch.id))
+
+
+VOICE_KEYS = (
+    "mode", "model", "voice_id", "reference_path", "reference_sha256",
+    "reference_text", "speed", "language",
+)  # fmt: skip
+
+
+def _voice_row(ctx: AppContext, cid: str) -> Voice | None:
+    with ctx.session_factory() as s:
+        ch = s.get(Character, cid)
+        return s.get(Voice, ch.voice_id) if ch is not None and ch.voice_id else None
+
+
+def get_voice(ctx: AppContext, character_id: str) -> dict[str, Any] | None:
+    v = _voice_row(ctx, character_id)
+    if v is None:
+        return None
+    return {
+        "mode": v.mode,
+        "model": v.model_key,
+        "voice_id": v.voice_ref,
+        "reference_path": v.reference_path,
+        "reference_sha256": v.reference_sha256,
+        "reference_text": v.reference_text,
+        "speed": v.speed,
+        "language": v.language,
+    }
+
+
+def voice_clip_seconds(ctx: AppContext, character_id: str) -> float | None:
+    v = _voice_row(ctx, character_id)
+    return v.clip_seconds if v is not None else None
+
+
+def voice_record(ctx: AppContext, character_id: str) -> dict[str, Any] | None:
+    """The `voice` object of the library JSON (VoiceOut fields)."""
+    from reelforge.voice.slots import current_voice_model  # noqa: PLC0415
+
+    v = get_voice(ctx, character_id)
+    if v is None:
+        return None
+    out: dict[str, Any] = {
+        "mode": v["mode"],
+        "model": v["model"],
+        "voice_id": v["voice_id"],
+        "reference_text": v["reference_text"],
+        "speed": v["speed"],
+        "language": v["language"],
+        "model_mismatch": v["model"] is not None and v["model"] != current_voice_model(ctx),
+    }
+    if v["mode"] == "cloned" and v["reference_path"]:
+        out["reference_url"] = f"/api/v1/library/characters/{character_id}/voice-reference"
+        seconds = voice_clip_seconds(ctx, character_id)
+        if seconds is not None:
+            out["clip_seconds"] = seconds
+    return out
+
+
+def voice_reference_file(ctx: AppContext, character_id: str) -> Path | None:
+    v = get_voice(ctx, character_id)
+    if v is None or not v["reference_path"]:
+        return None
+    path = ctx.settings.data_root / v["reference_path"]
+    return path if path.is_file() else None
+
+
+def store_voice_reference(ctx: AppContext, cid: str, src: Path) -> tuple[str, str]:
+    """Copy a clip to `voice_reference.<ext>` in the character folder; return (path, sha256)."""
+    folder = library_dir(ctx, cid)
+    data = src.read_bytes()
+    ext = src.suffix.lstrip(".").lower() or "wav"
+    for old in folder.glob("voice_reference.*"):
+        if old.suffix != f".{ext}":
+            old.unlink(missing_ok=True)
+    _atomic_write(folder / f"voice_reference.{ext}", data)
+    rel = (Path("library") / "characters" / cid / f"voice_reference.{ext}").as_posix()
+    return rel, hashlib.sha256(data).hexdigest()
+
+
+def set_voice(
+    ctx: AppContext,
+    character_id: str,
+    voice: dict[str, Any] | None,
+    *,
+    clip_seconds: float | None = None,
+) -> None:
+    """Save (or with None, remove) the voice of a library character."""
+    with ctx.session_factory.begin() as s:
+        ch = s.get(Character, character_id)
+        if ch is None:
+            raise CharacterNotFound(character_id)
+        row = s.get(Voice, ch.voice_id) if ch.voice_id else None
+        if voice is None:
+            if row is not None:
+                ch.voice_id = None
+                s.flush()
+                s.delete(row)
+        else:
+            if row is None:
+                row = Voice()
+                s.add(row)
+            row.mode = voice["mode"]
+            row.model_key = voice.get("model")
+            row.voice_ref = voice.get("voice_id")
+            row.reference_path = voice.get("reference_path")
+            row.reference_sha256 = voice.get("reference_sha256")
+            row.reference_text = voice.get("reference_text") or ""
+            row.speed = float(voice.get("speed") or 1.0)
+            row.language = voice.get("language") or "hi"
+            row.clip_seconds = clip_seconds
+            s.flush()
+            ch.voice_id = row.id
+        s.flush()
+        s.expunge(ch)
+    if voice is None:
+        for old in library_dir(ctx, character_id).glob("voice_reference.*"):
+            old.unlink(missing_ok=True)
+    _mirror(ctx, ch)
 
 
 def _atomic_write(path: Path, data: bytes) -> None:
@@ -71,7 +197,7 @@ def _atomic_write(path: Path, data: bytes) -> None:
 
 
 def _mirror(ctx: AppContext, ch: Character) -> None:
-    text = json.dumps(to_record(ch), indent=2, sort_keys=True)
+    text = json.dumps(record(ctx, ch), indent=2, sort_keys=True)
     _atomic_write(library_dir(ctx, ch.id) / "character.json", text.encode("utf-8"))
 
 
@@ -247,6 +373,16 @@ def make_variant(ctx: AppContext, original_id: str) -> Character:
             ).as_posix()
     with ctx.session_factory.begin() as s:
         s.add(variant)
+    voice = get_voice(ctx, original.id)
+    if voice is not None:
+        if voice["reference_path"]:
+            src_clip = ctx.settings.data_root / voice["reference_path"]
+            if src_clip.is_file():
+                voice["reference_path"], voice["reference_sha256"] = store_voice_reference(
+                    ctx, variant.id, src_clip
+                )
+        set_voice(ctx, variant.id, voice, clip_seconds=voice_clip_seconds(ctx, original.id))
+        return require(ctx, variant.id)
     _mirror(ctx, variant)
     return variant
 

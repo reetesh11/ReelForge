@@ -17,7 +17,7 @@ def build_router(ctx: AppContext) -> APIRouter:
 
     @router.get("/characters", response_model=list[LibraryCharacterOut])
     async def list_characters() -> JSONResponse:
-        return JSONResponse([service.to_record(c) for c in service.list_all(ctx)])
+        return JSONResponse([service.record(ctx, c) for c in service.list_all(ctx)])
 
     @router.post("/characters", status_code=201, response_model=LibraryCharacterOut)
     async def create_character(body: LibraryCreate) -> JSONResponse:
@@ -25,14 +25,14 @@ def build_router(ctx: AppContext) -> APIRouter:
             ch = service.create(ctx, **body.model_dump())
         except service.ArtifactNotFound:
             raise HTTPException(404, "artifact not found") from None
-        return JSONResponse(service.to_record(ch), status_code=201)
+        return JSONResponse(service.record(ctx, ch), status_code=201)
 
     @router.get("/characters/{cid}", response_model=LibraryCharacterOut)
     async def get_character(cid: str) -> JSONResponse:
         ch = service.get(ctx, cid)
         if ch is None:
             raise HTTPException(404, "character not found")
-        return JSONResponse(service.to_record(ch))
+        return JSONResponse(service.record(ctx, ch))
 
     @router.patch("/characters/{cid}", response_model=LibraryCharacterOut)
     async def patch_character(cid: str, body: LibraryPatch) -> JSONResponse:
@@ -43,7 +43,7 @@ def build_router(ctx: AppContext) -> APIRouter:
             ch = service.patch(ctx, cid, changes)
         except service.CharacterNotFound:
             raise HTTPException(404, "character not found") from None
-        return JSONResponse(service.to_record(ch))
+        return JSONResponse(service.record(ctx, ch))
 
     @router.get("/characters/{cid}/master")
     async def get_master(cid: str) -> FileResponse:
@@ -52,5 +52,12 @@ def build_router(ctx: AppContext) -> APIRouter:
         if found is None:
             raise HTTPException(404, "master image not found")
         return FileResponse(found[0], media_type=found[1])
+
+    @router.get("/characters/{cid}/voice-reference")
+    async def get_voice_reference(cid: str) -> FileResponse:
+        path = service.voice_reference_file(ctx, cid)
+        if path is None:
+            raise HTTPException(404, "voice reference not found")
+        return FileResponse(path)
 
     return router

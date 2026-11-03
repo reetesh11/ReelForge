@@ -7,7 +7,9 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import delete, select
 
 from reelforge.adapters.mlx_audio import PRESETS, VOICE_MODELS
-from reelforge.db.models import Setting, VoiceSlot, utcnow
+from reelforge.artifacts.store import ArtifactSpec
+from reelforge.db.models import Artifact, Setting, VoiceSlot, utcnow
+from reelforge.library import service as library
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -15,6 +17,8 @@ if TYPE_CHECKING:
 SETTING_KEY = "voice_model"
 MODEL_LABELS = {"omnivoice": "OmniVoice", "kokoro": "Kokoro (fallback)"}
 MODES = ("preset", "cloned", "recorded")
+REF_KIND = "voice_reference"
+OWNER_CHARACTER = "character"
 
 
 def current_voice_model(ctx: AppContext) -> str:
@@ -121,3 +125,77 @@ def voice_out(ctx: AppContext, slot: VoiceSlot) -> dict[str, Any]:
     if slot.clip_seconds is not None and slot.mode == "cloned":
         out["clip_seconds"] = slot.clip_seconds
     return out
+
+
+def sync_to_library(ctx: AppContext, project_id: str, key: str, character_id: str) -> None:
+    """Copy the project voice (and its clip) onto the library character."""
+    slot = get_slot(ctx, project_id, key)
+    if slot is None:
+        library.set_voice(ctx, character_id, None)
+        return
+    ref_path: str | None = None
+    sha: str | None = None
+    if slot.mode == "cloned" and slot.reference_artifact_id:
+        with ctx.session_factory() as s:
+            art = s.get(Artifact, slot.reference_artifact_id)
+        if art is not None and ctx.store.absolute_path(art).is_file():
+            ref_path, sha = library.store_voice_reference(
+                ctx, character_id, ctx.store.absolute_path(art)
+            )
+    library.set_voice(
+        ctx,
+        character_id,
+        {
+            "mode": slot.mode,
+            "model": slot.model,
+            "voice_id": slot.voice_id,
+            "reference_path": ref_path,
+            "reference_sha256": sha,
+            "reference_text": slot.reference_text,
+            "speed": slot.speed,
+            "language": slot.language,
+        },
+        clip_seconds=slot.clip_seconds,
+    )
+
+
+def adopt_from_library(ctx: AppContext, project_id: str, key: str, character_id: str) -> None:
+    """Copy a library character's voice settings and clip into the project."""
+    voice = library.get_voice(ctx, character_id)
+    if voice is None:
+        return
+    artifact_id: str | None = None
+    if voice["mode"] == "cloned" and voice["reference_path"]:
+        src = ctx.settings.data_root / voice["reference_path"]
+        if src.is_file():
+            seconds = library.voice_clip_seconds(ctx, character_id)
+            spec = ArtifactSpec(
+                project_id=project_id,
+                owner_type=OWNER_CHARACTER,
+                owner_id=key,
+                kind=REF_KIND,
+                subdir=f"voices/{key}",
+                prompt="voice reference clip",
+                seed=0,
+                model_key="upload",
+                model_revision="",
+                adapter="library",
+                version="library-1",
+                duration_s=seconds,
+            )
+            artifact_id = ctx.store.write(
+                spec, src.read_bytes(), ext=src.suffix.lstrip(".") or "wav"
+            ).id
+    update_slot(
+        ctx,
+        project_id,
+        key,
+        mode=voice["mode"],
+        model=voice["model"],
+        voice_id=voice["voice_id"],
+        reference_artifact_id=artifact_id,
+        reference_text=voice["reference_text"],
+        speed=voice["speed"],
+        language=voice["language"],
+        clip_seconds=library.voice_clip_seconds(ctx, character_id),
+    )

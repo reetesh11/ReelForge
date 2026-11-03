@@ -181,6 +181,18 @@ class StructureRequest(BaseModel):
     answers: list[StoryAnswer] = []
 
 
+class VoiceOut(BaseModel):
+    mode: Literal["preset", "cloned", "recorded"]
+    model: Literal["omnivoice", "kokoro"] | None
+    voice_id: str | None
+    reference_url: str | None = None
+    reference_text: str
+    speed: float
+    language: str
+    clip_seconds: float | None = None
+    model_mismatch: bool
+
+
 class LibraryCharacterOut(BaseModel):
     """Documentation model: responses are plain dicts with empty keys omitted."""
 
@@ -199,6 +211,7 @@ class LibraryCharacterOut(BaseModel):
     license: str | None = None
     license_url: str | None = None
     parent_character_id: str | None = None
+    voice: VoiceOut | None = None
 
 
 class LibraryCreate(BaseModel):
@@ -329,18 +342,6 @@ class VoiceSetRequest(BaseModel):
     voice_id: str | None = None
     reference_text: str | None = None
     speed: float | None = None
-
-
-class VoiceOut(BaseModel):
-    mode: Literal["preset", "cloned", "recorded"]
-    model: Literal["omnivoice", "kokoro"] | None
-    voice_id: str | None
-    reference_url: str | None = None
-    reference_text: str
-    speed: float
-    language: str
-    clip_seconds: float | None = None
-    model_mismatch: bool
 
 
 class VoiceClearOut(BaseModel):

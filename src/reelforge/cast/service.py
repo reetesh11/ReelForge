@@ -19,6 +19,7 @@ from reelforge.db.models import (
     utcnow,
 )
 from reelforge.library import service as library
+from reelforge.voice import slots as voice_slots
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -77,7 +78,10 @@ def approved_count(story: state.StoryCast, slots: dict[str, CastSlot]) -> int:
 
 
 def recompute_stage(ctx: AppContext, project_id: str) -> str:
-    """CAST_APPROVED iff every story character is approved; publishes stage.changed."""
+    """CAST_APPROVED iff every story character is approved; publishes stage.changed.
+
+    An incomplete cast also demotes VOICES_APPROVED.
+    """
     story = state.load_story_cast(ctx, project_id)
     slots = state.list_slots(ctx, project_id)
     complete = bool(story.characters) and approved_count(story, slots) == len(story.characters)
@@ -88,7 +92,7 @@ def recompute_stage(ctx: AppContext, project_id: str) -> str:
             raise ProjectMissing(project_id)
         if complete and project.stage == "STORY_APPROVED":
             new_stage = "CAST_APPROVED"
-        elif not complete and project.stage == "CAST_APPROVED":
+        elif not complete and project.stage in ("CAST_APPROVED", "VOICES_APPROVED"):
             new_stage = "STORY_APPROVED"
         if new_stage is not None:
             project.stage = new_stage
@@ -108,7 +112,7 @@ def _sidecar(ctx: AppContext, artifact: Artifact) -> dict[str, Any]:
     return cast("dict[str, Any]", parsed) if isinstance(parsed, dict) else {}
 
 
-def _linked_character(ctx: AppContext, project_id: str, key: str) -> Character | None:
+def linked_character(ctx: AppContext, project_id: str, key: str) -> Character | None:
     with ctx.session_factory() as s:
         link = s.get(ProjectCharacter, (project_id, key))
         return s.get(Character, link.character_id) if link is not None else None
@@ -128,7 +132,7 @@ def ensure_own_character(ctx: AppContext, project_id: str, key: str) -> CastSlot
     slot = state.get_slot(ctx, project_id, key)
     if slot is None or slot.origin != "reused":
         return slot
-    original = _linked_character(ctx, project_id, key)
+    original = linked_character(ctx, project_id, key)
     if original is None:
         return state.update_slot(ctx, project_id, key, origin="saved")
     variant = library.make_variant(ctx, original.id)
@@ -244,7 +248,7 @@ def approve(
         height=candidate.height,
     )
     char = story.characters[key]
-    linked = _linked_character(ctx, project_id, key)
+    linked = linked_character(ctx, project_id, key)
     saved = library.save_from_artifact(
         ctx,
         artifact=master,
@@ -256,6 +260,8 @@ def approve(
         existing_id=linked.id if linked is not None else None,
     )
     _link(ctx, project_id, key, saved.id)
+    if voice_slots.get_slot(ctx, project_id, key) is not None:
+        voice_slots.sync_to_library(ctx, project_id, key, saved.id)
     _finish_approval(
         ctx, project_id, key, master,
         approved_candidate_id=candidate_id, seed=candidate.seed, origin="saved",
@@ -302,6 +308,7 @@ def use_library(ctx: AppContext, project_id: str, key: str, character_id: str) -
         height=None,
     )
     _link(ctx, project_id, key, ch.id)
+    voice_slots.adopt_from_library(ctx, project_id, key, ch.id)
     _finish_approval(
         ctx, project_id, key, master,
         bible_line=ch.look_text, bible_source="user", seed=ch.seed,
@@ -420,7 +427,7 @@ def build_item(
             item["master_sha256"] = master.sha256
     if slot is not None and slot.seed is not None:
         item["seed"] = slot.seed
-    linked = _linked_character(ctx, project_id, char.key) if slot is not None else None
+    linked = linked_character(ctx, project_id, char.key) if slot is not None else None
     if linked is not None and approved:
         item["library_character_id"] = linked.id
     if slot is not None and slot.variant_of_id:

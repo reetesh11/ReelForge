@@ -125,6 +125,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/library/characters/{cid}/voice-reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Voice Reference */
+        get: operations["get_voice_reference_api_v1_library_characters__cid__voice_reference_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -941,6 +958,7 @@ export interface components {
             seed?: number | null;
             /** Tags */
             tags: string[];
+            voice?: components["schemas"]["VoiceOut"] | null;
             /** Voice Reference */
             voice_reference: string;
         };
@@ -1571,6 +1589,37 @@ export interface operations {
         };
     };
     get_master_api_v1_library_characters__cid__master_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_voice_reference_api_v1_library_characters__cid__voice_reference_get: {
         parameters: {
             query?: never;
             header?: never;

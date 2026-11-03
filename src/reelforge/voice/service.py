@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from reelforge.adapters.mlx_audio import PRESETS, check_speed
 from reelforge.artifacts.store import ArtifactSpec
+from reelforge.cast import service as cast_service
 from reelforge.cast import state as cast_state
 from reelforge.db.models import Project
 from reelforge.ids import new_id
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 
 VOICE_JOB = "gen_voice_take"
 TAKE_KIND = "voice_take"
-REF_KIND = "voice_reference"
+REF_KIND = slots.REF_KIND
 OWNER_SCENE = "scene"
 OWNER_CHARACTER = "character"
 UNLOCKED_STAGES = (
@@ -218,8 +219,19 @@ def store_reference(
     return slots.voice_out(ctx, after)
 
 
+def sync_library(ctx: AppContext, project_id: str, key: str) -> None:
+    """Keep the linked library character's voice equal to the project voice."""
+    if cast_state.get_slot(ctx, project_id, key) is None:
+        return
+    cast_service.ensure_own_character(ctx, project_id, key)
+    linked = cast_service.linked_character(ctx, project_id, key)
+    if linked is not None:
+        slots.sync_to_library(ctx, project_id, key, linked.id)
+
+
 def voice_changed(ctx: AppContext, project_id: str, key: str) -> None:
-    """A character's voice changed: hook for staling their lines and the library copy."""
+    """A character's voice changed: update the library copy."""
+    sync_library(ctx, project_id, key)
 
 
 # ---- the board body ------------------------------------------------------------------------
