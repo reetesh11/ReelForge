@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from m3_helpers import StubServer
+from m3_helpers import StubServer, models_with_license
 from rf_helpers import free_port, make_client, make_ctx, make_settings
 
 
 def test_health_has_no_licence_key_for_permissive_default_model(tmp_path):
-    client = make_client(make_ctx(make_settings(tmp_path)))
+    models = models_with_license(tmp_path / "models.toml", "Apache-2.0")
+    client = make_client(make_ctx(make_settings(tmp_path, models_path=models)))
     with client:
         body = client.get("/health").json()
         assert "image_licence_warning" not in body

@@ -64,8 +64,8 @@ class DrawThingsAdapter:
         body = {
             "prompt": "health check",
             "seed": 0,
-            "width": 64,
-            "height": 64,
+            "width": 128,  # Draw Things rejects anything below 128 with 422
+            "height": 128,
             "steps": 1,
             "model": model_id,
         }
@@ -137,12 +137,15 @@ class DrawThingsAdapter:
         params = task.params
         width = int(params.get("width", DEFAULT_WIDTH))
         height = int(params.get("height", DEFAULT_HEIGHT))
+        steps = params["steps"] if "steps" in params else task.model.steps
+        if steps is None:
+            steps = DEFAULT_STEPS
         body: dict[str, object] = {
             "prompt": task.prompt,
             "seed": task.seed,
             "width": width,
             "height": height,
-            "steps": int(params.get("steps", DEFAULT_STEPS)),
+            "steps": int(steps),
             "model": task.model.id,
         }
         path = "/sdapi/v1/txt2img"

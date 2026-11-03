@@ -54,6 +54,7 @@ test("add an image, approve it, then find the character in the library", async (
 
   await row.getByRole("radio").first().click();
   await row.getByRole("button", { name: "Approve this one" }).click();
+  await page.getByRole("button", { name: "Approve anyway" }).click();
   await expect(row.getByText("Approved", { exact: true })).toBeVisible();
   await expect(cast.getByText("1 of 1 characters approved")).toBeVisible();
   const stages = page.getByRole("list", { name: "Stages" }).getByRole("listitem");

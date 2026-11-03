@@ -233,7 +233,8 @@ def test_licence_warning_text_rules():
 
 
 def test_permissive_licence_has_no_warning_in_cast(tmp_path):
-    ctx, client, _ = new_world(tmp_path)
+    models = models_with_license(tmp_path / "models.toml", "Apache-2.0")
+    ctx, client, _ = new_world(tmp_path, models_path=models)
     with client:
         pid = approved_project(client)
         r = client.get(cast_url(pid))
