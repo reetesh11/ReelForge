@@ -6,8 +6,11 @@ from fastapi import APIRouter, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
 from reelforge.adapters.mlx_audio import VOICE_MODELS
+from reelforge.api.routes_jobs import job_body
 from reelforge.api.schemas import (
+    JobOut,
     VoiceClearOut,
+    VoiceGenerateRequest,
     VoiceModelOut,
     VoiceModelPut,
     VoiceOut,
@@ -86,5 +89,21 @@ def build_router(ctx: AppContext) -> APIRouter:
         except service.VoiceError as exc:
             raise fail(exc) from None
         return JSONResponse(out, status_code=201)
+
+    @router.post(p + "/voices:generate", status_code=202, response_model=JobOut)
+    async def generate(project_id: str, body: VoiceGenerateRequest) -> JSONResponse:
+        try:
+            job = service.enqueue_generation(ctx, project_id, body.mode, body.lines)
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return JSONResponse(job_body(job), status_code=202)
+
+    @router.post(p + "/voices/presets/{preset_id}:preview", status_code=202, response_model=JobOut)
+    async def preview_preset(project_id: str, preset_id: str) -> JSONResponse:
+        try:
+            job = service.enqueue_preset_preview(ctx, project_id, preset_id)
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return JSONResponse(job_body(job), status_code=202)
 
     return router

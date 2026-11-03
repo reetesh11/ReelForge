@@ -36,9 +36,7 @@ def test_default_edit_resets_stage_to_draft(tmp_path):
 
 def test_keep_stage_keeps_stage_and_approval_and_records_changes(tmp_path):
     ctx, pid = _approved(tmp_path)
-    saved = service.save_version(
-        ctx, pid, ys.STORY.replace("Hello", "Namaste"), keep_stage=True
-    )
+    saved = service.save_version(ctx, pid, ys.STORY.replace("Hello", "Namaste"), keep_stage=True)
     assert _stage(ctx, pid) == "STORY_APPROVED"
     assert saved.approved_at is not None
     assert [(c.owner_id, c.kinds) for c in _changes(ctx, pid)] == [("s2", ["voice_take", "shot"])]

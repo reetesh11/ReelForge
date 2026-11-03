@@ -378,3 +378,8 @@ class VoicesOut(BaseModel):
     characters: list[VoiceCharacterOut]
     lines: list[dict[str, Any]]
     job: JobOut | None
+
+
+class VoiceGenerateRequest(BaseModel):
+    mode: Literal["missing", "stale", "lines"] = "missing"
+    lines: list[str] | None = None

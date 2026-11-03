@@ -1956,6 +1956,36 @@
         "title": "VoiceClearOut",
         "type": "object"
       },
+      "VoiceGenerateRequest": {
+        "properties": {
+          "lines": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lines"
+          },
+          "mode": {
+            "default": "missing",
+            "enum": [
+              "missing",
+              "stale",
+              "lines"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "VoiceGenerateRequest",
+        "type": "object"
+      },
       "VoiceModelChoice": {
         "properties": {
           "key": {
@@ -3949,6 +3979,109 @@
           }
         },
         "summary": "Upload Reference",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/presets/{preset_id}:preview": {
+      "post": {
+        "operationId": "preview_preset_api_v1_projects__project_id__voices_presets__preset_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "preset_id",
+            "required": true,
+            "schema": {
+              "title": "Preset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Preset",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices:generate": {
+      "post": {
+        "operationId": "generate_api_v1_projects__project_id__voices_generate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceGenerateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate",
         "tags": [
           "voice"
         ]
