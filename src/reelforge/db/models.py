@@ -1,4 +1,4 @@
-"""SQLAlchemy 2 declarative models (16 tables)."""
+"""SQLAlchemy 2 declarative models (17 tables)."""
 
 from __future__ import annotations
 
@@ -115,6 +115,10 @@ class Voice(Base):
     reference_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
     speed: Mapped[float] = mapped_column(Float, default=1.0)
     language: Mapped[str] = mapped_column(String(16), default="hi")
+    reference_text: Mapped[str] = mapped_column(Text, default="", server_default="")
+    reference_path: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reference_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    clip_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
 
 
 class Character(Base):
@@ -170,6 +174,26 @@ class CastSlot(Base):
     updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
 
 
+class VoiceSlot(Base):
+    """Per project and story character: the voice chosen for that character."""
+
+    __tablename__ = "voice_slots"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    story_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    mode: Mapped[str] = mapped_column(String(16), default="preset", server_default="preset")
+    model: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    voice_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reference_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
+    reference_text: Mapped[str] = mapped_column(Text, default="", server_default="")
+    speed: Mapped[float] = mapped_column(Float, default=1.0, server_default="1.0")
+    language: Mapped[str] = mapped_column(String(16), default="hi", server_default="hi")
+    clip_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
+
+
 class ProjectCharacter(Base):
     __tablename__ = "project_characters"
 
@@ -190,6 +214,7 @@ class Scene(Base):
     shot_type: Mapped[str] = mapped_column(String(32), default="")
     duration_s: Mapped[float] = mapped_column(Float, default=0.0)
     frames: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    shot_length_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     continue_from: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
@@ -206,6 +231,7 @@ class Line(Base):
     speed: Mapped[float] = mapped_column(Float, default=1.0)
     pause_before: Mapped[float] = mapped_column(Float, default=0.0)
     pause_after: Mapped[float] = mapped_column(Float, default=0.0)
+    approved_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
 
 
 class Artifact(Base):
