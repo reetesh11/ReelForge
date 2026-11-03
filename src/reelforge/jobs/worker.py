@@ -13,6 +13,7 @@ from reelforge.adapters.base import AdapterError, CancelToken, TransientError
 from reelforge.adapters.runner import CommandResult, current_log_path, current_observer
 from reelforge.artifacts.service import generate_artifact
 from reelforge.cast.generate import cast_generate
+from reelforge.cast.state import GENERATE_JOB
 from reelforge.db.models import Job, utcnow
 from reelforge.jobs.preflight import preflight
 from reelforge.story.structure import structure_story
@@ -159,12 +160,18 @@ class Worker:
                 should_stop=lambda: ctx.queue.get(job.id).status != "queued",
             )
             if not result.ok:
+                reason = result.reason
+                if job.type == GENERATE_JOB:
+                    reason = (
+                        f"Only {result.free_gb:.1f} GB free, job needs {result.need_gb:.1f} GB. "
+                        "Close other apps, or lower image_mem_gb in config.toml."
+                    )
                 ctx.queue.transition(
                     job.id,
                     "queued",
                     status="failed",
-                    error=result.reason,
-                    message=result.reason,
+                    error=reason,
+                    message=reason,
                     finished_at=utcnow(),
                 )
                 return
