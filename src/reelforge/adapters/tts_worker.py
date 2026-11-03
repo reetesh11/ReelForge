@@ -92,16 +92,35 @@ def _mock_loader(_model_id: str) -> Synth:
     return _mock_synth
 
 
+def _unshadow_mlx_audio() -> None:
+    """Keep this folder off the import path before importing the real `mlx_audio`.
+
+    Run as a script, Python puts this file's folder first on `sys.path`, where the
+    ReelForge adapter `mlx_audio.py` would hide the real mlx-audio package.
+    """
+    here = Path(__file__).resolve().parent
+    sys.path[:] = [p for p in sys.path if Path(p or ".").resolve() != here]
+    loaded = sys.modules.get("mlx_audio")
+    if (
+        loaded is not None
+        and Path(getattr(loaded, "__file__", None) or "").resolve().parent == here
+    ):
+        del sys.modules["mlx_audio"]
+
+
 def _real_loader(model_id: str) -> Synth:
     """Load an mlx-audio model lazily; the import happens only for the real backend."""
+    _unshadow_mlx_audio()
     utils: Any = importlib.import_module("mlx_audio.tts.utils")
     model: Any = utils.load_model(model_id)
     is_kokoro = "kokoro" in model_id.lower()
+    is_omnivoice = "omnivoice" in model_id.lower()
 
     def synth(line: dict[str, Any]) -> tuple[np.ndarray[Any, Any], int]:
         kwargs: dict[str, Any] = {"text": line["text"], "speed": float(line.get("speed") or 1.0)}
         if line.get("voice"):
-            kwargs["voice"] = line["voice"]
+            # OmniVoice takes a voice description as `instruct`; a `voice` argument is ignored.
+            kwargs["instruct" if is_omnivoice else "voice"] = line["voice"]
         lang = str(line.get("lang") or "hi")
         if is_kokoro:
             kwargs["lang_code"] = KOKORO_LANG.get(lang, lang)
@@ -153,6 +172,7 @@ def selftest(backend: str, model_id: str | None = None) -> None:
     """Render one Hindi word to a temporary WAV; raise on any failure."""
     with tempfile.TemporaryDirectory() as tmp:
         if backend != "mock" and not model_id:
+            _unshadow_mlx_audio()
             importlib.import_module("mlx_audio")
             return
         events: list[dict[str, Any]] = []
