@@ -1,4 +1,5 @@
 import { useHealth, type HealthReport } from "@/api/queries";
+import { useSetVoiceModel, useVoiceModel } from "@/api/voice";
 
 type Check = HealthReport["checks"][number];
 type Colour = "green" | "amber" | "red";
@@ -14,6 +15,29 @@ const DEPENDENCIES: Array<{ label: string; check: string }> = [
 export function colourOf(check: Check): Colour {
   if (check.status === "pass") return "green";
   return check.severity === "warning" ? "amber" : "red";
+}
+
+function VoiceModelSection() {
+  const model = useVoiceModel();
+  const change = useSetVoiceModel();
+  if (!model.data) return null;
+  const { voice_model: current, label, model_id: modelId, choices } = model.data;
+  return (
+    <div className="card">
+      <label className="field">
+        Voice model
+        <select value={current} onChange={(e) => change.mutate(e.target.value)}>
+          {choices.map((c) => (
+            <option key={c.key} value={c.key}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className="meta">{`Voice model: ${label} (${modelId})`}</p>
+      {change.isError ? <p role="alert">{change.error.message}</p> : null}
+    </div>
+  );
 }
 
 export function SettingsPage() {
@@ -59,6 +83,7 @@ export function SettingsPage() {
           ) : null}
         </ul>
       )}
+      <VoiceModelSection />
     </section>
   );
 }
