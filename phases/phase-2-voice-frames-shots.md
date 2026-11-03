@@ -6,9 +6,9 @@ Scope is Tech Spec milestones **M4 Voice** and **M5 Frames and shots**. CI uses 
 
 ## Prerequisites (human)
 - Phase 1 merged.
-- Spike S2 (LTX a2v with image + 3 s Hindi line at 320×576: flags, peak memory, time, lip-sync quality) done.
-- Spike S3 (Hindi TTS bake-off: Voxtral, Kokoro, Qwen3-TTS, cloned) done; default voice models and licenses recorded in `models.toml`.
-- Spike S4 (Draw Things open + LTX render on 24 GB) done; decide whether auto-quit of Draw Things is on.
+- Spike S2 (LTX a2v with image + 3 s Hindi line at 320×576) done, finding in the Technical Spec: `a2v --image … --audio … --distilled --low-ram` works, 48 s, 15.6 GB peak, lip sync good on a cartoon character. Human-like characters are unverified.
+- Spike S3 (Hindi TTS bake-off) done, finding in the Technical Spec: default voice model OmniVoice, fallback Kokoro; Voxtral is non-commercial and Qwen3-TTS has no Hindi. Cloning is still untested. `models.toml` must be updated by M4 (OmniVoice default entry, Kokoro fallback entry).
+- Spike S4 (Draw Things open + LTX render on 24 GB) done: no swaps with Draw Things open, so auto-quit stays off by default.
 
 ## Requirements
 - R1 (M4). `tts_worker.py` batch worker for mlx-audio (JSONL in, WAV 24 kHz mono plus duration and JSON progress out); adapter with preset and cloned voices; ffmpeg post-process (trim silence, −16 LUFS, 48 kHz).
@@ -38,4 +38,4 @@ Scope is Tech Spec milestones **M4 Voice** and **M5 Frames and shots**. CI uses 
 - Assembly, captions, export (Phase 3).
 
 ## Open questions
-- If S2 shows weak lip sync on cartoon faces, do talking shots switch to i2v plus a separate lip-sync pass? That changes R5 and needs a decision before this phase starts.
+- Resolved by S2: lip sync on the cartoon character is good, so talking shots stay `a2v` with the key frame as `--image`; no separate lip-sync pass. Still open: human-like characters are untested (fallback: the experimental `lipdub` command).
