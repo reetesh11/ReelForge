@@ -190,6 +190,31 @@
         "title": "Body_upload_api_v1_projects__project_id__cast__key__upload_post",
         "type": "object"
       },
+      "Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "reference_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Text"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post",
+        "type": "object"
+      },
       "CastActionOut": {
         "properties": {
           "approved_count": {
@@ -1870,6 +1895,381 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "VoiceCharacterOut": {
+        "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "voice": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "voice"
+        ],
+        "title": "VoiceCharacterOut",
+        "type": "object"
+      },
+      "VoiceClearOut": {
+        "properties": {
+          "voice": {
+            "title": "Voice",
+            "type": "null"
+          }
+        },
+        "title": "VoiceClearOut",
+        "type": "object"
+      },
+      "VoiceModelChoice": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ],
+        "title": "VoiceModelChoice",
+        "type": "object"
+      },
+      "VoiceModelInUse": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "model_id"
+        ],
+        "title": "VoiceModelInUse",
+        "type": "object"
+      },
+      "VoiceModelOut": {
+        "properties": {
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceModelChoice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "model_id": {
+            "title": "Model Id",
+            "type": "string"
+          },
+          "voice_model": {
+            "enum": [
+              "omnivoice",
+              "kokoro"
+            ],
+            "title": "Voice Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "voice_model",
+          "label",
+          "model_id",
+          "choices"
+        ],
+        "title": "VoiceModelOut",
+        "type": "object"
+      },
+      "VoiceModelPut": {
+        "properties": {
+          "voice_model": {
+            "title": "Voice Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "voice_model"
+        ],
+        "title": "VoiceModelPut",
+        "type": "object"
+      },
+      "VoiceOut": {
+        "properties": {
+          "clip_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Seconds"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "preset",
+              "cloned",
+              "recorded"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "enum": [
+                  "omnivoice",
+                  "kokoro"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "model_mismatch": {
+            "title": "Model Mismatch",
+            "type": "boolean"
+          },
+          "reference_text": {
+            "title": "Reference Text",
+            "type": "string"
+          },
+          "reference_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Url"
+          },
+          "speed": {
+            "title": "Speed",
+            "type": "number"
+          },
+          "voice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Id"
+          }
+        },
+        "required": [
+          "mode",
+          "model",
+          "voice_id",
+          "reference_text",
+          "speed",
+          "language",
+          "model_mismatch"
+        ],
+        "title": "VoiceOut",
+        "type": "object"
+      },
+      "VoicePresetOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "VoicePresetOut",
+        "type": "object"
+      },
+      "VoiceSetRequest": {
+        "properties": {
+          "mode": {
+            "enum": [
+              "preset",
+              "cloned",
+              "recorded"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "reference_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Text"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          },
+          "voice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Id"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "VoiceSetRequest",
+        "type": "object"
+      },
+      "VoicesOut": {
+        "description": "Documentation model: responses are plain dicts with empty keys omitted.",
+        "properties": {
+          "approved_count": {
+            "title": "Approved Count",
+            "type": "integer"
+          },
+          "characters": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceCharacterOut"
+            },
+            "title": "Characters",
+            "type": "array"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lines": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/VoicePresetOut"
+            },
+            "title": "Presets",
+            "type": "array"
+          },
+          "stage": {
+            "enum": [
+              "DRAFT",
+              "STORY_APPROVED",
+              "CAST_APPROVED",
+              "VOICES_APPROVED",
+              "FRAMES_APPROVED",
+              "SHOTS_APPROVED",
+              "ASSEMBLED",
+              "EXPORTED"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "stale_count": {
+            "title": "Stale Count",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "voice_model": {
+            "$ref": "#/components/schemas/VoiceModelInUse"
+          }
+        },
+        "required": [
+          "stage",
+          "voice_model",
+          "presets",
+          "approved_count",
+          "total",
+          "stale_count",
+          "characters",
+          "lines",
+          "job"
+        ],
+        "title": "VoicesOut",
+        "type": "object"
       }
     }
   },
@@ -3289,6 +3689,221 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/voices": {
+      "get": {
+        "operationId": "get_voices_api_v1_projects__project_id__voices_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoicesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Voices",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/characters/{key}:clear": {
+      "post": {
+        "operationId": "clear_voice_api_v1_projects__project_id__voices_characters__key__clear_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceClearOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Voice",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/characters/{key}:set": {
+      "post": {
+        "operationId": "set_voice_api_v1_projects__project_id__voices_characters__key__set_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Voice",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/characters/{key}:upload-reference": {
+      "post": {
+        "operationId": "upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Reference",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
     "/api/v1/story/schema": {
       "get": {
         "operationId": "story_schema_api_v1_story_schema_get",
@@ -3309,6 +3924,66 @@
         "summary": "Story Schema",
         "tags": [
           "story"
+        ]
+      }
+    },
+    "/api/v1/voice-model": {
+      "get": {
+        "operationId": "get_voice_model_api_v1_voice_model_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceModelOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Voice Model",
+        "tags": [
+          "voice"
+        ]
+      },
+      "put": {
+        "operationId": "put_voice_model_api_v1_voice_model_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceModelPut"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceModelOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Voice Model",
+        "tags": [
+          "voice"
         ]
       }
     },

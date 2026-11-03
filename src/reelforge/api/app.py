@@ -18,6 +18,7 @@ from reelforge.api import (
     routes_media,
     routes_projects,
     routes_story,
+    routes_voice,
     ws,
 )
 from reelforge.api.schemas import CheckOut, HealthOut
@@ -79,6 +80,7 @@ def create_app(ctx: AppContext, *, start_worker: bool = True) -> FastAPI:
     app.include_router(routes_story.build_router(ctx))
     app.include_router(routes_jobs.build_router(ctx))
     app.include_router(routes_cast.build_router(ctx))
+    app.include_router(routes_voice.build_router(ctx))
     app.include_router(routes_library.build_router(ctx))
     app.include_router(routes_media.build_router(ctx))
     app.include_router(ws.build_router(ctx))

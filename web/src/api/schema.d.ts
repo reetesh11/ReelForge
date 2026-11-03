@@ -435,6 +435,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/voices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Voices */
+        get: operations["get_voices_api_v1_projects__project_id__voices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/voices/characters/{key}:clear": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clear Voice */
+        post: operations["clear_voice_api_v1_projects__project_id__voices_characters__key__clear_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/voices/characters/{key}:set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Voice */
+        post: operations["set_voice_api_v1_projects__project_id__voices_characters__key__set_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/voices/characters/{key}:upload-reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Reference */
+        post: operations["upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/story/schema": {
         parameters: {
             query?: never;
@@ -445,6 +513,24 @@ export interface paths {
         /** Story Schema */
         get: operations["story_schema_api_v1_story_schema_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/voice-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Voice Model */
+        get: operations["get_voice_model_api_v1_voice_model_get"];
+        /** Put Voice Model */
+        put: operations["put_voice_model_api_v1_voice_model_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -561,6 +647,13 @@ export interface components {
         Body_upload_api_v1_projects__project_id__cast__key__upload_post: {
             /** File */
             file: string;
+        };
+        /** Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post */
+        Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post: {
+            /** File */
+            file: string;
+            /** Reference Text */
+            reference_text?: string | null;
         };
         /** CastActionOut */
         CastActionOut: {
@@ -1101,6 +1194,128 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VoiceCharacterOut */
+        VoiceCharacterOut: {
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            voice: components["schemas"]["VoiceOut"] | null;
+        };
+        /** VoiceClearOut */
+        VoiceClearOut: {
+            /** Voice */
+            voice?: null;
+        };
+        /** VoiceModelChoice */
+        VoiceModelChoice: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** VoiceModelInUse */
+        VoiceModelInUse: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Model Id */
+            model_id: string;
+        };
+        /** VoiceModelOut */
+        VoiceModelOut: {
+            /** Choices */
+            choices: components["schemas"]["VoiceModelChoice"][];
+            /** Label */
+            label: string;
+            /** Model Id */
+            model_id: string;
+            /**
+             * Voice Model
+             * @enum {string}
+             */
+            voice_model: "omnivoice" | "kokoro";
+        };
+        /** VoiceModelPut */
+        VoiceModelPut: {
+            /** Voice Model */
+            voice_model: string;
+        };
+        /** VoiceOut */
+        VoiceOut: {
+            /** Clip Seconds */
+            clip_seconds?: number | null;
+            /** Language */
+            language: string;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "preset" | "cloned" | "recorded";
+            /** Model */
+            model: ("omnivoice" | "kokoro") | null;
+            /** Model Mismatch */
+            model_mismatch: boolean;
+            /** Reference Text */
+            reference_text: string;
+            /** Reference Url */
+            reference_url?: string | null;
+            /** Speed */
+            speed: number;
+            /** Voice Id */
+            voice_id: string | null;
+        };
+        /** VoicePresetOut */
+        VoicePresetOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+        };
+        /** VoiceSetRequest */
+        VoiceSetRequest: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "preset" | "cloned" | "recorded";
+            /** Reference Text */
+            reference_text?: string | null;
+            /** Speed */
+            speed?: number | null;
+            /** Voice Id */
+            voice_id?: string | null;
+        };
+        /**
+         * VoicesOut
+         * @description Documentation model: responses are plain dicts with empty keys omitted.
+         */
+        VoicesOut: {
+            /** Approved Count */
+            approved_count: number;
+            /** Characters */
+            characters: components["schemas"]["VoiceCharacterOut"][];
+            job: components["schemas"]["JobOut"] | null;
+            /** Lines */
+            lines: {
+                [key: string]: unknown;
+            }[];
+            /** Presets */
+            presets: components["schemas"]["VoicePresetOut"][];
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            /** Stale Count */
+            stale_count: number;
+            /** Total */
+            total: number;
+            voice_model: components["schemas"]["VoiceModelInUse"];
         };
     };
     responses: never;
@@ -2089,6 +2304,141 @@ export interface operations {
             };
         };
     };
+    get_voices_api_v1_projects__project_id__voices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoicesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_voice_api_v1_projects__project_id__voices_characters__key__clear_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceClearOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_voice_api_v1_projects__project_id__voices_characters__key__set_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSetRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     story_schema_api_v1_story_schema_get: {
         parameters: {
             query?: never;
@@ -2107,6 +2457,59 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    get_voice_model_api_v1_voice_model_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceModelOut"];
+                };
+            };
+        };
+    };
+    put_voice_model_api_v1_voice_model_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceModelPut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceModelOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
