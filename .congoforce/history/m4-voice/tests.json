@@ -1,0 +1,34 @@
+{
+  "acceptance": [
+    {"criterion": "AC-1", "file": "tests/acceptance/test_m4_takes.py", "tests": 4, "expect_red": true,
+     "description": "gen_voice_take job; retake becomes active take and the scene shot length uses the active take"},
+    {"criterion": "AC-2", "file": "tests/acceptance/test_m4_takes.py", "tests": 3, "expect_red": true,
+     "description": "text edit stales only that line's take and its scene shot length; no job created; regenerate-stale; character voice change stales only their lines"},
+    {"criterion": "AC-3", "file": "tests/acceptance/test_m4_frames.py", "tests": 8, "expect_red": true,
+     "description": "frames_for known values (73, 81) and 8k+1 property, ValueError, plan_speed"},
+    {"criterion": "AC-4", "file": "tests/acceptance/test_m4_worker.py", "tests": 8, "expect_red": true,
+     "description": "tts_worker: 3 WAVs and 3 progress lines, per-line error, model loaded once, mock determinism, selftest"},
+    {"criterion": "AC-5", "file": "tests/acceptance/test_m4_adapter.py", "tests": 10, "expect_red": true,
+     "description": "ffmpeg postprocess (48 kHz, -16 LUFS, trim, atempo), one subprocess per batch, crash/cancel, presets"},
+    {"criterion": "AC-6", "file": "tests/acceptance/test_m4_adapter.py", "tests": 4, "expect_red": true,
+     "description": "doctor mlx-audio voice engine: pass when selftest passes, blocking failure when selftest fails or env missing; adapter selftest report"},
+    {"criterion": "AC-7", "file": "tests/acceptance/test_m4_settings.py", "tests": 10, "expect_red": true,
+     "description": "models.toml OmniVoice/Kokoro, voice_model setting, /voice-model endpoint, batch model id, manual-checks doc"},
+    {"criterion": "AC-8", "file": "tests/acceptance/test_m4_voices.py", "tests": 10, "expect_red": true,
+     "description": "character voices, content-checked clone uploads, generated names, library persistence and reuse"},
+    {"criterion": "AC-9", "file": "tests/acceptance/test_m4_takes.py", "tests": 4, "expect_red": true,
+     "description": "speed 0.8-1.25 and pauses 0-1 s: 422 outside, accepted at boundaries, scene duration includes both pauses; check_speed/check_pause in test_m4_frames.py"},
+    {"criterion": "AC-10", "file": "tests/acceptance/test_m4_takes.py", "tests": 2, "expect_red": true,
+     "description": "memory shortfall fails naming voice_mem_gb; enough memory runs with Ollama unloaded first; voice_mem_gb precedence and rejects in test_m4_settings.py"},
+    {"criterion": "AC-11", "file": "tests/acceptance/test_m4_takes.py", "tests": 3, "expect_red": true,
+     "description": "VOICES_APPROVED only when every line approved; editing an approved line reopens only that line"},
+    {"criterion": "AC-12", "file": "tests/acceptance/test_m4_worker.py", "tests": 3, "expect_red": true,
+     "description": "mock backend CLI batch, determinism and selftest run with outbound network blocked by the acceptance conftest; takes job tests also run on mock"},
+    {"criterion": "AC-14", "file": "tests/acceptance/test_m4_unchanged.py", "tests": 5, "expect_red": false,
+     "description": "M1 mlx-audio check details, doctor registry, GET /jobs keys, library without voice, other models.toml entries"}
+  ],
+  "untestable": [
+    {"criterion": "AC-13", "reason": "manual listening on the reference Mac; recorded in docs/manual-checks.md (presence of the section is checked in test_m4_settings)"},
+    {"criterion": "R10 UI", "reason": "VoiceBoard, cast-row Voice section and Settings page UI are not in the pytest acceptance set; the verifier checks them against the interface contract and runs the web unit tests"}
+  ]
+}

@@ -1,0 +1,25 @@
+flowchart LR
+  ui[web/src/voice VoiceBoard]:::new -->|/api/v1/projects/id/voices| routes[api/routes_voice.py]:::new
+  settingsui[SettingsPage.tsx]:::changed -->|/api/v1/voice-model| routes
+  castui[CastRow.tsx + LibraryDetail.tsx]:::changed --> routes
+  routes --> vsvc[voice/service.py]:::new
+  routes --> uploads[voice/uploads.py]:::new
+  routes --> frames[voice/frames.py]:::new
+  routes --> storysvc[story/service.py]:::changed
+  vsvc --> staleness[story/staleness.py]
+  vsvc --> db[(voice_slots, voice_takes via artifacts, lines, scenes)]:::changed
+  vsvc --> lib[library/service.py]:::changed
+  vsvc --> castsvc[cast/service.py]:::changed
+  routes -->|enqueue gen_voice_take heavy| queue[jobs/queue.py]
+  queue --> worker[jobs/worker.py]:::changed
+  worker -->|HANDLERS| gen[voice/generate.py]:::new
+  worker --> preflight[jobs/preflight.py + lease.py]
+  gen --> adapter[adapters/mlx_audio.py]:::changed
+  adapter --> runner[adapters/runner.py]:::changed
+  runner -->|argv, stdout JSON lines| ttsw[adapters/tts_worker.py]:::new
+  adapter -->|ffmpeg argv| ffmpeg[(ffmpeg)]
+  gen --> store[artifacts/store.py]
+  doctor[doctor.py mlx_audio check]:::changed --> adapter
+  cfg[config.py + models.toml]:::changed --> adapter
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706
