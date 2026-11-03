@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from reelforge.adapters.drawthings import DrawThingsAdapter
 from reelforge.adapters.ltx import LtxAdapter
-from reelforge.adapters.mlx_audio import MlxAudioAdapter
+from reelforge.adapters.mlx_audio import VOICE_MODELS, MlxAudioAdapter
 from reelforge.adapters.ollama import OllamaAdapter
 from reelforge.config import Settings
 from reelforge.models_registry import load_models
@@ -154,16 +154,29 @@ def check_ltx(settings: Settings) -> CheckResult:
     )
 
 
+def _voice_model_id(settings: Settings) -> str | None:
+    try:
+        registry = load_models(settings.models_path)
+        key = VOICE_MODELS[settings.voice_model]
+        return registry.get(key).id if key in registry.keys() else None
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def check_mlx_audio(settings: Settings) -> CheckResult:
-    rep = MlxAudioAdapter(settings.mlx_audio_path).check()
-    return _result(
-        "mlx_audio",
-        rep.ok,
-        "blocking",
-        rep.detail,
-        "Install mlx-audio and set [tools.mlx_audio] project_path in config.toml "
-        "(or REELFORGE_MLX_AUDIO_PATH).",
+    fix = (
+        "Install mlx-audio in an arm64 uv environment (uv python install "
+        "cpython-3.12-macos-aarch64-none, then uv sync in the mlx-audio project) and set "
+        "[tools.mlx_audio] project_path in config.toml (or REELFORGE_MLX_AUDIO_PATH)."
     )
+    adapter = MlxAudioAdapter(settings.mlx_audio_path)
+    rep = adapter.check()
+    if not rep.ok:
+        return _result("mlx_audio", False, "blocking", rep.detail, fix)
+    test = adapter.selftest(model_id=_voice_model_id(settings))
+    if not test.ok:
+        return _result("mlx_audio", False, "blocking", test.detail, fix)
+    return _result("mlx_audio", True, "blocking", "mlx-audio ready (selftest passed)")
 
 
 def check_draw_things(settings: Settings) -> CheckResult:
