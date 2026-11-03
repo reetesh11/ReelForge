@@ -1,0 +1,36 @@
+# CongoForce repo config. Commit this file.
+# Precedence: plugin userConfig < this file < per-run flags (--set key=value).
+
+[congoforce]
+max_iterations = 5            # implement/verify loop cap
+confirm_before_push = true    # show the PR body and wait for a yes
+base_branch = ""              # "" = remote default branch, fetched fresh; e.g. "origin/main"
+branch_prefix = "congoforce/"
+run_mode = "foreground"       # or "background": post-Gate 2 agents run in the background
+command_timeout = 600         # seconds, per command the helper runs
+post_pr = []                  # e.g. ["/seo-review {pr}", "echo opened {pr_url}"]
+retro = true                  # propose standards.md edits after each run
+repo_map_backend = "builtin"  # or an executable that takes --repo <path>
+e2e = false
+push = true                   # false = dry run: stop before pushing
+create_pr = true              # false = push the branch but open no PR
+worktree_dir = ""             # "" = .congoforce/worktrees; any path relative to the repo root
+history_dir = ".congoforce/history"  # where specs and reports are committed on the task branch
+protected_branches = ["main", "master", "develop", "release"]  # never pushed to directly
+red_check_attempts = 2        # test-author retries before the red check escalates
+agent_retries = 2             # re-runs of an agent whose output the helper rejects
+architecture_diagram = "large"  # when tech.md must hold a Mermaid diagram: off | large | medium | always
+diagram_render = "auto"       # auto (mmdc if on PATH) | off | a command with {in} and {out}
+
+# Agent models: opus | sonnet | haiku | fable | inherit (the session model).
+# A role setting beats its tier; a tier beats `default`. --set models.<name>=<model> per run.
+[models]
+# default = "sonnet"
+# spec = "opus"               # requirements, product-spec, tech-spec, test-author
+# build = "sonnet"            # implementer, verifier
+# verifier = "opus"           # a role overrides its tier
+
+# Which roles each tier covers. Redefine a tier or add your own.
+# [model_tiers]
+# spec = ["requirements", "product-spec", "tech-spec", "test-author"]
+# build = ["implementer", "verifier"]
