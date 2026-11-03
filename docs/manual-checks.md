@@ -8,6 +8,13 @@ and the date next to each item. Automated tests run on the mock backend only.
 Setup: Draw Things is installed, its HTTP API server is on, port 7860, and the pinned image
 model from `models.toml` is loaded. Run `reelforge up --backend real`.
 
+Image memory: an image job waits until `image_mem_gb` GB are free (default 6.0). Set it with
+`image_mem_gb = 6.0` under `[limits]` in config.toml, the `REELFORGE_IMAGE_MEM_GB` environment
+variable, or `--image-mem-gb` on `reelforge up` / `reelforge doctor`. If memory stays short the job
+fails with "Only X GB free, job needs Y GB. Close other apps, or lower image_mem_gb in
+config.toml."; close other apps or lower the value, then click Retry. Restart `reelforge up`
+after changing it.
+
 | # | Step | Expect | Result |
 | --- | --- | --- | --- |
 | 1 | `reelforge doctor` | The `draw_things` check passes and names no missing model. | |
@@ -23,5 +30,6 @@ model from `models.toml` is loaded. Run `reelforge up --backend real`.
 | 11 | Approve one image per character | The licence warning is expected and an "Approve anyway" confirmation dialog appears; confirming it works. The stage becomes `CAST_APPROVED`. | |
 | 12 | Open Library | Both characters are listed with their master images. | |
 | 13 | New project, "Use from library" | The master image is copied without any generation. | |
+| 14 | With about 8 GB available, generate candidates; then restart with `REELFORGE_IMAGE_MEM_GB=20` and generate again | First run renders 4 images. Second run fails with "Only X GB free, job needs 20.0 GB. Close other apps, or lower image_mem_gb in config.toml."; Retry is offered. | |
 
 Reviewer: ________  Date: ________

@@ -50,6 +50,7 @@ class Settings(BaseModel):
     image_fallback: Literal["none", "mflux"] = "none"
     mflux_command: Path | None = None
     max_upload_mb: int = Field(default=10, ge=1)
+    image_mem_gb: float = Field(default=6.0, gt=0, allow_inf_nan=False)
 
     @field_validator("host")
     @classmethod
@@ -90,6 +91,7 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "image_fallback": "image_fallback",
         "max_upload_mb": "max_upload_mb",
     },
+    "limits": {"image_mem_gb": "image_mem_gb"},
 }
 _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {
     ("services", "ollama"): {"url": "ollama_url"},

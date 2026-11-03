@@ -23,7 +23,6 @@ from reelforge.cast.licence import licence_warning
 from reelforge.cast.uploads import NotAnImage, TooLarge, sniff_image
 from reelforge.context import AppContext
 
-GENERATE_MEM_GB = 10.0
 NOT_AN_IMAGE = "That file isn't a PNG or JPEG image."
 
 
@@ -104,7 +103,7 @@ def build_router(ctx: AppContext) -> APIRouter:
                 "total": 1 if body.refine is not None else state.CANDIDATES_PER_RUN,
             },
             heavy=True,
-            mem_need_gb=GENERATE_MEM_GB,
+            mem_need_gb=ctx.settings.image_mem_gb,
         )
         return JSONResponse(job_body(job), status_code=202)
 

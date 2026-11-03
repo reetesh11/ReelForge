@@ -15,6 +15,10 @@ from reelforge.startup import format_report, run_up
 app = typer.Typer(name="reelforge", help="ReelForge command line.", no_args_is_help=True)
 
 Host = Annotated[str | None, typer.Option("--host", help="Bind host (loopback only).")]
+ImageMemGb = Annotated[
+    float | None,
+    typer.Option("--image-mem-gb", help="Memory (GB) an image job needs free before it starts."),
+]
 ApiPort = Annotated[int | None, typer.Option("--api-port", help="API port.")]
 UiPort = Annotated[int | None, typer.Option("--ui-port", help="UI dev server port.")]
 DataRoot = Annotated[Path | None, typer.Option("--data-root", help="Data root folder.")]
@@ -59,6 +63,7 @@ def doctor(
     models_path: ModelsPath = None,
     ollama_url: OllamaUrl = None,
     drawthings_url: DrawThingsUrl = None,
+    image_mem_gb: ImageMemGb = None,
     config: ConfigFile = None,
 ) -> None:
     """Check that this machine can run ReelForge."""
@@ -71,6 +76,7 @@ def doctor(
         models_path=models_path,
         ollama_url=ollama_url,
         drawthings_url=drawthings_url,
+        image_mem_gb=image_mem_gb,
         config=config,
     )
     report = run_doctor(settings)
@@ -92,6 +98,7 @@ def up(
     models_path: ModelsPath = None,
     ollama_url: OllamaUrl = None,
     drawthings_url: DrawThingsUrl = None,
+    image_mem_gb: ImageMemGb = None,
     config: ConfigFile = None,
 ) -> None:
     """Run doctor, migrate, recover interrupted jobs, then serve the API and worker."""
@@ -104,6 +111,7 @@ def up(
         models_path=models_path,
         ollama_url=ollama_url,
         drawthings_url=drawthings_url,
+        image_mem_gb=image_mem_gb,
         config=config,
     )
     raise typer.Exit(run_up(settings, allow_degraded=allow_degraded))

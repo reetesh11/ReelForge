@@ -1,0 +1,56 @@
+{
+  "acceptance": [
+    {
+      "criterion": "AC-1",
+      "file": "tests/acceptance/test_m3c_image_mem.py",
+      "tests": 9,
+      "expect_red": true,
+      "description": "default, toml, env, CLI (up/doctor), precedence, [limits] accepted, help text"
+    },
+    {
+      "criterion": "AC-2",
+      "file": "tests/acceptance/test_m3c_image_mem.py",
+      "tests": 20,
+      "expect_red": true,
+      "description": "0, -1, abc (and empty env) rejected via toml/env/CLI mapping/Settings/CLI exit 2; 0.5 accepted"
+    },
+    {
+      "criterion": "AC-3",
+      "file": "tests/acceptance/test_m3c_image_mem.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "mem_need_gb equals image_mem_gb for generate, regenerate, refine"
+    },
+    {
+      "criterion": "AC-4",
+      "file": "tests/acceptance/test_m3c_image_mem.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "cast failure message with hint, success when enough memory, non-cast wording pinned"
+    },
+    {
+      "criterion": "AC-5",
+      "file": "tests/acceptance/test_m3c_image_mem.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "GENERATE_MEM_GB removed from src; manual-checks M3 documents the setting (R5)"
+    },
+    {
+      "criterion": "AC-4",
+      "file": "tests/acceptance/test_m3c_unchanged.py",
+      "tests": 1,
+      "expect_red": false,
+      "description": "non-cast pre-flight wording has no setting hint"
+    }
+  ],
+  "untestable": [
+    {
+      "criterion": "AC-6",
+      "reason": "toolchain and full-suite gate; run by the verifier"
+    },
+    {
+      "criterion": "AC-7",
+      "reason": "manual check on the reference Mac with Draw Things"
+    }
+  ]
+}
