@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+import io
+import json
+import math
+import wave
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import func, select
 
-from reelforge.adapters.mlx_audio import PRESETS, check_speed
+from reelforge.adapters.base import AdapterError
+from reelforge.adapters.mlx_audio import (
+    PRESETS,
+    SPEED_MAX,
+    SPEED_MIN,
+    check_pause,
+    check_speed,
+    postprocess_wav,
+)
 from reelforge.artifacts.store import ArtifactSpec
 from reelforge.cast import service as cast_service
 from reelforge.cast import state as cast_state
@@ -763,3 +775,291 @@ def enqueue_preset_preview(ctx: AppContext, project_id: str, preset_id: str) -> 
         heavy=True,
         mem_need_gb=ctx.settings.voice_mem_gb,
     )
+
+
+# ---- line actions --------------------------------------------------------------------------
+
+VOICE_PROMPTS = Path(__file__).resolve().parent / "prompts"
+SHORTEN_PROMPT = "shorten.v1.md"
+LLM_DOWN = "The language model isn't available. Edit the text yourself."
+TOO_LONG = "Even at 1.25x this is too long."
+
+
+def _require_line(ctx: AppContext, project_id: str, scene_id: str) -> LineInput:
+    require(ctx, project_id)
+    inputs = line_inputs(ctx, project_id)
+    if scene_id not in inputs:
+        raise VoiceError(404, "line not found")
+    return inputs[scene_id]
+
+
+def line_response(ctx: AppContext, project_id: str, scene_id: str, **extra: Any) -> dict[str, Any]:
+    lines = build_lines(ctx, project_id)
+    approved, total, _ = counts(lines)
+    line = next(ln for ln in lines if ln["scene_id"] == scene_id)
+    return {
+        "project_stage": project_stage(ctx, project_id),
+        "approved_count": approved,
+        "total": total,
+        "line": line,
+        **extra,
+    }
+
+
+def _active_take(ctx: AppContext, project_id: str, scene_id: str) -> Artifact | None:
+    return next((t for t in takes_by_scene(ctx, project_id).get(scene_id, []) if t.is_active), None)
+
+
+def select_take(ctx: AppContext, project_id: str, scene_id: str, take_id: str) -> dict[str, Any]:
+    _require_line(ctx, project_id, scene_id)
+    takes = takes_by_scene(ctx, project_id).get(scene_id, [])
+    if take_id not in {t.id for t in takes}:
+        raise VoiceError(404, "take not found")
+    with ctx.session_factory.begin() as s:
+        for t in takes:
+            row = s.get(Artifact, t.id)
+            if row is not None:
+                row.is_active = t.id == take_id
+    clear_approval(ctx, project_id, scene_id)
+    recompute_stage(ctx, project_id)
+    return line_response(ctx, project_id, scene_id)
+
+
+def approve_line(ctx: AppContext, project_id: str, scene_id: str) -> dict[str, Any]:
+    from reelforge.voice.frames import frames_for  # noqa: PLC0415
+
+    li = _require_line(ctx, project_id, scene_id)
+    active = _active_take(ctx, project_id, scene_id)
+    if active is None or active.duration_s is None:
+        raise VoiceError(409, "This line has no take yet.")
+    current = next(ln for ln in build_lines(ctx, project_id) if ln["scene_id"] == scene_id)
+    if current["state"] == "stale":
+        raise VoiceError(409, "This take is out of date. Make a new take first.")
+    length = active.duration_s + li.pause_before + li.pause_after
+    with ctx.session_factory.begin() as s:
+        scene = s.scalars(
+            select(Scene).where(Scene.project_id == project_id, Scene.story_key == scene_id)
+        ).one()
+        line = s.scalars(select(Line).where(Line.scene_id == scene.id)).one()
+        if line.approved_artifact_id != active.id:
+            line.approved_artifact_id = active.id
+        scene.duration_s = length
+        scene.frames = frames_for(length)
+        scene.shot_length_at = utcnow()
+    recompute_stage(ctx, project_id)
+    return line_response(ctx, project_id, scene_id)
+
+
+def _edit_scene(
+    ctx: AppContext, project_id: str, scene_id: str, field: str, value: Any, *, record: bool
+) -> None:
+    from reelforge.story.yamlio import (  # noqa: PLC0415
+        dump_story_text,
+        load_story_text,
+        story_to_yaml,
+    )
+
+    current = story_service.current_version(ctx, project_id)
+    if current is None:
+        raise VoiceError(409, "There is no story yet.")
+    doc: Any = load_story_text(current.yaml_text)
+    if doc.fa.flow_style() is True:  # a JSON-style document: write clean block YAML
+        story = parse_story(current.yaml_text)
+        scenes = [
+            sc.model_copy(update={field: value}) if sc.id == scene_id else sc for sc in story.scenes
+        ]
+        text = story_to_yaml(story.model_copy(update={"scenes": scenes}))
+    else:
+        for sc in doc["scenes"]:
+            if sc["id"] == scene_id:
+                sc[field] = value
+        text = dump_story_text(doc)
+    story_service.save_version(ctx, project_id, text, keep_stage=True, record_changes=record)
+
+
+def edit_text(ctx: AppContext, project_id: str, scene_id: str, text: str) -> dict[str, Any]:
+    _require_line(ctx, project_id, scene_id)
+    text = text.strip()
+    if not text:
+        raise VoiceError(422, "The line can't be empty.")
+    _edit_scene(ctx, project_id, scene_id, "line", text, record=True)
+    ensure_rows(ctx, project_id)
+    clear_approval(ctx, project_id, scene_id)
+    recompute_stage(ctx, project_id)
+    return line_response(ctx, project_id, scene_id)
+
+
+def _apply_timing(
+    ctx: AppContext, project_id: str, scene_id: str, values: dict[str, float]
+) -> None:
+    changed = False
+    with ctx.session_factory.begin() as s:
+        scene = s.scalars(
+            select(Scene).where(Scene.project_id == project_id, Scene.story_key == scene_id)
+        ).one()
+        line = s.scalars(select(Line).where(Line.scene_id == scene.id)).one()
+        for name, value in values.items():
+            if getattr(line, name) != value:
+                setattr(line, name, value)
+                changed = True
+        if changed:
+            line.approved_artifact_id = None
+    if changed:
+        recompute_stage(ctx, project_id)
+
+
+def set_timing(
+    ctx: AppContext,
+    project_id: str,
+    scene_id: str,
+    *,
+    speed: float | None,
+    pause_before: float | None,
+    pause_after: float | None,
+) -> dict[str, Any]:
+    _require_line(ctx, project_id, scene_id)
+    values: dict[str, float] = {}
+    try:
+        if speed is not None:
+            values["speed"] = check_speed(speed)
+        if pause_before is not None:
+            values["pause_before"] = check_pause("pause_before", pause_before)
+        if pause_after is not None:
+            values["pause_after"] = check_pause("pause_after", pause_after)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    _apply_timing(ctx, project_id, scene_id, values)
+    return line_response(ctx, project_id, scene_id)
+
+
+def speed_up(ctx: AppContext, project_id: str, scene_id: str) -> dict[str, Any]:
+    li = _require_line(ctx, project_id, scene_id)
+    active = _active_take(ctx, project_id, scene_id)
+    if active is None or active.duration_s is None:
+        raise VoiceError(409, "This line has no take yet.")
+    if li.budget_s is None:
+        raise VoiceError(409, "This scene has no length to fit.")
+    params: dict[str, Any] = active.params or {}
+    used = float(params.get("speed") or 1.0)
+    voice_speed = li.slot.speed if li.slot is not None else 1.0
+    pauses = li.pause_before + li.pause_after
+    base = active.duration_s * used
+    chosen: float | None = None
+    for i in range(10):
+        candidate = round(SPEED_MIN + 0.05 * i, 2)
+        effective = min(SPEED_MAX, max(SPEED_MIN, voice_speed * candidate))
+        if base / effective + pauses <= li.budget_s + 1e-6:
+            chosen = candidate
+            break
+    extra: dict[str, Any] = {}
+    if chosen is None:
+        chosen = SPEED_MAX
+        extra["message"] = TOO_LONG
+    _apply_timing(ctx, project_id, scene_id, {"speed": chosen})
+    return line_response(ctx, project_id, scene_id, **extra)
+
+
+def extend_scene(ctx: AppContext, project_id: str, scene_id: str) -> dict[str, Any]:
+    _require_line(ctx, project_id, scene_id)
+    line = next(ln for ln in build_lines(ctx, project_id) if ln["scene_id"] == scene_id)
+    length = line.get("duration_s")
+    if length is None:
+        raise VoiceError(409, "This line has no take yet.")
+    _edit_scene(ctx, project_id, scene_id, "duration", math.ceil(length * 2) / 2, record=False)
+    return line_response(ctx, project_id, scene_id)
+
+
+async def shorten(ctx: AppContext, project_id: str, scene_id: str) -> str:
+    li = _require_line(ctx, project_id, scene_id)
+    line = next(ln for ln in build_lines(ctx, project_id) if ln["scene_id"] == scene_id)
+    budget = li.budget_s if li.budget_s is not None else line.get("duration_s", 0)
+    messages = [
+        {"role": "system", "content": (VOICE_PROMPTS / SHORTEN_PROMPT).read_text(encoding="utf-8")},
+        {"role": "user", "content": f"Line: {li.text}\nSeconds available: {budget}"},
+    ]
+    schema = {
+        "type": "object",
+        "properties": {"shorter_line": {"type": "string"}},
+        "required": ["shorter_line"],
+    }
+    try:
+        raw = await ctx.llm.chat(messages, schema=schema)
+        parsed: Any = json.loads(raw)
+        data: dict[str, Any] = cast("dict[str, Any]", parsed) if isinstance(parsed, dict) else {}
+        proposal = str(data.get("shorter_line") or "").strip()
+    except Exception:  # noqa: BLE001
+        raise VoiceError(503, LLM_DOWN) from None
+    if not proposal:
+        raise VoiceError(503, LLM_DOWN)
+    return proposal
+
+
+async def upload_recording(
+    ctx: AppContext, project_id: str, scene_id: str, data: bytes
+) -> dict[str, Any]:
+    li = _require_line(ctx, project_id, scene_id)
+    clip = await screen_clip(ctx, data)
+    out = ctx.settings.cache_tmp / f"{new_id()}.wav"
+    try:
+        try:
+            duration = await postprocess_wav(clip.path, out)
+        except AdapterError:
+            raise VoiceError(415, NOT_AUDIO) from None
+        write_take(
+            ctx,
+            project_id,
+            scene_id,
+            out,
+            duration_s=duration,
+            text=li.text,
+            speed=1.0,
+            voice={"mode": "recorded"},
+            source="upload",
+            model_key="upload",
+            model_id="",
+            revision="",
+            adapter="upload",
+            version="upload-1",
+            inputs=[],
+            job_id=None,
+        )
+    finally:
+        clip.path.unlink(missing_ok=True)
+        out.unlink(missing_ok=True)
+    return line_response(ctx, project_id, scene_id)
+
+
+def build_preview(ctx: AppContext, project_id: str, scene_id: str | None) -> tuple[bytes, int]:
+    """Stitch active takes (with pauses as silence); return the WAV bytes and the skipped count."""
+    require(ctx, project_id)
+    inputs = line_inputs(ctx, project_id)
+    if scene_id is not None and scene_id not in inputs:
+        raise VoiceError(404, "line not found")
+    takes = takes_by_scene(ctx, project_id)
+    frames = bytearray()
+    skipped = used = 0
+    rate = 48000
+    for sid, li in inputs.items():
+        if (scene_id is not None and sid != scene_id) or not li.text:
+            continue
+        active = next((t for t in takes.get(sid, []) if t.is_active), None)
+        path = ctx.store.absolute_path(active) if active is not None else None
+        if path is None or not path.is_file():
+            skipped += 1
+            continue
+        with wave.open(str(path), "rb") as w:
+            rate = w.getframerate()
+            audio = w.readframes(w.getnframes())
+        frames += b"\x00\x00" * round(li.pause_before * rate)
+        frames += audio
+        frames += b"\x00\x00" * round(li.pause_after * rate)
+        used += 1
+    if used == 0:
+        raise VoiceError(404, "No takes to play yet.")
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as out:
+        out.setnchannels(1)
+        out.setsampwidth(2)
+        out.setframerate(rate)
+        out.writeframes(bytes(frames))
+    return buf.getvalue(), skipped

@@ -383,3 +383,29 @@ class VoicesOut(BaseModel):
 class VoiceGenerateRequest(BaseModel):
     mode: Literal["missing", "stale", "lines"] = "missing"
     lines: list[str] | None = None
+
+
+class VoiceSelectTakeRequest(BaseModel):
+    take_id: str
+
+
+class VoiceEditTextRequest(BaseModel):
+    text: str
+
+
+class VoiceTimingRequest(BaseModel):
+    speed: float | None = None
+    pause_before: float | None = None
+    pause_after: float | None = None
+
+
+class VoiceLineActionOut(BaseModel):
+    project_stage: StageName
+    approved_count: int
+    total: int
+    line: dict[str, Any]
+    message: str | None = None
+
+
+class VoiceShortenOut(BaseModel):
+    proposal: str

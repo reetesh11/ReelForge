@@ -190,6 +190,20 @@
         "title": "Body_upload_api_v1_projects__project_id__cast__key__upload_post",
         "type": "object"
       },
+      "Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post",
+        "type": "object"
+      },
       "Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post": {
         "properties": {
           "file": {
@@ -1956,6 +1970,19 @@
         "title": "VoiceClearOut",
         "type": "object"
       },
+      "VoiceEditTextRequest": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "VoiceEditTextRequest",
+        "type": "object"
+      },
       "VoiceGenerateRequest": {
         "properties": {
           "lines": {
@@ -1984,6 +2011,56 @@
           }
         },
         "title": "VoiceGenerateRequest",
+        "type": "object"
+      },
+      "VoiceLineActionOut": {
+        "properties": {
+          "approved_count": {
+            "title": "Approved Count",
+            "type": "integer"
+          },
+          "line": {
+            "additionalProperties": true,
+            "title": "Line",
+            "type": "object"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "project_stage": {
+            "enum": [
+              "DRAFT",
+              "STORY_APPROVED",
+              "CAST_APPROVED",
+              "VOICES_APPROVED",
+              "FRAMES_APPROVED",
+              "SHOTS_APPROVED",
+              "ASSEMBLED",
+              "EXPORTED"
+            ],
+            "title": "Project Stage",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "project_stage",
+          "approved_count",
+          "total",
+          "line"
+        ],
+        "title": "VoiceLineActionOut",
         "type": "object"
       },
       "VoiceModelChoice": {
@@ -2181,6 +2258,19 @@
         "title": "VoicePresetOut",
         "type": "object"
       },
+      "VoiceSelectTakeRequest": {
+        "properties": {
+          "take_id": {
+            "title": "Take Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "take_id"
+        ],
+        "title": "VoiceSelectTakeRequest",
+        "type": "object"
+      },
       "VoiceSetRequest": {
         "properties": {
           "mode": {
@@ -2230,6 +2320,58 @@
           "mode"
         ],
         "title": "VoiceSetRequest",
+        "type": "object"
+      },
+      "VoiceShortenOut": {
+        "properties": {
+          "proposal": {
+            "title": "Proposal",
+            "type": "string"
+          }
+        },
+        "required": [
+          "proposal"
+        ],
+        "title": "VoiceShortenOut",
+        "type": "object"
+      },
+      "VoiceTimingRequest": {
+        "properties": {
+          "pause_after": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause After"
+          },
+          "pause_before": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause Before"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          }
+        },
+        "title": "VoiceTimingRequest",
         "type": "object"
       },
       "VoicesOut": {
@@ -3984,6 +4126,454 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:approve": {
+      "post": {
+        "operationId": "approve_line_api_v1_projects__project_id__voices_lines__scene_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Line",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:edit-text": {
+      "post": {
+        "operationId": "edit_text_api_v1_projects__project_id__voices_lines__scene_id__edit_text_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceEditTextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Text",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:extend-scene": {
+      "post": {
+        "operationId": "extend_scene_api_v1_projects__project_id__voices_lines__scene_id__extend_scene_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Extend Scene",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:select-take": {
+      "post": {
+        "operationId": "select_take_api_v1_projects__project_id__voices_lines__scene_id__select_take_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSelectTakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Select Take",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:set-timing": {
+      "post": {
+        "operationId": "set_timing_api_v1_projects__project_id__voices_lines__scene_id__set_timing_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceTimingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Timing",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:shorten": {
+      "post": {
+        "operationId": "shorten_api_v1_projects__project_id__voices_lines__scene_id__shorten_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceShortenOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Shorten",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:speed-up": {
+      "post": {
+        "operationId": "speed_up_api_v1_projects__project_id__voices_lines__scene_id__speed_up_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Speed Up",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:upload-recording": {
+      "post": {
+        "operationId": "upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Recording",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/voices/presets/{preset_id}:preview": {
       "post": {
         "operationId": "preview_preset_api_v1_projects__project_id__voices_presets__preset_id__preview_post",
@@ -4030,6 +4620,62 @@
           }
         },
         "summary": "Preview Preset",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/preview": {
+      "get": {
+        "operationId": "preview_api_v1_projects__project_id__voices_preview_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scene_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Scene Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
         "tags": [
           "voice"
         ]

@@ -97,3 +97,20 @@ def test_memory_shortfall_names_voice_mem_gb(tmp_path):
             "Not enough free memory for voice: need 4.0 GB, have 2.0 GB. "
             "Lower voice_mem_gb or close other apps."
         )
+
+
+def test_enough_memory_unloads_ollama_first(tmp_path):
+    unloads: list[int] = []
+
+    async def unload():
+        unloads.append(1)
+
+    ctx, client = voice_world(
+        tmp_path, image_mem_gb=1.0, available_gb=5.0, voice_mem_gb=4.0, unload=unload
+    )
+    with client:
+        pid = cast_approved(client, ctx)
+        set_presets(client, pid)
+        n = len(unloads)
+        _, done = generate(client, ctx, pid)
+        assert done.status == "succeeded" and len(unloads) > n

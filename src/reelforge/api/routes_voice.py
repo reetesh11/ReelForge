@@ -3,19 +3,24 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Form, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from reelforge.adapters.mlx_audio import VOICE_MODELS
 from reelforge.api.routes_jobs import job_body
 from reelforge.api.schemas import (
     JobOut,
     VoiceClearOut,
+    VoiceEditTextRequest,
     VoiceGenerateRequest,
+    VoiceLineActionOut,
     VoiceModelOut,
     VoiceModelPut,
     VoiceOut,
+    VoiceSelectTakeRequest,
     VoiceSetRequest,
+    VoiceShortenOut,
     VoicesOut,
+    VoiceTimingRequest,
 )
 from reelforge.context import AppContext
 from reelforge.voice import service, slots
@@ -105,5 +110,87 @@ def build_router(ctx: AppContext) -> APIRouter:
         except service.VoiceError as exc:
             raise fail(exc) from None
         return JSONResponse(job_body(job), status_code=202)
+
+    ln = p + "/voices/lines/{scene_id}"
+
+    def line_route(name: str, status: int = 200):  # noqa: ANN202
+        return router.post(f"{ln}:{name}", status_code=status, response_model=VoiceLineActionOut)
+
+    @line_route("select-take")
+    async def select_take(
+        project_id: str, scene_id: str, body: VoiceSelectTakeRequest
+    ) -> JSONResponse:
+        try:
+            return JSONResponse(service.select_take(ctx, project_id, scene_id, body.take_id))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @line_route("approve")
+    async def approve_line(project_id: str, scene_id: str) -> JSONResponse:
+        try:
+            return JSONResponse(service.approve_line(ctx, project_id, scene_id))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @line_route("edit-text")
+    async def edit_text(project_id: str, scene_id: str, body: VoiceEditTextRequest) -> JSONResponse:
+        try:
+            return JSONResponse(service.edit_text(ctx, project_id, scene_id, body.text))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @line_route("set-timing")
+    async def set_timing(project_id: str, scene_id: str, body: VoiceTimingRequest) -> JSONResponse:
+        try:
+            out = service.set_timing(
+                ctx,
+                project_id,
+                scene_id,
+                speed=body.speed,
+                pause_before=body.pause_before,
+                pause_after=body.pause_after,
+            )
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return JSONResponse(out)
+
+    @line_route("upload-recording", 201)
+    async def upload_recording(project_id: str, scene_id: str, file: UploadFile) -> JSONResponse:
+        try:
+            service.require(ctx, project_id)
+            data = await file.read(ctx.settings.max_upload_mb * 1024 * 1024 + 1)
+            out = await service.upload_recording(ctx, project_id, scene_id, data)
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return JSONResponse(out, status_code=201)
+
+    @line_route("speed-up")
+    async def speed_up(project_id: str, scene_id: str) -> JSONResponse:
+        try:
+            return JSONResponse(service.speed_up(ctx, project_id, scene_id))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @line_route("extend-scene")
+    async def extend_scene(project_id: str, scene_id: str) -> JSONResponse:
+        try:
+            return JSONResponse(service.extend_scene(ctx, project_id, scene_id))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @router.post(f"{ln}:shorten", response_model=VoiceShortenOut)
+    async def shorten(project_id: str, scene_id: str) -> JSONResponse:
+        try:
+            return JSONResponse({"proposal": await service.shorten(ctx, project_id, scene_id)})
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @router.get(p + "/voices/preview")
+    async def preview(project_id: str, scene_id: str | None = None) -> Response:
+        try:
+            data, skipped = service.build_preview(ctx, project_id, scene_id)
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return Response(data, media_type="audio/wav", headers={"X-Skipped-Lines": str(skipped)})
 
     return router
