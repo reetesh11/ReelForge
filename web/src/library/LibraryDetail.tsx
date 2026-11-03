@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useLibraryCharacter, usePatchLibraryCharacter, type LibraryCharacter } from "@/api/library";
+import { modelNote } from "@/voice/VoiceSetup";
 
 const split = (text: string): string[] =>
   text
@@ -38,6 +39,22 @@ function DetailForm({ character }: { character: LibraryCharacter }) {
         Tags
         <input type="text" value={tags} onChange={(e) => setTags(e.target.value)} />
       </label>
+      {character.voice ? (
+        <fieldset aria-label="Voice">
+          <legend>Voice</legend>
+          <p>
+            {character.voice.mode === "preset"
+              ? `Preset: ${character.voice.voice_id ?? ""}`
+              : character.voice.mode === "cloned"
+                ? `Cloned from a reference clip: ${character.voice.reference_text}`
+                : "Recorded lines"}
+          </p>
+          {character.voice.reference_url ? (
+            <audio controls src={character.voice.reference_url} aria-label="Reference clip" />
+          ) : null}
+          {modelNote(character.voice) ? <p className="meta">{modelNote(character.voice)}</p> : null}
+        </fieldset>
+      ) : null}
       <div className="actions">
         <button type="submit" disabled={patch.isPending}>
           Save

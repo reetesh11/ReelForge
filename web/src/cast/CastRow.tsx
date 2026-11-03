@@ -9,6 +9,7 @@ import {
   type CastItem,
 } from "@/api/cast";
 import { useLibraryCharacters } from "@/api/library";
+import { ProjectVoiceSetup } from "@/voice/VoiceSetup";
 import { ApproveDialog } from "./ApproveDialog";
 import { CandidateGrid } from "./CandidateGrid";
 import { LibraryPicker } from "./LibraryPicker";
@@ -196,6 +197,8 @@ export function CastRow({
           />
         </label>
       )}
+
+      {item.approved ? <ProjectVoiceSetup projectId={projectId} characterKey={item.key} /> : null}
 
       {error ? <p role="alert">{error}</p> : null}
       {confirming && licenceWarning ? (
