@@ -61,4 +61,37 @@ Known limitation to record here: the exact OmniVoice call arguments for the voic
 | 10 | Edit one approved line's text | Only that line becomes "Needs update"; the other lines stay approved. | |
 | 11 | With about 3 GB available, generate lines | The job fails with "Not enough free memory for voice: need 4.0 GB, have X GB. Lower voice_mem_gb or close other apps." | |
 
+## M5 Key frames and shots (AC-15): real Draw Things and ltx-2-mlx on the reference Mac
+
+Setup: Draw Things is running with the pinned image model, ltx-2-mlx is installed and `[tools.ltx] project_path` in config.toml points at it
+(the executable is `<project_path>/.venv/bin/ltx-2-mlx`, run directly). Run `reelforge up --backend real`. Use a project with the cast and voices
+approved.
+
+Memory: `shot_mem_gb` (default 16.0) is the memory a shot job needs; a shortfall fails with "Not enough free memory for a shot: need 16.0 GB (shot_mem_gb), have X GB".
+Record the measured peak for a Draft and a Final shot here and set `shot_mem_gb` to match.
+
+| Quality | Size | Peak memory (GB) | Render time (s) |
+| --- | --- | --- | --- |
+| Draft | 320x576 | | |
+| Final | 448x768 | | |
+
+Known limitation to record here: Draw Things receives only the master as `init_images`. The product pack is a second input recorded on the job
+and artifact and described in the prompt, but its pixels are not sent. Note whether the real pack comes out right.
+
+| # | Step | Expect | Result |
+| --- | --- | --- | --- |
+| 1 | `reelforge doctor` | The `ltx` check passes (all required options of `a2v`, `generate` and `extend` are present). | |
+| 2 | Generate one key frame from a real master | The frame keeps the character's look, in the chosen framing. | |
+| 3 | Generate a frame for a scene with two characters | Only the master is copied; the second character is described in the prompt. Record how close it is. | |
+| 4 | Render one talking shot at Draft | A 9:16 clip with the voice take as audio; the lips follow the speech. | |
+| 5 | Render one action shot at Draft | A silent 9:16 clip that moves as described. | |
+| 6 | Compare the frame, talking shot and action shot of the same character | The character reads as the same one. | |
+| 7 | Render a Continue shot after its previous shot | It starts from the previous shot's last frame. | |
+| 8 | Run the real `LtxAdapter` once and open the job log | The log shows the `ltx-2-mlx a2v` or `generate` command with `--distilled` and `--low-ram`. | |
+| 9 | Set the quality of one shot to Final and render | A larger clip; fill in the memory table above. | |
+| 10 | With about 8 GB available, render a shot | The job fails with "Not enough free memory for a shot: need 16.0 GB (shot_mem_gb), have X GB". | |
+| 11 | Close other apps, render a Final shot and quit other apps' memory use until it is killed | The card reads "Killed, likely out of memory." with "Retry at Draft size". | |
+| 12 | Click Render all and watch the queue | The panel shows the shot count, minutes and "keep the Mac plugged in"; rows can be moved, paused and cancelled. | |
+| 13 | Upload an own 9:16 clip of up to 20 s | It becomes a new take and its last frame is cut. | |
+
 Reviewer: ________  Date: ________

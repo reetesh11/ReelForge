@@ -152,6 +152,23 @@ class MockAdapter:
             path = out_dir / "out.wav"
             self._write_wav(path, duration, float(hooks.get("freq_hz", 440.0)))
             produced = ProducedFile(path=path, ext="wav", duration_s=duration)
+        elif "frames" in task.params:
+            path = out_dir / "out.mp4"
+            frames = int(task.params["frames"])
+            fps = int(task.params.get("fps", 24))
+            width = int(task.params.get("width", width))
+            height = int(task.params.get("height", height))
+            audio = (
+                task.input_paths[1]
+                if task.params.get("mode") == "a2v" and len(task.input_paths) > 1
+                else None
+            )
+            await self._write_shot_mp4(
+                path, width, height, frames, fps, audio, timeout_s, cancel, ctx_job_id
+            )
+            produced = ProducedFile(
+                path=path, ext="mp4", width=width, height=height, duration_s=frames / fps
+            )
         else:
             path = out_dir / "out.mp4"
             await self._write_mp4(path, width, height, duration, timeout_s, cancel, ctx_job_id)
@@ -173,6 +190,40 @@ class MockAdapter:
             wav.setsampwidth(2)
             wav.setframerate(rate)
             wav.writeframes(bytes(frames))
+
+    async def _write_shot_mp4(
+        self,
+        path: Path,
+        width: int,
+        height: int,
+        frames: int,
+        fps: int,
+        audio: Path | None,
+        timeout_s: float,
+        cancel: CancelToken,
+        job_id: str | None,
+    ) -> None:
+        """Exactly `frames` frames at `fps` and `width`x`height`; audio only when given."""
+        ffmpeg = shutil.which("ffmpeg")
+        if ffmpeg is None:
+            raise AdapterError("ffmpeg not found")
+        argv = [
+            ffmpeg,
+            "-y",
+            "-loglevel",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            f"testsrc=size={width - width % 2}x{height - height % 2}:rate={fps}",
+        ]
+        if audio is not None:
+            argv += ["-i", str(audio)]
+        argv += ["-frames:v", str(frames), "-pix_fmt", "yuv420p", "-c:v", "libx264"]
+        argv += ["-preset", "ultrafast"]
+        argv += ["-c:a", "aac", "-map", "0:v", "-map", "1:a"] if audio is not None else ["-an"]
+        argv.append(str(path))
+        await self._command(argv, timeout_s, cancel, job_id)
 
     async def _write_mp4(
         self,

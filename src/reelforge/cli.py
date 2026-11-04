@@ -23,6 +23,10 @@ VoiceMemGb = Annotated[
     float | None,
     typer.Option("--voice-mem-gb", help="Memory (GB) a voice job needs free before it starts."),
 ]
+ShotMemGb = Annotated[
+    float | None,
+    typer.Option("--shot-mem-gb", help="Memory (GB) a shot job needs free before it starts."),
+]
 VoiceModel = Annotated[
     str | None,
     typer.Option("--voice-model", help="Voice model (omnivoice or kokoro)."),
@@ -73,6 +77,7 @@ def doctor(
     drawthings_url: DrawThingsUrl = None,
     image_mem_gb: ImageMemGb = None,
     voice_mem_gb: VoiceMemGb = None,
+    shot_mem_gb: ShotMemGb = None,
     voice_model: VoiceModel = None,
     config: ConfigFile = None,
 ) -> None:
@@ -88,6 +93,7 @@ def doctor(
         drawthings_url=drawthings_url,
         image_mem_gb=image_mem_gb,
         voice_mem_gb=voice_mem_gb,
+        shot_mem_gb=shot_mem_gb,
         voice_model=voice_model,
         config=config,
     )
@@ -112,6 +118,7 @@ def up(
     drawthings_url: DrawThingsUrl = None,
     image_mem_gb: ImageMemGb = None,
     voice_mem_gb: VoiceMemGb = None,
+    shot_mem_gb: ShotMemGb = None,
     voice_model: VoiceModel = None,
     config: ConfigFile = None,
 ) -> None:
@@ -127,6 +134,7 @@ def up(
         drawthings_url=drawthings_url,
         image_mem_gb=image_mem_gb,
         voice_mem_gb=voice_mem_gb,
+        shot_mem_gb=shot_mem_gb,
         voice_model=voice_model,
         config=config,
     )

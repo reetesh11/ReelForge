@@ -53,6 +53,12 @@ class Settings(BaseModel):
     image_mem_gb: float = Field(default=6.0, gt=0, allow_inf_nan=False)
     voice_model: Literal["omnivoice", "kokoro"] = "omnivoice"
     voice_mem_gb: float = Field(default=4.0, gt=0, allow_inf_nan=False)
+    shot_mem_gb: float = Field(default=16.0, gt=0, allow_inf_nan=False)
+    shot_quality: Literal["draft", "final"] = "draft"
+    shot_draft_size: str = "320x576"
+    shot_final_size: str = "448x768"
+    shot_timeout_s: float = Field(default=1800.0, gt=0, allow_inf_nan=False)
+    max_clip_mb: int = Field(default=100, ge=1)
 
     @field_validator("host")
     @classmethod
@@ -60,6 +66,16 @@ class Settings(BaseModel):
         if value != LOOPBACK_HOST:
             raise ValueError(f"must be exactly {LOOPBACK_HOST} (loopback only), got {value!r}")
         return value
+
+    @field_validator("shot_draft_size", "shot_final_size")
+    @classmethod
+    def _shot_size(cls, value: str) -> str:
+        parts = value.lower().split("x")
+        if len(parts) != 2 or not all(p.isdigit() for p in parts):
+            raise ValueError(f"must look like WxH, got {value!r}")
+        if any(int(p) <= 0 or int(p) % 32 for p in parts):
+            raise ValueError(f"both sides must be a multiple of 32, got {value!r}")
+        return value.lower()
 
     @field_validator("data_root", "models_path", "ltx_path", "mlx_audio_path", "mflux_command")
     @classmethod
@@ -93,8 +109,17 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "image_fallback": "image_fallback",
         "max_upload_mb": "max_upload_mb",
         "voice_model": "voice_model",
+        "shot_quality": "shot_quality",
+        "shot_draft_size": "shot_draft_size",
+        "shot_final_size": "shot_final_size",
+        "shot_timeout_s": "shot_timeout_s",
+        "max_clip_mb": "max_clip_mb",
     },
-    "limits": {"image_mem_gb": "image_mem_gb", "voice_mem_gb": "voice_mem_gb"},
+    "limits": {
+        "image_mem_gb": "image_mem_gb",
+        "voice_mem_gb": "voice_mem_gb",
+        "shot_mem_gb": "shot_mem_gb",
+    },
 }
 _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {
     ("services", "ollama"): {"url": "ollama_url"},

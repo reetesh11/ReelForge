@@ -10,6 +10,7 @@ license_url = "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev"
 [models.video]
 id = "dgrauet/ltx-2.3-mlx-q4"
 revision = "unpinned"
+steps = 8
 license = "LTX-2 Community License"
 license_url = "https://huggingface.co/Lightricks/LTX-2"
 

@@ -49,7 +49,9 @@ function JobStatus({
   );
 }
 
-export function VoiceBoard({ projectId }: { projectId: string }) {
+const VOICES_DONE = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "ASSEMBLED", "EXPORTED"]);
+
+export function VoiceBoard({ projectId, onContinue }: { projectId: string; onContinue?: () => void }) {
   const voices = useVoices(projectId);
   const generate = useGenerateVoices(projectId);
   const cancel = useCancelVoiceJob(projectId);
@@ -96,7 +98,7 @@ export function VoiceBoard({ projectId }: { projectId: string }) {
         ))}
       </ul>
       <div className="actions">
-        <button type="button" disabled={board.stage !== "VOICES_APPROVED"}>
+        <button type="button" disabled={!VOICES_DONE.has(board.stage)} onClick={onContinue}>
           Continue to key frames
         </button>
       </div>

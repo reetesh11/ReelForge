@@ -652,10 +652,11 @@ def recompute_stage(ctx: AppContext, project_id: str) -> str:
         if new_stage is not None:
             project.stage = new_stage
             project.updated_at = utcnow()
-        stage = project.stage
     if new_stage is not None:
         ctx.bus.publish("stage.changed", {"project_id": project_id, "stage": new_stage})
-    return stage
+    from reelforge.frames.service import recompute_stage as frames_stage  # noqa: PLC0415
+
+    return frames_stage(ctx, project_id)
 
 
 def counts(lines: list[dict[str, Any]]) -> tuple[int, int, int]:

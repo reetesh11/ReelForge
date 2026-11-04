@@ -86,6 +86,14 @@ def _canned_shorter_line(messages: list[ChatMessage]) -> str:
     return " ".join(words[: max(1, (len(words) + 1) // 2)])
 
 
+def _canned_scene_sentence(messages: list[ChatMessage]) -> str:
+    for line in messages[-1]["content"].splitlines():
+        label, _, value = line.partition(": ")
+        if label == "Action":
+            return value.strip()
+    return messages[-1]["content"].strip().splitlines()[0] if messages[-1]["content"] else ""
+
+
 class MockLlm:
     name = "mock-llm"
 
@@ -106,6 +114,12 @@ class MockLlm:
             return json.dumps({"bible_line": _canned_bible_line(messages)})
         if "shorter_line" in schema.get("properties", {}):
             return json.dumps({"shorter_line": _canned_shorter_line(messages)})
+        if "scene_sentence" in schema.get("properties", {}):
+            return json.dumps({"scene_sentence": _canned_scene_sentence(messages)})
+        if "motion_prompt" in schema.get("properties", {}):
+            return json.dumps(
+                {"motion_prompt": "gentle camera push in, subtle natural movement, soft light"}
+            )
         if not self.responses:
             return json.dumps({"story": canned_story(), "questions": []})
         index = min(len(self.calls) - 1, len(self.responses) - 1)

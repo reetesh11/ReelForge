@@ -23,6 +23,8 @@ def main(argv: list[str] | None = None) -> int:
         time.sleep(min(remaining, 0.1))
     if ns.kill:
         os.kill(os.getpid(), signal.SIGKILL)
+    if ns.exit_code < 0:  # like a real child killed by a signal: Popen reports -signal
+        os.kill(os.getpid(), -ns.exit_code)
     print("mock child done", flush=True)
     return ns.exit_code
 
