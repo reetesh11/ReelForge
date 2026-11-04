@@ -52,6 +52,11 @@ except a bootstrap task, which may fill in the test commands.
 - The generated PR body marks manual criteria as met; edit it to say what was actually run on the reference Mac before shipping.
 - `.congoforce/standards.md` and `config.toml` are tracked on `main`; do not leave them untracked, because switching branches would remove them and CongoForce would regenerate a default.
 
+- When an owner answer changes what a criterion means, edit `req.md` and `product-spec.md` so the AC text matches before Gate 2; otherwise the Gate 2 packet and the PR body carry the stale wording.
+- Push the `--base` branch to origin before the ship stage when it is not `main`; `gh pr create` fails otherwise and the task stays blocked until `congoforce answer`.
+- The verifier does not run vitest. For UI criteria run `pnpm --dir web test --run` and state the result in the PR body.
+- When a frozen test measures exact timing (for example a silence gap), check the default trim or padding in the audio path against its tolerance before implementing.
+
 ## Draft notes
 
 - Commands are written to be safe before the project exists: Python and frontend steps are skipped until `pyproject.toml` and `web/package.json` exist.
