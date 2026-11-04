@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { NotFoundError, useProject, useStages } from "@/api/queries";
+import { NotFoundError, useProject, useStages, type Project } from "@/api/queries";
 import { StoryUnavailableError, useStory } from "@/api/story";
 import { AssemblyScreen } from "@/assembly/AssemblyScreen";
 import { CastScreen } from "@/cast/CastScreen";
@@ -14,12 +15,18 @@ import { NextUpBar } from "@/workspace/NextUpBar";
 import { ProjectHeader } from "@/workspace/ProjectHeader";
 import { resolveStage, type StageKey } from "@/workspace/stages";
 
+type ProjectStage = Project["stage"];
+
 export function ProjectPage() {
   const { projectId = "" } = useParams();
   const project = useProject(projectId);
   const stages = useStages(projectId);
   const story = useStory(projectId);
   const [params, setParams] = useSearchParams();
+  // The landing stage is fixed when the project first loads, so approving the last item of a stage
+  // does not move the person to the next panel behind their back.
+  const [pinned, setPinned] = useState<{ id: string; stage: ProjectStage } | null>(null);
+  if (project.data && pinned?.id !== projectId) setPinned({ id: projectId, stage: project.data.stage });
 
   if (project.isPending) return <StateMessage>Loading...</StateMessage>;
   if (project.isError) {
@@ -30,7 +37,7 @@ export function ProjectPage() {
     );
   }
 
-  const shown = resolveStage(params, project.data.stage, stages.data);
+  const shown = resolveStage(params, pinned?.stage ?? project.data.stage, stages.data);
   const go = (key: StageKey) => setParams({ stage: key });
 
   return (
