@@ -8,6 +8,7 @@ import {
   useVoices,
   type VoiceBoardState,
 } from "@/api/voice";
+import { ActionBar } from "@/components/ActionBar";
 import { LineCard } from "./LineCard";
 import { usePlayback } from "./usePlayback";
 
@@ -44,7 +45,7 @@ function JobStatus({
           ? (job.message ?? "Waiting for the voice engine")
           : `Rendering line ${line} of ${total} - ${elapsed} s elapsed`}
       </p>
-      <button type="button" onClick={() => onCancel(job.id)}>
+      <button type="button" className="btn btn-secondary" onClick={() => onCancel(job.id)}>
         Cancel
       </button>
     </div>
@@ -74,6 +75,7 @@ function PhraseGap({ projectId }: { projectId: string }) {
       </label>
       <button
         type="button"
+        className="btn btn-secondary"
         disabled={draft === null || draft === "" || save.isPending}
         onClick={() => save.mutate(Number(draft), { onSuccess: () => setDraft(null) })}
       >
@@ -100,28 +102,28 @@ export function VoiceBoard({ projectId, onContinue }: { projectId: string; onCon
   return (
     <section aria-label="Voices">
       <h2>Voices</h2>
+      <div className="status-strip" data-testid="status-strip">
+        <span>{`${board.approved_count} of ${board.total} lines approved`}</span>
+        {noTake > 0 ? <span>{noTake === 1 ? "1 line has no take yet" : `${noTake} lines have no take yet`}</span> : null}
+      </div>
       <div className="actions">
-        <button type="button" onClick={() => generate.mutate({ mode: "missing" })}>
+        <button type="button" className="btn btn-primary" onClick={() => generate.mutate({ mode: "missing" })}>
           Generate all lines
         </button>
         {board.stale_count > 0 ? (
-          <button type="button" onClick={() => generate.mutate({ mode: "stale" })}>
+          <button type="button" className="btn btn-secondary" onClick={() => generate.mutate({ mode: "stale" })}>
             Regenerate stale items
           </button>
         ) : null}
-        <button type="button" onClick={() => playback.play(previewUrl(projectId))}>
+        <button type="button" className="btn btn-secondary" onClick={() => playback.play(previewUrl(projectId))}>
           Play all
         </button>
-        <span>{`${board.approved_count} of ${board.total} lines approved`}</span>
       </div>
-      {noTake > 0 ? (
-        <p className="meta">{noTake === 1 ? "1 line has no take yet" : `${noTake} lines have no take yet`}</p>
-      ) : null}
       <PhraseGap projectId={projectId} />
       <JobStatus board={board} receivedAt={voices.dataUpdatedAt} onCancel={(id) => cancel.mutate(id)} />
       {error ? <p role="alert">{error}</p> : null}
       <audio key={playback.nonce} src={playback.url ?? undefined} autoPlay controls aria-label="Voice playback" />
-      <ul aria-label="Voice lines" className="list">
+      <ul aria-label="Voice lines" className="card-stack">
         {board.lines.map((line) => (
           <LineCard
             key={line.scene_id}
@@ -133,11 +135,13 @@ export function VoiceBoard({ projectId, onContinue }: { projectId: string; onCon
           />
         ))}
       </ul>
-      <div className="actions">
-        <button type="button" disabled={!VOICES_DONE.has(board.stage)} onClick={onContinue}>
-          Continue to key frames
-        </button>
-      </div>
+      <ActionBar
+        cta={
+          <button type="button" className="btn btn-cta" disabled={!VOICES_DONE.has(board.stage)} onClick={onContinue}>
+            Continue to key frames
+          </button>
+        }
+      />
     </section>
   );
 }

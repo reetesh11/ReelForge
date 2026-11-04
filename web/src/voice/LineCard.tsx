@@ -11,6 +11,9 @@ import {
   type Emotion,
   type VoiceLine,
 } from "@/api/voice";
+import { Chip, type ChipTone } from "@/components/Chip";
+import { IconButton } from "@/components/IconButton";
+import { Notice } from "@/components/Notice";
 
 const BADGES: Record<string, string> = {
   no_take: "No take yet",
@@ -19,6 +22,16 @@ const BADGES: Record<string, string> = {
   ready: "Ready",
   approved: "Approved",
   stale: "Needs update",
+};
+
+const TONES: Record<string, ChipTone> = {
+  no_take: "grey",
+  queued: "blue",
+  rendering: "blue",
+  ready: "blue",
+  approved: "green",
+  stale: "amber",
+  failed: "red",
 };
 
 const seconds = (value: number | null | undefined): string =>
@@ -117,16 +130,23 @@ export function LineCard({
   };
 
   return (
-    <li role="group" aria-label={`Scene ${line.scene_id}`} className="card">
-      <header className="editor-header">
-        <strong>{line.speaker_name ?? "No speaker"}</strong>
-        <span className="meta">Hindi</span>
-        {line.duration_s !== undefined ? <span className="meta">{seconds(line.duration_s)}</span> : null}
-        <span className="meta">{`${line.takes.length} ${line.takes.length === 1 ? "take" : "takes"}`}</span>
+    <li
+      role="group"
+      aria-label={`Scene ${line.scene_id}`}
+      className="card"
+      data-attention={line.state === "failed" || line.state === "stale" ? "true" : undefined}
+    >
+      <header className="card-header">
+        <span className="toolbar">
+          <strong>{line.speaker_name ?? "No speaker"}</strong>
+          <span className="meta">Hindi</span>
+          {line.duration_s !== undefined ? <span className="meta">{seconds(line.duration_s)}</span> : null}
+          <span className="meta">{`${line.takes.length} ${line.takes.length === 1 ? "take" : "takes"}`}</span>
+        </span>
         {BADGES[line.state] ? (
-          <span className={line.state === "stale" ? "badge amber" : line.state === "approved" ? "badge green" : "badge"}>
-            {BADGES[line.state]}
-          </span>
+          <Chip tone={TONES[line.state] ?? "grey"} testId="state-chip">
+            {BADGES[line.state] as string}
+          </Chip>
         ) : null}
       </header>
       <p>{line.text}</p>
@@ -154,21 +174,22 @@ export function LineCard({
 
       {line.state === "no_voice" ? <p>{line.message}</p> : null}
       {line.state === "failed" ? (
-        <div className="notice error">
+        <Notice tone="error">
           <p>Couldn't generate this line.</p>
           {line.message ? <p className="meta">{line.message}</p> : null}
-          <button type="button" onClick={retake}>
+          <button type="button" className="btn btn-secondary" onClick={retake}>
             Retry
           </button>
-        </div>
+        </Notice>
       ) : null}
 
       {line.over_budget ? (
-        <div className="notice amber">
+        <Notice tone="warning">
           <p>{`This line is ${line.over_budget.line_s.toFixed(1)} s but the scene allows ${line.over_budget.budget_s.toFixed(1)} s.`}</p>
           <div className="actions">
             <button
               type="button"
+              className="btn btn-secondary"
               onClick={() =>
                 action.mutate(
                   { sceneId: line.scene_id, name: "speed-up" },
@@ -178,28 +199,28 @@ export function LineCard({
             >
               Speed up
             </button>
-            <button type="button" onClick={() => shorten.mutate(line.scene_id, { onSuccess: setProposal })}>
+            <button type="button" className="btn btn-secondary" onClick={() => shorten.mutate(line.scene_id, { onSuccess: setProposal })}>
               Shorten text
             </button>
-            <button type="button" onClick={() => action.mutate({ sceneId: line.scene_id, name: "extend-scene" })}>
+            <button type="button" className="btn btn-secondary" onClick={() => action.mutate({ sceneId: line.scene_id, name: "extend-scene" })}>
               Extend scene
             </button>
           </div>
-        </div>
+        </Notice>
       ) : null}
       {note ? <p className="meta">{note}</p> : null}
       {proposal ? (
-        <div className="notice">
+        <Notice tone="info">
           <p>{`Shorter: ${proposal}`}</p>
           <div className="actions">
-            <button type="button" onClick={() => saveText(proposal, true)}>
+            <button type="button" className="btn btn-primary" onClick={() => saveText(proposal, true)}>
               Use this text
             </button>
-            <button type="button" onClick={() => setProposal(null)}>
+            <button type="button" className="btn btn-secondary" onClick={() => setProposal(null)}>
               Dismiss
             </button>
           </div>
-        </div>
+        </Notice>
       ) : null}
 
       {line.takes.length > 0 ? (
@@ -271,10 +292,10 @@ export function LineCard({
             <textarea rows={2} value={draft} onChange={(e) => setDraft(e.target.value)} />
           </label>
           <div className="actions">
-            <button type="button" disabled={!draft.trim()} onClick={() => saveText(draft, true)}>
+            <button type="button" className="btn btn-primary" disabled={!draft.trim()} onClick={() => saveText(draft, true)}>
               Save and re-take
             </button>
-            <button type="button" onClick={() => setEditing(false)}>
+            <button type="button" className="btn btn-secondary" onClick={() => setEditing(false)}>
               Cancel edit
             </button>
           </div>
@@ -282,16 +303,13 @@ export function LineCard({
       ) : null}
 
       <div className="actions">
-        <button type="button" disabled={!active} onClick={() => active && onPlay(active.audio_url)}>
-          Play
-        </button>
-        <button
-          type="button"
+        <IconButton label="Play" icon="play" disabled={!active} onClick={() => active && onPlay(active.audio_url)} />
+        <IconButton
+          label="Approve"
+          icon="check"
           disabled={!active || line.state === "approved" || line.state === "stale" || busy}
           onClick={() => action.mutate({ sceneId: line.scene_id, name: "approve" })}
-        >
-          Approve
-        </button>
+        />
         {recorded ? (
           <label className="field">
             Upload recording
@@ -306,22 +324,17 @@ export function LineCard({
             />
           </label>
         ) : (
-          <button type="button" disabled={busy || line.state === "no_voice"} onClick={retake}>
-            New take
-          </button>
+          <IconButton label="New take" icon="regenerate" disabled={busy || line.state === "no_voice"} onClick={retake} />
         )}
-        <button
-          type="button"
+        <IconButton
+          label="Edit text and re-take"
+          icon="edit"
           onClick={() => {
             setDraft(line.edit_text ?? line.text);
             setEditing(true);
           }}
-        >
-          Edit text and re-take
-        </button>
-        <button type="button" onClick={() => onPlay(previewUrl(projectId, line.scene_id))}>
-          Play scene
-        </button>
+        />
+        <IconButton label="Play scene" icon="shots" onClick={() => onPlay(previewUrl(projectId, line.scene_id))} />
       </div>
       {cloned && active && line.speaker ? (
         <div>
@@ -330,6 +343,7 @@ export function LineCard({
               <button
                 key={o.value}
                 type="button"
+                className="btn btn-secondary"
                 onClick={() => {
                   setRefEmotion(o.value);
                   setRefText(line.text);
@@ -347,6 +361,7 @@ export function LineCard({
               </label>
               <button
                 type="button"
+                className="btn btn-primary"
                 disabled={!refText.trim() || clip.isPending}
                 onClick={() =>
                   line.speaker &&
@@ -364,7 +379,7 @@ export function LineCard({
               >
                 Save reference
               </button>
-              <button type="button" onClick={() => setRefEmotion(null)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setRefEmotion(null)}>
                 Cancel reference
               </button>
             </div>
