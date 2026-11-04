@@ -109,6 +109,8 @@ def build_router(ctx: AppContext) -> APIRouter:
             reason = blocked_reason(ctx, project_id)
             if reason is not None:
                 raise AssemblyError(409, reason)
+            if not working_edl_path(ctx, project_id).is_file():
+                save_edl(build_edl(ctx, project_id), working_edl_path(ctx, project_id))
             edl = load_working(ctx, project_id)
             for job in ctx.queue.list(project_id=project_id):
                 if job.type == FINAL_JOB and job.status in ("queued", "running"):

@@ -720,9 +720,12 @@ class ReelVersionOut(BaseModel):
 
 
 class LicenceWarningOut(BaseModel):
-    model: str
-    version: str
+    model: str | None = None
+    version: str | None = None
     licence: str
+    cue_id: str | None = None
+    kind: str | None = None
+    file_name: str | None = None
 
 
 class CaptionPresetOut(BaseModel):
