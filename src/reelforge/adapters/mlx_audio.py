@@ -15,7 +15,7 @@ import subprocess
 import sys
 import wave
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -87,6 +87,12 @@ class VoiceLine:
     ref_text: str | None
     speed: float
     lang: str = "hi"
+    instruct: str | None = None
+    duration_scale: float = 1.0
+    semitones: float = 0.0
+    tempo: float = 1.0
+    gain_db: float = 0.0
+    generation: dict[str, float] = field(default_factory=lambda: {})
 
 
 @dataclass
@@ -95,6 +101,7 @@ class VoiceResult:
     path: Path | None
     duration_s: float | None
     error: str | None
+    duration_requested_s: float | None = None
 
 
 _LUFS_RE = re.compile(r"I:\s+(-?\d+(?:\.\d+)?|-inf)\s+LUFS")
@@ -309,6 +316,7 @@ class MlxAudioAdapter:
         job_id: str | None = None,
     ) -> list[VoiceResult]:
         plans = {ln.id: plan_speed(voice_model, ln.speed) for ln in lines}
+        by_id = {ln.id: ln for ln in lines}
         raw_dir = out_dir / "raw"
         raw_dir.mkdir(parents=True, exist_ok=True)
         batch = out_dir / "batch.jsonl"
@@ -322,6 +330,11 @@ class MlxAudioAdapter:
                 "ref_text": ln.ref_text,
                 "speed": plans[ln.id][0],
                 "lang": ln.lang,
+                "instruct": ln.instruct,
+                "duration_scale": ln.duration_scale,
+                # OmniVoice pace is a length target in the worker; Kokoro has a native speed.
+                "target_speed": ln.speed if voice_model != "kokoro" else 1.0,
+                "gen": ln.generation,
             }
             for ln in lines
         ]
@@ -354,10 +367,23 @@ class MlxAudioAdapter:
             else:
                 try:
                     dst = out_dir / f"{line_id}.48k.wav"
+                    line = by_id[line_id]
                     duration = await postprocess_wav(
-                        Path(str(event["path"])), dst, atempo=plans[line_id][1], cancel=cancel
+                        Path(str(event["path"])),
+                        dst,
+                        semitones=line.semitones,
+                        tempo=line.tempo,
+                        gain_db=line.gain_db,
+                        cancel=cancel,
                     )
-                    result = VoiceResult(line_id, dst, duration, None)
+                    requested = event.get("duration_requested_s")
+                    result = VoiceResult(
+                        line_id,
+                        dst,
+                        duration,
+                        None,
+                        float(requested) if requested is not None else None,
+                    )
                 except AdapterError as exc:
                     if cancel.cancelled:
                         raise
