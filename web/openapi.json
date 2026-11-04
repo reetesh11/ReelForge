@@ -6744,6 +6744,48 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/audio:preview-mix": {
+      "post": {
+        "operationId": "preview_mix_api_v1_projects__project_id__audio_preview_mix_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Mix",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/cast": {
       "get": {
         "operationId": "get_cast_api_v1_projects__project_id__cast_get",

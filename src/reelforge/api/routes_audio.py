@@ -92,6 +92,10 @@ def build_router(ctx: AppContext) -> APIRouter:
     async def generate(project_id: str, cue_id: str) -> JSONResponse:
         return respond(lambda: job_body(service.generate(ctx, project_id, cue_id)), 202)
 
+    @router.post("/audio:preview-mix", status_code=202, response_model=JobOut)
+    async def preview_mix(project_id: str) -> JSONResponse:
+        return respond(lambda: job_body(service.preview_mix(ctx, project_id)), 202)
+
     @router.post("/audio/cues/{cue_id}:upload", status_code=201, response_model=AudioOut)
     async def upload(
         project_id: str,

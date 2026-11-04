@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import select
 
 from reelforge.artifacts.store import ArtifactSpec
-from reelforge.assembly.build import approved_shot_takes
+from reelforge.assembly.build import approved_shot_takes, build_edl, working_edl_path
+from reelforge.assembly.edl import save_edl
 from reelforge.audio import cues as cue_store
 from reelforge.audio.backends import engine_status
 from reelforge.audio.fit import FitError, fit_to_length
@@ -452,3 +453,27 @@ async def upload(
         fitted.unlink(missing_ok=True)
     set_picked(ctx, project_id, cue_id, take.id)
     return audio_body(ctx, project_id)
+
+
+# ---- preview of the full mix ---------------------------------------------------------------
+
+SHOTS_LOCKED = "Approve the shots first."
+
+
+def preview_mix(ctx: AppContext, project_id: str) -> Job:
+    """Refresh the working EDL with the current cues and queue one preview (no export folder)."""
+    from reelforge.assembly.state import AssemblyError  # noqa: PLC0415
+    from reelforge.audio.build import refresh_audio  # noqa: PLC0415
+    from reelforge.frames.service import stage_at_least  # noqa: PLC0415
+
+    require(ctx, project_id)
+    with ctx.session_factory() as s:
+        project = s.get(Project, project_id)
+    if project is None or not stage_at_least(project.stage, "SHOTS_APPROVED"):
+        raise AudioError(409, SHOTS_LOCKED)
+    try:
+        if refresh_audio(ctx, project_id) is None:
+            save_edl(build_edl(ctx, project_id), working_edl_path(ctx, project_id))
+        return ctx.previews.enqueue_now(project_id)
+    except AssemblyError as exc:
+        raise AudioError(exc.status, exc.message) from None
