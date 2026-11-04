@@ -383,6 +383,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/cast/{key}:set-age": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Age */
+        post: operations["set_age_api_v1_projects__project_id__cast__key__set_age_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/cast/{key}:upload": {
         parameters: {
             query?: never;
@@ -1030,6 +1047,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/voices/characters/{key}/emotion-clips/{emotion}:from-take": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clip From Take */
+        post: operations["clip_from_take_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__from_take_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/voices/characters/{key}/emotion-clips/{emotion}:remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove Emotion Clip */
+        post: operations["remove_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__remove_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/voices/characters/{key}/emotion-clips/{emotion}:upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Emotion Clip */
+        post: operations["upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/voices/characters/{key}:clear": {
         parameters: {
             query?: never;
@@ -1149,6 +1217,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:set-emotion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Emotion */
+        post: operations["set_emotion_api_v1_projects__project_id__voices_lines__scene_id__set_emotion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/voices/lines/{scene_id}:set-timing": {
         parameters: {
             query?: never;
@@ -1244,6 +1329,24 @@ export interface paths {
         /** Preview */
         get: operations["preview_api_v1_projects__project_id__voices_preview_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/voices/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Voice Settings */
+        get: operations["get_voice_settings_api_v1_projects__project_id__voices_settings_get"];
+        /** Put Voice Settings */
+        put: operations["put_voice_settings_api_v1_projects__project_id__voices_settings_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1524,6 +1627,13 @@ export interface components {
             /** File */
             file: string;
         };
+        /** Body_upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post */
+        Body_upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post: {
+            /** File */
+            file: string;
+            /** Transcript */
+            transcript?: string | null;
+        };
         /** Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post */
         Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post: {
             /** File */
@@ -1620,6 +1730,10 @@ export interface components {
         };
         /** CastItemOut */
         CastItemOut: {
+            /** Age */
+            age?: number | null;
+            /** Age Band */
+            age_band?: string | null;
             /** Aliases */
             aliases: string[];
             /** Approved */
@@ -1701,6 +1815,11 @@ export interface components {
              * @default
              */
             instruction: string;
+        };
+        /** CastSetAgeRequest */
+        CastSetAgeRequest: {
+            /** Age */
+            age?: unknown;
         };
         /** CastUseLibraryRequest */
         CastUseLibraryRequest: {
@@ -2583,6 +2702,15 @@ export interface components {
             /** Voice */
             voice?: null;
         };
+        /** VoiceClipFromTakeRequest */
+        VoiceClipFromTakeRequest: {
+            /** Scene Id */
+            scene_id: string;
+            /** Take Id */
+            take_id: string;
+            /** Transcript */
+            transcript?: string | null;
+        };
         /** VoiceEditTextRequest */
         VoiceEditTextRequest: {
             /** Text */
@@ -2656,6 +2784,12 @@ export interface components {
         VoiceOut: {
             /** Clip Seconds */
             clip_seconds?: number | null;
+            /** Emotion Clips */
+            emotion_clips?: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            } | null;
             /** Language */
             language: string;
             /**
@@ -2688,6 +2822,11 @@ export interface components {
             /** Take Id */
             take_id: string;
         };
+        /** VoiceSetEmotionRequest */
+        VoiceSetEmotionRequest: {
+            /** Emotion */
+            emotion?: string | null;
+        };
         /** VoiceSetRequest */
         VoiceSetRequest: {
             /**
@@ -2701,6 +2840,18 @@ export interface components {
             speed?: number | null;
             /** Voice Id */
             voice_id?: string | null;
+        };
+        /** VoiceSettingsOut */
+        VoiceSettingsOut: {
+            /** Default Phrase Gap Ms */
+            default_phrase_gap_ms: number;
+            /** Phrase Gap Ms */
+            phrase_gap_ms: number;
+        };
+        /** VoiceSettingsPut */
+        VoiceSettingsPut: {
+            /** Phrase Gap Ms */
+            phrase_gap_ms: number;
         };
         /** VoiceShortenOut */
         VoiceShortenOut: {
@@ -3588,6 +3739,42 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CastActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_age_api_v1_projects__project_id__cast__key__set_age_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CastSetAgeRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -4900,6 +5087,113 @@ export interface operations {
             };
         };
     };
+    clip_from_take_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__from_take_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+                emotion: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceClipFromTakeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__remove_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+                emotion: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                key: string;
+                emotion: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     clear_voice_api_v1_projects__project_id__voices_characters__key__clear_post: {
         parameters: {
             query?: never;
@@ -5140,6 +5434,42 @@ export interface operations {
             };
         };
     };
+    set_emotion_api_v1_projects__project_id__voices_lines__scene_id__set_emotion_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSetEmotionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceLineActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     set_timing_api_v1_projects__project_id__voices_lines__scene_id__set_timing_post: {
         parameters: {
             query?: never;
@@ -5328,6 +5658,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_voice_settings_api_v1_projects__project_id__voices_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_voice_settings_api_v1_projects__project_id__voices_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSettingsPut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VoiceSettingsOut"];
                 };
             };
             /** @description Validation Error */
