@@ -194,6 +194,22 @@ class VoiceSlot(Base):
     updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
 
 
+class VoiceEmotionClip(Base):
+    """Per project, character and emotion: the reference clip used for that emotion."""
+
+    __tablename__ = "voice_emotion_clips"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    story_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    emotion: Mapped[str] = mapped_column(String(16), primary_key=True)
+    artifact_id: Mapped[str] = mapped_column(String(26))
+    transcript: Mapped[str] = mapped_column(Text, default="", server_default="")
+    clip_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
+
+
 class FrameSlot(Base):
     """Per project and scene: framing, prompt and approval of the key frame."""
 

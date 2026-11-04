@@ -3,6 +3,8 @@ import {
   previewUrl,
   useCancelVoiceJob,
   useGenerateVoices,
+  useSetPhraseGap,
+  useVoiceSettings,
   useVoices,
   type VoiceBoardState,
 } from "@/api/voice";
@@ -51,6 +53,37 @@ function JobStatus({
 
 const VOICES_DONE = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 
+function PhraseGap({ projectId }: { projectId: string }) {
+  const settings = useVoiceSettings(projectId);
+  const save = useSetPhraseGap(projectId);
+  const [draft, setDraft] = useState<string | null>(null);
+  if (!settings.data) return null;
+  const shown = draft ?? String(settings.data.phrase_gap_ms);
+  return (
+    <div className="actions">
+      <label className="field">
+        Silence between phrases (ms)
+        <input
+          type="number"
+          min={0}
+          max={1000}
+          step={10}
+          value={shown}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </label>
+      <button
+        type="button"
+        disabled={draft === null || draft === "" || save.isPending}
+        onClick={() => save.mutate(Number(draft), { onSuccess: () => setDraft(null) })}
+      >
+        Save gap
+      </button>
+      {save.error ? <p role="alert">{save.error.message}</p> : null}
+    </div>
+  );
+}
+
 export function VoiceBoard({ projectId, onContinue }: { projectId: string; onContinue?: () => void }) {
   const voices = useVoices(projectId);
   const generate = useGenerateVoices(projectId);
@@ -60,6 +93,7 @@ export function VoiceBoard({ projectId, onContinue }: { projectId: string; onCon
   if (!voices.data) return null;
   const board = voices.data;
   const recorded = new Set(board.characters.filter((c) => c.voice?.mode === "recorded").map((c) => c.key));
+  const cloned = new Set(board.characters.filter((c) => c.voice?.mode === "cloned").map((c) => c.key));
   const noTake = board.lines.filter((l) => l.state !== "no_dialogue" && !l.takes.some((t) => t.active)).length;
   const error = generate.error?.message ?? cancel.error?.message;
 
@@ -83,6 +117,7 @@ export function VoiceBoard({ projectId, onContinue }: { projectId: string; onCon
       {noTake > 0 ? (
         <p className="meta">{noTake === 1 ? "1 line has no take yet" : `${noTake} lines have no take yet`}</p>
       ) : null}
+      <PhraseGap projectId={projectId} />
       <JobStatus board={board} receivedAt={voices.dataUpdatedAt} onCancel={(id) => cancel.mutate(id)} />
       {error ? <p role="alert">{error}</p> : null}
       <audio key={playback.nonce} src={playback.url ?? undefined} autoPlay controls aria-label="Voice playback" />
@@ -93,6 +128,7 @@ export function VoiceBoard({ projectId, onContinue }: { projectId: string; onCon
             projectId={projectId}
             line={line}
             recorded={line.speaker !== null && recorded.has(line.speaker)}
+            cloned={line.speaker !== null && cloned.has(line.speaker)}
             onPlay={playback.play}
           />
         ))}

@@ -10,6 +10,7 @@ from reelforge.api.routes_jobs import job_body
 from reelforge.api.schemas import (
     JobOut,
     VoiceClearOut,
+    VoiceClipFromTakeRequest,
     VoiceEditTextRequest,
     VoiceGenerateRequest,
     VoiceLineActionOut,
@@ -17,13 +18,17 @@ from reelforge.api.schemas import (
     VoiceModelPut,
     VoiceOut,
     VoiceSelectTakeRequest,
+    VoiceSetEmotionRequest,
     VoiceSetRequest,
+    VoiceSettingsOut,
+    VoiceSettingsPut,
     VoiceShortenOut,
     VoicesOut,
     VoiceTimingRequest,
 )
 from reelforge.context import AppContext
 from reelforge.voice import service, slots
+from reelforge.voice.mapping import MappingError
 
 
 def build_router(ctx: AppContext) -> APIRouter:
@@ -51,6 +56,24 @@ def build_router(ctx: AppContext) -> APIRouter:
             return JSONResponse(service.voices_body(ctx, project_id))
         except service.VoiceError as exc:
             raise fail(exc) from None
+
+    @router.get(p + "/voices/settings", response_model=VoiceSettingsOut)
+    async def get_voice_settings(project_id: str) -> JSONResponse:
+        try:
+            return JSONResponse(service.settings_body(ctx, project_id))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        except MappingError as exc:
+            raise HTTPException(500, str(exc)) from None
+
+    @router.put(p + "/voices/settings", response_model=VoiceSettingsOut)
+    async def put_voice_settings(project_id: str, body: VoiceSettingsPut) -> JSONResponse:
+        try:
+            return JSONResponse(service.set_phrase_gap(ctx, project_id, body.phrase_gap_ms))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        except MappingError as exc:
+            raise HTTPException(500, str(exc)) from None
 
     @router.post(p + "/voices/characters/{key}:set", response_model=VoiceOut)
     async def set_voice(project_id: str, key: str, body: VoiceSetRequest) -> JSONResponse:
@@ -95,6 +118,43 @@ def build_router(ctx: AppContext) -> APIRouter:
             raise fail(exc) from None
         return JSONResponse(out, status_code=201)
 
+    clips = p + "/voices/characters/{key}/emotion-clips/{emotion}"
+
+    @router.post(clips + ":upload", status_code=201, response_model=VoiceOut)
+    async def upload_emotion_clip(
+        project_id: str,
+        key: str,
+        emotion: str,
+        file: UploadFile,
+        transcript: str | None = Form(None),
+    ) -> JSONResponse:
+        try:
+            service.require(ctx, project_id, key)
+            data = await file.read(ctx.settings.max_upload_mb * 1024 * 1024 + 1)
+            out = await service.upload_emotion_clip(ctx, project_id, key, emotion, data, transcript)
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return JSONResponse(out, status_code=201)
+
+    @router.post(clips + ":from-take", status_code=201, response_model=VoiceOut)
+    async def clip_from_take(
+        project_id: str, key: str, emotion: str, body: VoiceClipFromTakeRequest
+    ) -> JSONResponse:
+        try:
+            out = service.clip_from_take(
+                ctx, project_id, key, emotion, body.scene_id, body.take_id, body.transcript
+            )
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        return JSONResponse(out, status_code=201)
+
+    @router.post(clips + ":remove", response_model=VoiceOut)
+    async def remove_emotion_clip(project_id: str, key: str, emotion: str) -> JSONResponse:
+        try:
+            return JSONResponse(service.remove_emotion_clip(ctx, project_id, key, emotion))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
     @router.post(p + "/voices:generate", status_code=202, response_model=JobOut)
     async def generate(project_id: str, body: VoiceGenerateRequest) -> JSONResponse:
         try:
@@ -136,6 +196,15 @@ def build_router(ctx: AppContext) -> APIRouter:
     async def edit_text(project_id: str, scene_id: str, body: VoiceEditTextRequest) -> JSONResponse:
         try:
             return JSONResponse(service.edit_text(ctx, project_id, scene_id, body.text))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @line_route("set-emotion")
+    async def set_emotion(
+        project_id: str, scene_id: str, body: VoiceSetEmotionRequest
+    ) -> JSONResponse:
+        try:
+            return JSONResponse(service.set_emotion(ctx, project_id, scene_id, body.emotion))
         except service.VoiceError as exc:
             raise fail(exc) from None
 

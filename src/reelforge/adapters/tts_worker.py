@@ -7,8 +7,11 @@ It reads a batch of lines (JSONL), loads each distinct model once, writes one 24
     python tts_worker.py --batch BATCH.jsonl --out-dir DIR [--backend real|mock]
     python tts_worker.py --selftest [--backend real|mock] [--model ID]
 
-Batch line: {"id", "text", "model", "voice", "ref_audio", "ref_text", "speed", "lang"}.
-Progress line: {"id", "path", "duration_s"} or {"id", "error"}.
+Batch line: {"id", "text", "model", "voice", "ref_audio", "ref_text", "speed", "lang"} plus the
+optional {"instruct", "duration_scale", "target_speed", "gen"}. For OmniVoice the length target is
+`estimated length x duration_scale / target_speed` seconds, passed to the model as `duration_s`
+only when that factor is not 1.0.
+Progress line: {"id", "path", "duration_s"[, "duration_requested_s"]} or {"id", "error"}.
 """
 
 from __future__ import annotations
@@ -31,8 +34,11 @@ SILENCE_S = 0.3
 FAIL_MARK = "[[fail]]"
 SELFTEST_WORD = "नमस्ते"
 KOKORO_LANG = {"hi": "h"}
+TARGET_MIN_S = 0.3
+TARGET_MAX_S = 60.0
 
-Synth = Callable[[dict[str, Any]], tuple["np.ndarray[Any, Any]", int]]
+# A synth returns (samples, rate) or (samples, rate, duration_requested_s).
+Synth = Callable[[dict[str, Any]], tuple[Any, ...]]
 LoadModel = Callable[[str], Synth]
 Emit = Callable[[dict[str, Any]], None]
 
@@ -67,13 +73,34 @@ def write_wav(path: Path, samples: np.ndarray[Any, Any], rate: int = OUT_RATE) -
     return float(pcm.size) / rate
 
 
-def _mock_synth(line: dict[str, Any]) -> tuple[np.ndarray[Any, Any], int]:
+def duration_factor(line: dict[str, Any]) -> float:
+    """`duration_scale / target_speed` of a batch line (1.0 when neither key is given)."""
+    scale = float(line.get("duration_scale") or 1.0)
+    target = float(line.get("target_speed") or 1.0)
+    return scale / target
+
+
+def check_target(seconds: float) -> float:
+    """The real model accepts 0.3 to 60 s; the mock mirrors that limit."""
+    if not TARGET_MIN_S <= seconds <= TARGET_MAX_S:
+        raise ValueError(
+            f"Duration target {seconds:g} s is outside what the model accepts "
+            f"({TARGET_MIN_S:g} to {TARGET_MAX_S:g} s)."
+        )
+    return seconds
+
+
+def _mock_synth(line: dict[str, Any]) -> tuple[Any, ...]:
     text = str(line.get("text", ""))
     if FAIL_MARK in text:
         raise RuntimeError("mock failure requested by [[fail]]")
     speed = float(line.get("speed") or 1.0)
     words = len(text.split())
     tone_s = (0.3 + 0.25 * words) / speed
+    factor = duration_factor(line)
+    requested: float | None = None
+    if factor != 1.0:
+        tone_s = requested = check_target(tone_s * factor)
     digest = hashlib.sha256(text.encode("utf-8")).digest()
     freq = 180.0 + (int.from_bytes(digest[:2], "big") % 240)
     n_tone = round(tone_s * OUT_RATE)
@@ -85,7 +112,8 @@ def _mock_synth(line: dict[str, Any]) -> tuple[np.ndarray[Any, Any], int]:
         tone[:fade] *= ramp
         tone[-fade:] *= ramp[::-1]
     gap = np.zeros(round(SILENCE_S * OUT_RATE))
-    return np.concatenate([gap, tone, gap]).astype("float32"), OUT_RATE
+    audio = np.concatenate([gap, tone, gap]).astype("float32")
+    return (audio, OUT_RATE) if requested is None else (audio, OUT_RATE, requested)
 
 
 def _mock_loader(_model_id: str) -> Synth:
@@ -116,11 +144,33 @@ def _real_loader(model_id: str) -> Synth:
     is_kokoro = "kokoro" in model_id.lower()
     is_omnivoice = "omnivoice" in model_id.lower()
 
-    def synth(line: dict[str, Any]) -> tuple[np.ndarray[Any, Any], int]:
-        kwargs: dict[str, Any] = {"text": line["text"], "speed": float(line.get("speed") or 1.0)}
-        if line.get("voice"):
-            # OmniVoice takes a voice description as `instruct`; a `voice` argument is ignored.
-            kwargs["instruct" if is_omnivoice else "voice"] = line["voice"]
+    def estimated_s(text: str) -> float:
+        """OmniVoice's own default length for `text`, in seconds."""
+        module: Any = importlib.import_module("mlx_audio.tts.models.omnivoice.duration")
+        tokens: float = module.RuleDurationEstimator().estimate_duration(
+            text, "Nice to meet you.", 25
+        )
+        per_second = int(model.sample_rate) / 960
+        return max(10, int(tokens * 1.15)) / per_second
+
+    def synth(line: dict[str, Any]) -> tuple[Any, ...]:
+        kwargs: dict[str, Any] = {"text": line["text"]}
+        if not is_omnivoice:  # the MLX OmniVoice build ignores `speed`; pace is `duration_s`
+            kwargs["speed"] = float(line.get("speed") or 1.0)
+        if is_omnivoice:
+            # A voice description and the line's style values are one `instruct` string.
+            parts = [str(p) for p in (line.get("voice"), line.get("instruct")) if p]
+            if parts:
+                kwargs["instruct"] = ", ".join(parts)
+        elif line.get("voice"):
+            kwargs["voice"] = line["voice"]
+        requested: float | None = None
+        factor = duration_factor(line) if is_omnivoice else 1.0
+        if factor != 1.0:
+            requested = check_target(estimated_s(str(line["text"])) * factor)
+            kwargs["duration_s"] = requested
+        gen: dict[str, Any] = dict(line.get("gen") or {})
+        kwargs.update(gen)
         lang = str(line.get("lang") or "hi")
         if is_kokoro:
             kwargs["lang_code"] = KOKORO_LANG.get(lang, lang)
@@ -132,7 +182,9 @@ def _real_loader(model_id: str) -> Synth:
         parts = [np.asarray(r.audio, dtype="float32").reshape(-1) for r in model.generate(**kwargs)]
         if not parts:
             raise RuntimeError("the model returned no audio")
-        return np.concatenate(parts), int(model.sample_rate)
+        audio = np.concatenate(parts)
+        rate = int(model.sample_rate)
+        return (audio, rate) if requested is None else (audio, rate, requested)
 
     return synth
 
@@ -156,13 +208,18 @@ def run_batch(
         if model_id not in synths:
             synths[model_id] = loader(model_id)  # a load failure stops the whole batch
         try:
-            samples, rate = synths[model_id](line)
+            made = synths[model_id](line)
+            samples, rate = made[0], int(made[1])
+            requested = float(made[2]) if len(made) > 2 else None
             samples = resample(np.asarray(samples, dtype="float32").reshape(-1), rate)
             if samples.size == 0:
                 raise RuntimeError("the model returned no audio")
             path = out_dir / f"{line_id}.wav"
             duration = write_wav(path, samples)
-            emit({"id": line_id, "path": str(path), "duration_s": duration})
+            event: dict[str, Any] = {"id": line_id, "path": str(path), "duration_s": duration}
+            if requested is not None:
+                event["duration_requested_s"] = requested
+            emit(event)
         except Exception as exc:  # noqa: BLE001 - one bad line must not stop the batch
             emit({"id": line_id, "error": str(exc) or type(exc).__name__})
     return 0

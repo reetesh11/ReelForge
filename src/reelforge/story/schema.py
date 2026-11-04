@@ -4,7 +4,17 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
+
+from reelforge.story.age import check_age
+from reelforge.story.markup import check_emotion, parse_segments
 
 _STRICT = ConfigDict(extra="forbid", strict=True)
 
@@ -29,6 +39,12 @@ class Character(BaseModel):
     name: str
     look: str = Field(min_length=1)
     voice: Voice | None = None
+    age: int | None = None
+
+    @field_validator("age", mode="before")
+    @classmethod
+    def _age(cls, value: object) -> int | None:
+        return check_age(value)
 
 
 class Product(BaseModel):
@@ -52,6 +68,19 @@ class Scene(BaseModel):
     continue_from: str | None = None
     end_card: bool | None = None
     suggested: bool | None = None
+    emotion: str | None = None
+
+    @field_validator("emotion", mode="before")
+    @classmethod
+    def _emotion(cls, value: object) -> str | None:
+        return check_emotion(value if value is None else str(value))
+
+    @field_validator("line")
+    @classmethod
+    def _line(cls, value: str | None) -> str | None:
+        if value:
+            parse_segments(value)
+        return value
 
 
 class Music(BaseModel):

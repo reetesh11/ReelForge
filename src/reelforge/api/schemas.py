@@ -181,6 +181,12 @@ class StructureRequest(BaseModel):
     answers: list[StoryAnswer] = []
 
 
+class EmotionClipOut(BaseModel):
+    url: str
+    transcript: str
+    clip_seconds: float | None = None
+
+
 class VoiceOut(BaseModel):
     mode: Literal["preset", "cloned", "recorded"]
     model: Literal["omnivoice", "kokoro"] | None
@@ -190,6 +196,7 @@ class VoiceOut(BaseModel):
     speed: float
     language: str
     clip_seconds: float | None = None
+    emotion_clips: dict[str, EmotionClipOut] | None = None
     model_mismatch: bool
 
 
@@ -251,6 +258,10 @@ class CastApproveRequest(BaseModel):
     candidate_id: str
 
 
+class CastSetAgeRequest(BaseModel):
+    age: Any = None  # checked by `check_age`, which gives the 422 message
+
+
 class CastUseLibraryRequest(BaseModel):
     character_id: str
 
@@ -294,6 +305,8 @@ class CastItemOut(BaseModel):
     master_sha256: str | None = None
     seed: int | None = None
     voice_reference: str
+    age: int | None = None
+    age_band: str | None = None
     library_character_id: str | None = None
     variant_of_library_id: str | None = None
 
@@ -363,6 +376,8 @@ class VoiceCharacterOut(BaseModel):
     key: str
     name: str
     avatar_url: str | None = None
+    age: int | None = None
+    age_band: str | None = None
     voice: VoiceOut | None
 
 
@@ -391,6 +406,25 @@ class VoiceSelectTakeRequest(BaseModel):
 
 class VoiceEditTextRequest(BaseModel):
     text: str
+
+
+class VoiceSetEmotionRequest(BaseModel):
+    emotion: str | None = None
+
+
+class VoiceClipFromTakeRequest(BaseModel):
+    scene_id: str
+    take_id: str
+    transcript: str | None = None
+
+
+class VoiceSettingsOut(BaseModel):
+    phrase_gap_ms: int
+    default_phrase_gap_ms: int
+
+
+class VoiceSettingsPut(BaseModel):
+    phrase_gap_ms: int
 
 
 class VoiceTimingRequest(BaseModel):

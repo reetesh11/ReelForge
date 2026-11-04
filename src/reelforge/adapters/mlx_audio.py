@@ -15,7 +15,7 @@ import subprocess
 import sys
 import wave
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -32,6 +32,7 @@ PAUSE_MAX = 1.0
 TARGET_LUFS = -16.0
 OUT_RATE = 48000
 PEAK_LIMIT = 0.89
+EDGE_PAD_S = 0.02  # near-silence kept at each end of a take
 
 # The `voice_model` setting maps to the models.toml key.
 VOICE_MODELS: dict[str, str] = {"omnivoice": "tts", "kokoro": "tts_fallback"}
@@ -87,6 +88,13 @@ class VoiceLine:
     ref_text: str | None
     speed: float
     lang: str = "hi"
+    instruct: str | None = None
+    duration_scale: float = 1.0
+    semitones: float = 0.0
+    tempo: float = 1.0
+    gain_db: float = 0.0
+    generation: dict[str, float] = field(default_factory=lambda: {})
+    edge_pad_s: float = EDGE_PAD_S  # 0 for phrases that are joined, so the gap is exact
 
 
 @dataclass
@@ -95,15 +103,19 @@ class VoiceResult:
     path: Path | None
     duration_s: float | None
     error: str | None
+    duration_requested_s: float | None = None
 
 
 _LUFS_RE = re.compile(r"I:\s+(-?\d+(?:\.\d+)?|-inf)\s+LUFS")
-_TRIM = (
-    "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.02,"
-    "areverse,"
-    "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.02,"
-    "areverse"
-)
+
+
+def _trim(pad_s: float) -> str:
+    """Cut near-silence from both ends, keeping `pad_s` seconds of it."""
+    one = f"silenceremove=start_periods=1:start_threshold=-50dB:start_silence={pad_s:g}"
+    return f"{one},areverse,{one},areverse"
+
+
+_TRIM = _trim(EDGE_PAD_S)
 
 
 def _first_line(text: str) -> str:
@@ -122,18 +134,48 @@ def _wav_seconds(path: Path) -> float:
         return w.getnframes() / w.getframerate()
 
 
+NO_RUBBERBAND = (
+    'ffmpeg is missing the "rubberband" filter, needed for pitch and tempo changes. '
+    "Install ffmpeg-full."
+)
+
+
+def ffmpeg_has_filter(name: str) -> bool:
+    """Whether the installed ffmpeg lists the filter `name` (asked every time, never cached)."""
+    try:
+        res = subprocess.run(  # noqa: S603
+            ["ffmpeg", "-hide_banner", "-filters"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return any(len(parts := ln.split()) >= 2 and parts[1] == name for ln in res.stdout.splitlines())
+
+
 async def postprocess_wav(
     src: Path,
     dst: Path,
     *,
     atempo: float | None = None,
+    semitones: float = 0.0,
+    tempo: float = 1.0,
+    gain_db: float = 0.0,
+    edge_pad_s: float = EDGE_PAD_S,
     timeout_s: float = 120.0,
     cancel: CancelToken | None = None,
 ) -> float:
-    """Trim edge silence, apply `atempo`, normalise to -16 LUFS, write 48 kHz mono 16-bit WAV."""
-    chain = _TRIM
+    """Trim edge silence, change tempo and pitch, normalise to -16 LUFS, apply `gain_db` after
+    the normalisation, and write a 48 kHz mono 16-bit WAV."""
+    chain = _TRIM if edge_pad_s == EDGE_PAD_S else _trim(edge_pad_s)
     if atempo is not None and atempo != 1.0:
         chain += f",atempo={atempo:.4f}"
+    if semitones != 0.0 or tempo != 1.0:
+        if not ffmpeg_has_filter("rubberband"):
+            raise AdapterError(NO_RUBBERBAND)
+        chain += f",rubberband=pitch={2 ** (semitones / 12):.6f}:tempo={tempo:.6f}"
     dst.parent.mkdir(parents=True, exist_ok=True)
     measure = await run_command(
         [
@@ -156,6 +198,7 @@ async def postprocess_wav(
     gain = 0.0
     if found and found[-1] != "-inf":
         gain = TARGET_LUFS - float(found[-1])
+    gain += gain_db
     final = (
         f"{chain},volume={gain:.3f}dB,alimiter=limit={PEAK_LIMIT}:level=disabled,"
         f"aresample={OUT_RATE}"
@@ -279,6 +322,7 @@ class MlxAudioAdapter:
         job_id: str | None = None,
     ) -> list[VoiceResult]:
         plans = {ln.id: plan_speed(voice_model, ln.speed) for ln in lines}
+        by_id = {ln.id: ln for ln in lines}
         raw_dir = out_dir / "raw"
         raw_dir.mkdir(parents=True, exist_ok=True)
         batch = out_dir / "batch.jsonl"
@@ -292,6 +336,11 @@ class MlxAudioAdapter:
                 "ref_text": ln.ref_text,
                 "speed": plans[ln.id][0],
                 "lang": ln.lang,
+                "instruct": ln.instruct,
+                "duration_scale": ln.duration_scale,
+                # OmniVoice pace is a length target in the worker; Kokoro has a native speed.
+                "target_speed": ln.speed if voice_model != "kokoro" else 1.0,
+                "gen": ln.generation,
             }
             for ln in lines
         ]
@@ -324,10 +373,24 @@ class MlxAudioAdapter:
             else:
                 try:
                     dst = out_dir / f"{line_id}.48k.wav"
+                    line = by_id[line_id]
                     duration = await postprocess_wav(
-                        Path(str(event["path"])), dst, atempo=plans[line_id][1], cancel=cancel
+                        Path(str(event["path"])),
+                        dst,
+                        semitones=line.semitones,
+                        tempo=line.tempo,
+                        gain_db=line.gain_db,
+                        edge_pad_s=line.edge_pad_s,
+                        cancel=cancel,
                     )
-                    result = VoiceResult(line_id, dst, duration, None)
+                    requested = event.get("duration_requested_s")
+                    result = VoiceResult(
+                        line_id,
+                        dst,
+                        duration,
+                        None,
+                        float(requested) if requested is not None else None,
+                    )
                 except AdapterError as exc:
                     if cancel.cancelled:
                         raise

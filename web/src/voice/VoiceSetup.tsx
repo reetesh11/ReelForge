@@ -1,10 +1,14 @@
 import { useState } from "react";
 import {
+  EMOTIONS,
   useClearVoice,
   usePresetPreview,
+  useRemoveEmotionClip,
   useSetVoice,
+  useUploadEmotionClip,
   useUploadReference,
   useVoices,
+  type EmotionClip,
   type SetVoiceBody,
   type VoiceOut,
 } from "@/api/voice";
@@ -32,10 +36,91 @@ export interface VoiceSetupProps {
   onUpload: (file: File, text: string) => void;
   onPreview: (presetId: string) => Promise<string>;
   onClear?: () => void;
+  age?: number | null;
+  ageBand?: string;
+  modelKey?: string;
+  emotionClips?: Record<string, EmotionClip>;
+  onUploadEmotionClip?: (emotion: string, file: File, transcript: string) => void;
+  onRemoveEmotionClip?: (emotion: string) => void;
+}
+
+function EmotionClipRow({
+  emotion,
+  label,
+  clip,
+  onUpload,
+  onRemove,
+}: {
+  emotion: string;
+  label: string;
+  clip: EmotionClip | undefined;
+  onUpload?: (emotion: string, file: File, transcript: string) => void;
+  onRemove?: (emotion: string) => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [transcript, setTranscript] = useState("");
+  return (
+    <li aria-label={`${label} clip`} className="card">
+      <strong>{label}</strong>
+      {clip ? (
+        <div>
+          <audio controls src={clip.url} aria-label={`${label} clip audio`} />
+          <p>{clip.transcript}</p>
+          <button type="button" onClick={() => onRemove?.(emotion)}>
+            {`Remove ${label} clip`}
+          </button>
+        </div>
+      ) : (
+        <p className="meta">No clip. The neutral reference and emotion settings are used.</p>
+      )}
+      <div className="actions">
+        <label className="field">
+          {`Upload clip for ${label}`}
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        <label className="field">
+          {`Transcript for ${label}`}
+          <input type="text" value={transcript} onChange={(e) => setTranscript(e.target.value)} />
+        </label>
+        <button
+          type="button"
+          disabled={!file || !transcript.trim()}
+          onClick={() => {
+            if (!file) return;
+            onUpload?.(emotion, file, transcript);
+            setFile(null);
+            setTranscript("");
+          }}
+        >
+          Upload clip
+        </button>
+      </div>
+    </li>
+  );
 }
 
 /** The "Voice" section of a cast row: preset, cloned clip or recorded lines. */
-export function VoiceSetup({ name, voice, presets, busy, error, onSet, onUpload, onPreview, onClear }: VoiceSetupProps) {
+export function VoiceSetup({
+  name,
+  voice,
+  presets,
+  busy,
+  error,
+  onSet,
+  onUpload,
+  onPreview,
+  onClear,
+  age,
+  ageBand,
+  modelKey,
+  emotionClips,
+  onUploadEmotionClip,
+  onRemoveEmotionClip,
+}: VoiceSetupProps) {
   const [mode, setMode] = useState<Mode>((voice?.mode as Mode | undefined) ?? "preset");
   const [preset, setPreset] = useState(voice?.voice_id ?? "");
   const [text, setText] = useState(voice?.reference_text ?? "");
@@ -64,6 +149,12 @@ export function VoiceSetup({ name, voice, presets, busy, error, onSet, onUpload,
   return (
     <fieldset aria-label={`Voice for ${name}`}>
       <legend>Voice</legend>
+      {age !== undefined ? (
+        <p className="meta">
+          {age === null || age === undefined ? "No age set" : `Age ${age}${ageBand ? ` (${ageBand})` : ""}`}
+          {modelKey === "kokoro" ? <span className="badge amber">Experimental</span> : null}
+        </p>
+      ) : null}
       <div role="radiogroup" aria-label="Voice mode" className="actions">
         {MODES.map(({ mode: m, label }) => (
           <label key={m} className="inline">
@@ -130,6 +221,21 @@ export function VoiceSetup({ name, voice, presets, busy, error, onSet, onUpload,
           >
             Use this clip
           </button>
+          <section aria-label="Emotion reference clips">
+            <h4>Emotion reference clips</h4>
+            <ul className="list">
+              {EMOTIONS.map((o) => (
+                <EmotionClipRow
+                  key={o.value}
+                  emotion={o.value}
+                  label={o.label}
+                  clip={emotionClips?.[o.value]}
+                  onUpload={onUploadEmotionClip}
+                  onRemove={onRemoveEmotionClip}
+                />
+              ))}
+            </ul>
+          </section>
         </div>
       ) : null}
 
@@ -155,9 +261,11 @@ export function ProjectVoiceSetup({ projectId, characterKey }: { projectId: stri
   const clear = useClearVoice(projectId);
   const upload = useUploadReference(projectId);
   const preview = usePresetPreview(projectId);
+  const uploadClip = useUploadEmotionClip(projectId);
+  const removeClip = useRemoveEmotionClip(projectId);
   const character = voices.data?.characters.find((c) => c.key === characterKey);
   if (!voices.data || !character) return null;
-  const error = [setVoice, clear, upload].map((m) => m.error?.message).find((m) => m !== undefined) ?? null;
+  const error = [setVoice, clear, upload, uploadClip, removeClip].map((m) => m.error?.message).find((m) => m !== undefined) ?? null;
   return (
     <VoiceSetup
       key={`${characterKey}-${character.voice?.mode ?? "none"}`}
@@ -170,6 +278,14 @@ export function ProjectVoiceSetup({ projectId, characterKey }: { projectId: stri
       onUpload={(file, text) => upload.mutate({ key: characterKey, file, text: text || undefined })}
       onPreview={(id) => preview.mutateAsync(id)}
       onClear={() => clear.mutate(characterKey)}
+      age={character.age ?? null}
+      ageBand={character.age_band ?? undefined}
+      modelKey={voices.data.voice_model.key}
+      emotionClips={(character.voice?.emotion_clips ?? undefined) as Record<string, EmotionClip> | undefined}
+      onUploadEmotionClip={(emotion, file, transcript) =>
+        uploadClip.mutate({ key: characterKey, emotion, file, transcript })
+      }
+      onRemoveEmotionClip={(emotion) => removeClip.mutate({ key: characterKey, emotion })}
     />
   );
 }

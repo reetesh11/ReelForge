@@ -14,6 +14,7 @@ from reelforge.adapters.llm import ChatMessage
 from reelforge.api.schemas import StoryVersionOut, StructureRequest
 from reelforge.db.models import Job
 from reelforge.story import service
+from reelforge.story.age import check_age
 from reelforge.story.errors import StoryInvalid
 from reelforge.story.prompts import REPAIR_PROMPT, STRUCTURE_PROMPT, load_prompt
 from reelforge.story.schema import Story, story_json_schema
@@ -117,6 +118,19 @@ def _questions(raw: Any) -> list[dict[str, str]]:
     return out
 
 
+def _drop_bad_ages(data: dict[str, Any]) -> None:
+    """A proposed age that is not a whole number from 1 to 120 is dropped, not an error."""
+    characters: Any = data.get("characters")
+    if not isinstance(characters, dict):
+        return
+    for character in characters.values():  # type: ignore[reportUnknownVariableType]
+        if isinstance(character, dict) and "age" in character:
+            try:
+                check_age(character["age"])  # type: ignore[reportUnknownArgumentType]
+            except ValueError:
+                character.pop("age", None)  # type: ignore[reportUnknownMemberType]
+
+
 def _apply_server_fields(data: dict[str, Any], req: StructureRequest) -> None:
     data["version"] = 1
     data["target_seconds"] = req.target_seconds
@@ -125,6 +139,7 @@ def _apply_server_fields(data: dict[str, Any], req: StructureRequest) -> None:
     if req.style and req.style.strip():
         data["style"] = req.style.strip()
     user_dialogue = bool(req.dialogue and req.dialogue.strip())
+    _drop_bad_ages(data)
     scenes: Any = data.get("scenes")
     if isinstance(scenes, list):
         for scene in scenes:  # type: ignore[reportUnknownVariableType]

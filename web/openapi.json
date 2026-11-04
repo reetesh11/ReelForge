@@ -559,6 +559,31 @@
         "title": "Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post",
         "type": "object"
       },
+      "Body_upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post",
+        "type": "object"
+      },
       "Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post": {
         "properties": {
           "file": {
@@ -852,6 +877,28 @@
       },
       "CastItemOut": {
         "properties": {
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "age_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Band"
+          },
           "aliases": {
             "items": {
               "type": "string"
@@ -1128,6 +1175,15 @@
         "title": "CastRefine",
         "type": "object"
       },
+      "CastSetAgeRequest": {
+        "properties": {
+          "age": {
+            "title": "Age"
+          }
+        },
+        "title": "CastSetAgeRequest",
+        "type": "object"
+      },
       "CastUseLibraryRequest": {
         "properties": {
           "character_id": {
@@ -1187,6 +1243,35 @@
           "fix"
         ],
         "title": "CheckOut",
+        "type": "object"
+      },
+      "EmotionClipOut": {
+        "properties": {
+          "clip_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Seconds"
+          },
+          "transcript": {
+            "title": "Transcript",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "transcript"
+        ],
+        "title": "EmotionClipOut",
         "type": "object"
       },
       "ExportStateOut": {
@@ -3721,6 +3806,28 @@
       },
       "VoiceCharacterOut": {
         "properties": {
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "age_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Band"
+          },
           "avatar_url": {
             "anyOf": [
               {
@@ -3767,6 +3874,35 @@
           }
         },
         "title": "VoiceClearOut",
+        "type": "object"
+      },
+      "VoiceClipFromTakeRequest": {
+        "properties": {
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "take_id": {
+            "title": "Take Id",
+            "type": "string"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          }
+        },
+        "required": [
+          "scene_id",
+          "take_id"
+        ],
+        "title": "VoiceClipFromTakeRequest",
         "type": "object"
       },
       "VoiceEditTextRequest": {
@@ -3964,6 +4100,20 @@
             ],
             "title": "Clip Seconds"
           },
+          "emotion_clips": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/EmotionClipOut"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emotion Clips"
+          },
           "language": {
             "title": "Language",
             "type": "string"
@@ -4070,6 +4220,23 @@
         "title": "VoiceSelectTakeRequest",
         "type": "object"
       },
+      "VoiceSetEmotionRequest": {
+        "properties": {
+          "emotion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emotion"
+          }
+        },
+        "title": "VoiceSetEmotionRequest",
+        "type": "object"
+      },
       "VoiceSetRequest": {
         "properties": {
           "mode": {
@@ -4119,6 +4286,37 @@
           "mode"
         ],
         "title": "VoiceSetRequest",
+        "type": "object"
+      },
+      "VoiceSettingsOut": {
+        "properties": {
+          "default_phrase_gap_ms": {
+            "title": "Default Phrase Gap Ms",
+            "type": "integer"
+          },
+          "phrase_gap_ms": {
+            "title": "Phrase Gap Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "phrase_gap_ms",
+          "default_phrase_gap_ms"
+        ],
+        "title": "VoiceSettingsOut",
+        "type": "object"
+      },
+      "VoiceSettingsPut": {
+        "properties": {
+          "phrase_gap_ms": {
+            "title": "Phrase Gap Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "phrase_gap_ms"
+        ],
+        "title": "VoiceSettingsPut",
         "type": "object"
       },
       "VoiceShortenOut": {
@@ -5481,6 +5679,67 @@
           }
         },
         "summary": "Reopen",
+        "tags": [
+          "cast"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/cast/{key}:set-age": {
+      "post": {
+        "operationId": "set_age_api_v1_projects__project_id__cast__key__set_age_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CastSetAgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CastActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Age",
         "tags": [
           "cast"
         ]
@@ -7459,6 +7718,206 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/voices/characters/{key}/emotion-clips/{emotion}:from-take": {
+      "post": {
+        "operationId": "clip_from_take_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__from_take_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "emotion",
+            "required": true,
+            "schema": {
+              "title": "Emotion",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceClipFromTakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clip From Take",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/characters/{key}/emotion-clips/{emotion}:remove": {
+      "post": {
+        "operationId": "remove_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__remove_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "emotion",
+            "required": true,
+            "schema": {
+              "title": "Emotion",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Emotion Clip",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/characters/{key}/emotion-clips/{emotion}:upload": {
+      "post": {
+        "operationId": "upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "emotion",
+            "required": true,
+            "schema": {
+              "title": "Emotion",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_emotion_clip_api_v1_projects__project_id__voices_characters__key__emotion_clips__emotion__upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Emotion Clip",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/voices/characters/{key}:clear": {
       "post": {
         "operationId": "clear_voice_api_v1_projects__project_id__voices_characters__key__clear_post",
@@ -7856,6 +8315,67 @@
         ]
       }
     },
+    "/api/v1/projects/{project_id}/voices/lines/{scene_id}:set-emotion": {
+      "post": {
+        "operationId": "set_emotion_api_v1_projects__project_id__voices_lines__scene_id__set_emotion_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSetEmotionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceLineActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Emotion",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
     "/api/v1/projects/{project_id}/voices/lines/{scene_id}:set-timing": {
       "post": {
         "operationId": "set_timing_api_v1_projects__project_id__voices_lines__scene_id__set_timing_post",
@@ -8182,6 +8702,98 @@
           }
         },
         "summary": "Preview",
+        "tags": [
+          "voice"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/voices/settings": {
+      "get": {
+        "operationId": "get_voice_settings_api_v1_projects__project_id__voices_settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Voice Settings",
+        "tags": [
+          "voice"
+        ]
+      },
+      "put": {
+        "operationId": "put_voice_settings_api_v1_projects__project_id__voices_settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSettingsPut"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Voice Settings",
         "tags": [
           "voice"
         ]

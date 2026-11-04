@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 LOOPBACK_HOST = "127.0.0.1"
 PACKAGED_MODELS = Path(__file__).resolve().parent / "models.toml"
+PACKAGED_EMOTIONS = Path(__file__).resolve().parent / "voice" / "emotions.toml"
 
 
 class ConfigError(ValueError):
@@ -37,6 +38,7 @@ class Settings(BaseModel):
     backend: Literal["mock", "real"] = "mock"
     llm_backend: Literal["mock", "ollama"] = "mock"
     models_path: Path = PACKAGED_MODELS
+    emotion_mapping_path: Path = PACKAGED_EMOTIONS
     ollama_url: str = "http://127.0.0.1:11434"
     drawthings_url: str = "http://127.0.0.1:7860"
     ltx_path: Path | None = None
@@ -81,7 +83,13 @@ class Settings(BaseModel):
         return value.lower()
 
     @field_validator(
-        "data_root", "models_path", "ltx_path", "mlx_audio_path", "mflux_command", "devanagari_font"
+        "data_root",
+        "models_path",
+        "emotion_mapping_path",
+        "ltx_path",
+        "mlx_audio_path",
+        "mflux_command",
+        "devanagari_font",
     )
     @classmethod
     def _expand(cls, value: Path | None) -> Path | None:
@@ -102,7 +110,11 @@ class Settings(BaseModel):
 
 _TOML_MAP: dict[str, dict[str, str]] = {
     "server": {"host": "host", "api_port": "api_port", "ui_port": "ui_port"},
-    "paths": {"data_root": "data_root", "models_path": "models_path"},
+    "paths": {
+        "data_root": "data_root",
+        "models_path": "models_path",
+        "emotion_mapping_path": "emotion_mapping_path",
+    },
     "runtime": {
         "command_timeout_s": "command_timeout_s",
         "preflight_wait_s": "preflight_wait_s",

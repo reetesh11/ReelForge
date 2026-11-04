@@ -33,6 +33,7 @@ class StoryCharacter:
     name: str
     look: str
     aliases: list[str]
+    age: int | None = None
 
 
 @dataclass(frozen=True)
@@ -53,7 +54,7 @@ def load_story_cast(ctx: AppContext, project_id: str) -> StoryCast:
     return StoryCast(
         style=story.style,
         characters={
-            key: StoryCharacter(key=key, name=c.name, look=c.look, aliases=[])
+            key: StoryCharacter(key=key, name=c.name, look=c.look, aliases=[], age=c.age)
             for key, c in story.characters.items()
         },
     )

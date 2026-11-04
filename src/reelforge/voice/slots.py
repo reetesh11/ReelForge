@@ -8,8 +8,9 @@ from sqlalchemy import delete, select
 
 from reelforge.adapters.mlx_audio import PRESETS, VOICE_MODELS
 from reelforge.artifacts.store import ArtifactSpec
-from reelforge.db.models import Artifact, Setting, VoiceSlot, utcnow
+from reelforge.db.models import Artifact, Setting, VoiceEmotionClip, VoiceSlot, utcnow
 from reelforge.library import service as library
+from reelforge.story.markup import EMOTIONS
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -18,6 +19,8 @@ SETTING_KEY = "voice_model"
 MODEL_LABELS = {"omnivoice": "OmniVoice", "kokoro": "Kokoro (fallback)"}
 MODES = ("preset", "cloned", "recorded")
 REF_KIND = "voice_reference"
+EMOTION_REF_KIND = "voice_emotion_reference"
+EMOTION_ORDER = list(EMOTIONS)
 OWNER_CHARACTER = "character"
 
 
@@ -109,6 +112,63 @@ def voice_usable(slot: VoiceSlot | None) -> bool:
     return slot.mode == "recorded"
 
 
+def list_emotion_clips(
+    ctx: AppContext, project_id: str, key: str | None = None
+) -> dict[str, dict[str, VoiceEmotionClip]]:
+    """Emotion clips as `{character key: {emotion: clip}}` (one character when `key` is given)."""
+    query = select(VoiceEmotionClip).where(VoiceEmotionClip.project_id == project_id)
+    if key is not None:
+        query = query.where(VoiceEmotionClip.story_key == key)
+    out: dict[str, dict[str, VoiceEmotionClip]] = {}
+    with ctx.session_factory() as s:
+        for row in s.scalars(query):
+            s.expunge(row)
+            out.setdefault(row.story_key, {})[row.emotion] = row
+    return out
+
+
+def get_emotion_clip(
+    ctx: AppContext, project_id: str, key: str, emotion: str
+) -> VoiceEmotionClip | None:
+    with ctx.session_factory() as s:
+        row = s.get(VoiceEmotionClip, (project_id, key, emotion))
+        if row is not None:
+            s.expunge(row)
+        return row
+
+
+def put_emotion_clip(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    *,
+    artifact_id: str,
+    transcript: str,
+    clip_seconds: float | None,
+) -> None:
+    with ctx.session_factory.begin() as s:
+        row = s.get(VoiceEmotionClip, (project_id, key, emotion))
+        if row is None:
+            row = VoiceEmotionClip(project_id=project_id, story_key=key, emotion=emotion)
+            s.add(row)
+        row.artifact_id = artifact_id
+        row.transcript = transcript
+        row.clip_seconds = clip_seconds
+        row.updated_at = utcnow()
+
+
+def delete_emotion_clip(ctx: AppContext, project_id: str, key: str, emotion: str) -> None:
+    with ctx.session_factory.begin() as s:
+        s.execute(
+            delete(VoiceEmotionClip).where(
+                VoiceEmotionClip.project_id == project_id,
+                VoiceEmotionClip.story_key == key,
+                VoiceEmotionClip.emotion == emotion,
+            )
+        )
+
+
 def voice_out(ctx: AppContext, slot: VoiceSlot) -> dict[str, Any]:
     mismatch = slot.model is not None and slot.model != current_voice_model(ctx)
     out: dict[str, Any] = {
@@ -124,6 +184,19 @@ def voice_out(ctx: AppContext, slot: VoiceSlot) -> dict[str, Any]:
         out["reference_url"] = f"/media/{slot.reference_artifact_id}"
     if slot.clip_seconds is not None and slot.mode == "cloned":
         out["clip_seconds"] = slot.clip_seconds
+    if slot.mode == "cloned":
+        clips = list_emotion_clips(ctx, slot.project_id, slot.story_key).get(slot.story_key, {})
+        if clips:
+            out["emotion_clips"] = {
+                emotion: {
+                    "url": f"/media/{clip.artifact_id}",
+                    "transcript": clip.transcript,
+                    "clip_seconds": clip.clip_seconds,
+                }
+                for emotion, clip in sorted(
+                    clips.items(), key=lambda kv: EMOTION_ORDER.index(kv[0])
+                )
+            }
     return out
 
 
