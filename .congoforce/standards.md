@@ -24,6 +24,10 @@ except a bootstrap task, which may fill in the test commands.
 - Real-tool checks (`docs/manual-checks.md`) run on the reference Mac before a PR that touches an adapter is merged. Mock stubs must mirror real server limits, for example Draw Things rejects width or height below 128 with 422.
 - Per-model settings such as `steps` live in `models.toml`, not in adapter constants.
 - Keep to one commit per task in tech.md, even when the change is small.
+- Run the real worker or adapter once on the reference Mac before shipping an adapter task (stub tests cannot see real-model defects), and say in the PR body what was and was not checked.
+- Test helpers that fake low free memory apply the limit only to the job under test, not to setup steps that run other heavy jobs.
+- In `tests.json`, write one entry per acceptance criterion id; never put several ids in one `criterion` string and never map a criterion only to the file it happens to appear in (the helper rejects the stage).
+- Specs and `tech.md` must name only commands that exist: the CLI has `reelforge up` and `reelforge doctor`. Check `--help` before writing a flag onto a command.
 
 ## Docs agents should read
 
@@ -39,6 +43,10 @@ except a bootstrap task, which may fill in the test commands.
 - Pass `--base origin/main` to `congoforce new`; a task can otherwise inherit a stale base. Check that the new worktree contains `origin/main` before the spec stage.
 - Never hand-edit a frozen test to get around a failure; the frozen-hash and red checks then fail. Revise it through Gate 2, or the escalation "Revisit a test" route before implementing.
 - Stop any running ReelForge app (ports 7400 and 7401) before a task's test stages; the Playwright wrapper needs both ports, and a busy port shows up as a pre-existing baseline failure.
+- A script that runs inside another uv environment must not sit next to a module named like a package it imports (for example `adapters/mlx_audio.py` and `import mlx_audio`): as a script, its folder is first on `sys.path` and shadows the package. Scrub `sys.path` before the real import.
+- Select frozen tests with `pytest -k` instead of naming the frozen file; a hook blocks any shell command that names a frozen file, even to run it.
+- The generated PR body marks manual criteria as met; edit it to say what was actually run on the reference Mac before shipping.
+- `.congoforce/standards.md` and `config.toml` are tracked on `main`; do not leave them untracked, because switching branches would remove them and CongoForce would regenerate a default.
 
 ## Draft notes
 
