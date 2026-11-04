@@ -246,6 +246,19 @@ class ShotSlot(Base):
     updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
 
 
+class AudioSlot(Base):
+    """Per project and sound cue: the picked take."""
+
+    __tablename__ = "audio_slots"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    cue_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    picked_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
+
+
 class ProjectCharacter(Base):
     __tablename__ = "project_characters"
 
