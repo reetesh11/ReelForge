@@ -1,0 +1,51 @@
+flowchart LR
+  subgraph web[web/src]
+    asm[assembly/AssemblyScreen.tsx]:::new
+    tl[assembly/Timeline.tsx]:::new
+    player[player/Player.tsx]:::new
+    api[api/assembly.ts]:::new
+    shotcard[shots/ShotCard.tsx + CompareTakes.tsx]:::changed
+    pp[routes/ProjectPage.tsx]:::changed
+  end
+  subgraph apipkg[src/reelforge/api]
+    routes[routes_assembly.py]:::new
+    media[routes_media.py]
+    stages[stages.py]:::changed
+  end
+  subgraph asmpkg[src/reelforge/assembly]
+    build[build.py + edl.py]:::new
+    edit[edit.py]:::new
+    sched[scheduler.py]:::new
+    jobs[jobs.py]:::new
+    render[render.py + state.py]:::new
+    fg[filtergraph.py + ffmpeg.py]:::new
+    caps[captions.py + align.py]:::new
+    publish[publish.py + credits.py]:::new
+  end
+  worker[jobs/worker.py]:::changed
+  queue[jobs/queue.py]
+  store[artifacts/store.py register_in_place]:::changed
+  shots[shots/service.py + voice/service.py]
+  fs[(data_root/projects/.../assembly)]
+  db[(artifacts, reel_versions, projects.stage)]
+  tts[adapters/align_worker.py]:::new
+
+  asm --> api --> routes
+  tl --> asm
+  asm --> player
+  shotcard --> player
+  pp --> asm
+  player -->|GET /media/id Range| media
+  routes --> build --> shots
+  routes --> edit --> sched --> queue
+  routes --> publish
+  queue --> worker --> jobs --> render
+  render --> fg
+  render --> caps --> tts
+  jobs --> publish --> store --> db
+  render --> fs
+  publish --> fs
+  media --> db
+  routes --> stages
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706
