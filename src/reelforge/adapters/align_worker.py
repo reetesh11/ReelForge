@@ -14,7 +14,7 @@ import importlib
 import json
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def _unshadow() -> None:
@@ -28,18 +28,23 @@ def _unshadow() -> None:
         del sys.modules["mlx_audio"]
 
 
+def _attr(obj: Any, name: str) -> Any:
+    if isinstance(obj, dict):
+        return cast("dict[str, Any]", obj).get(name)
+    return getattr(obj, name, None)
+
+
 def _words(result: Any) -> list[dict[str, Any]]:
     """Pull word timestamps out of an mlx-audio speech-to-text result."""
     out: list[dict[str, Any]] = []
-    segments = getattr(result, "segments", None)
-    if segments is None and isinstance(result, dict):
-        segments = result.get("segments")
-    for seg in segments or []:
-        words = seg.get("words") if isinstance(seg, dict) else getattr(seg, "words", None)
-        for w in words or []:
-            get = w.get if isinstance(w, dict) else lambda k, d=None, _w=w: getattr(_w, k, d)
-            text = str(get("word", get("text", ""))).strip()
-            start, end = get("start"), get("end")
+    segments: Any = _attr(result, "segments")
+    for seg in cast("list[Any]", segments or []):
+        words: Any = _attr(seg, "words")
+        for w in cast("list[Any]", words or []):
+            word: Any = _attr(w, "word")
+            text = str(word if word is not None else _attr(w, "text") or "").strip()
+            start: Any = _attr(w, "start")
+            end: Any = _attr(w, "end")
             if text and start is not None and end is not None:
                 out.append({"text": text, "start_s": float(start), "end_s": float(end)})
     return out

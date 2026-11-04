@@ -331,6 +331,30 @@
         "title": "AssemblyEditRequest",
         "type": "object"
       },
+      "AssemblyExportRequest": {
+        "properties": {
+          "accept_licence_warning": {
+            "default": false,
+            "title": "Accept Licence Warning",
+            "type": "boolean"
+          }
+        },
+        "title": "AssemblyExportRequest",
+        "type": "object"
+      },
+      "AssemblyOpenVersionRequest": {
+        "properties": {
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "AssemblyOpenVersionRequest",
+        "type": "object"
+      },
       "AssemblyOut": {
         "properties": {
           "blocked_reason": {
@@ -5096,6 +5120,110 @@
           }
         },
         "summary": "Edit",
+        "tags": [
+          "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly:export": {
+      "post": {
+        "operationId": "export_api_v1_projects__project_id__assembly_export_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssemblyExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export",
+        "tags": [
+          "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly:open-version": {
+      "post": {
+        "operationId": "open_version_api_v1_projects__project_id__assembly_open_version_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssemblyOpenVersionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssemblyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Version",
         "tags": [
           "assembly"
         ]

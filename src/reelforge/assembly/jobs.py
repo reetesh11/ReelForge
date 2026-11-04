@@ -11,7 +11,16 @@ from reelforge.adapters.base import AdapterError, CancelToken
 from reelforge.artifacts.store import ArtifactSpec
 from reelforge.assembly.build import assembly_dir
 from reelforge.assembly.edl import Edl, edl_hash, load_edl
-from reelforge.assembly.render import RenderResult, render_edl
+from reelforge.assembly.publish import (
+    VERIFYING,
+    WRITING,
+    collect_credits,
+    extract_cover,
+    publish_version,
+    verify_output,
+)
+from reelforge.assembly.render import FINAL_STEPS, RenderResult, render_edl
+from reelforge.assembly.render_state import RenderState
 from reelforge.assembly.state import StepError
 from reelforge.db.models import Artifact, Job
 
@@ -135,3 +144,68 @@ async def assemble_preview(
             "step_runs": res.step_runs,
         },
     )
+
+
+async def assemble_final(
+    ctx: AppContext, job: Job, progress: Callable[[int, str], None], cancel: CancelToken
+) -> None:
+    project_id = job.project_id
+    if project_id is None:
+        raise AdapterError("assemble_final needs a project")
+    digest = str(job.payload.get("edl_hash", ""))
+    asm = assembly_dir(ctx, project_id)
+    snap = asm / "edls" / f"{digest}.json"
+    if not snap.is_file():
+        raise AdapterError("The edit this export was for is missing.")
+    edl = load_edl(snap)
+    out_dir = asm / "work" / f"final-{job.id}"
+    total = len(FINAL_STEPS)
+    tracker = StepTracker(progress)
+    try:
+        res = await render_edl(
+            ctx, edl, out_dir, profile="final", progress=tracker, cancel=cancel, step_total=total
+        )
+        state = RenderState.open(out_dir, edl_hash(edl), "final")
+        cover = out_dir / "cover.jpg"
+
+        async def verify() -> None:
+            verify_output(res.output, edl)
+
+        async def write() -> None:
+            await extract_cover(ctx, res.output, cover, cancel, edl)
+            row = publish_version(
+                ctx, project_id, edl=edl, work_dir=out_dir, final=res.output,
+                filtergraph=res.filtergraph, cover=cover,
+                credits=collect_credits(ctx, project_id, edl), job_id=job.id,
+            )  # fmt: skip
+            del row
+
+        for index, (name, fn) in enumerate(((VERIFYING, verify), (WRITING, write)), start=9):
+            if cancel.cancelled:
+                raise AdapterError("cancelled")
+            tracker((index - 1) / total * 100, f"{name} ({index} of {total})")
+            await state.run_step(name, [], fn)
+    except Exception as exc:
+        record_failure(ctx, job.id, tracker, exc)
+        raise
+    row = publish_version_row(ctx, project_id, job.id)
+    shutil.rmtree(out_dir, ignore_errors=True)
+    runs = {**res.step_runs, VERIFYING: state.runs(VERIFYING), WRITING: state.runs(WRITING)}
+    ctx.queue.update_running(
+        job.id,
+        result={
+            "edl_hash": digest or edl_hash(edl),
+            "version": row.version,
+            "reel_artifact_id": row.final_artifact_id,
+            "step_runs": runs,
+        },
+    )
+
+
+def publish_version_row(ctx: AppContext, project_id: str, job_id: str) -> Any:
+    from reelforge.assembly.publish import published_by  # noqa: PLC0415
+
+    row = published_by(ctx, project_id, job_id)
+    if row is None:
+        raise AdapterError("The reel was not published.")
+    return row

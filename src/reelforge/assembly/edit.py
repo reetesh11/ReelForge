@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from reelforge.assembly import ffmpeg
 from reelforge.assembly.build import working_edl_path
-from reelforge.assembly.edl import CAPTION_STYLES, Edl, load_edl, save_edl
+from reelforge.assembly.edl import (
+    CAPTION_STYLES,
+    Edl,
+    EdlCaption,
+    EdlDialogue,
+    load_edl,
+    save_edl,
+)
 from reelforge.assembly.state import AssemblyError
 from reelforge.db.models import Artifact
 from reelforge.shots import service as shots_service
@@ -54,7 +61,7 @@ def _fit_dialogue(edl: Edl) -> bool:
     """Cut dialogue (and its caption) that runs past the end of the reel; True when changed."""
     total = edl.total_duration_s
     changed = False
-    dialogue = []
+    dialogue: list[EdlDialogue] = []
     drop: set[str] = set()
     for clip in edl.dialogue:
         if clip.offset_s + clip.duration_s <= total + EPS:
@@ -66,7 +73,7 @@ def _fit_dialogue(edl: Edl) -> bool:
             drop.add(clip.scene_id)
             continue
         dialogue.append(clip.model_copy(update={"duration_s": room}))
-    captions = []
+    captions: list[EdlCaption] = []
     for cap in edl.captions:
         if cap.scene_id in drop:
             continue
@@ -82,11 +89,12 @@ def _fit_dialogue(edl: Edl) -> bool:
 
 
 def _reorder(edl: Edl, op: dict[str, Any]) -> None:
-    ids = op.get("scene_ids")
+    raw: Any = op.get("scene_ids")
     current = [s.scene_id for s in edl.video]
-    if not isinstance(ids, list) or sorted(map(str, ids)) != sorted(current):
+    given: list[Any] = cast("list[Any]", raw) if isinstance(raw, list) else []
+    ids = [str(i) for i in given]
+    if sorted(ids) != sorted(current):
         raise AssemblyError(422, "List every shot exactly once to reorder.")
-    ids = [str(i) for i in ids]
     old_start = {s.scene_id: edl.shot_start_s(i) for i, s in enumerate(edl.video)}
     by_id = {s.scene_id: s for s in edl.video}
     edl.video = [by_id[i] for i in ids]
