@@ -5,11 +5,13 @@ from __future__ import annotations
 import shutil
 import time
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from reelforge.adapters.base import AdapterError, CancelToken
 from reelforge.adapters.mlx_audio import (
+    EDGE_PAD_S,
     PRESETS,
     SPEED_MAX,
     SPEED_MIN,
@@ -19,8 +21,11 @@ from reelforge.adapters.mlx_audio import (
     VoiceResult,
 )
 from reelforge.artifacts.store import ArtifactSpec
-from reelforge.db.models import Job
+from reelforge.db.models import Artifact, Job
 from reelforge.voice import service, slots
+from reelforge.voice.join import join_wavs
+from reelforge.voice.mapping import MappingError
+from reelforge.voice.plan import LinePlan, plan_line
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -90,8 +95,13 @@ async def voice_generate(
         publish()
 
     publish()
+    try:
+        mapping = service.current_mapping(ctx)
+    except MappingError as exc:
+        raise AdapterError(str(exc)) from None
+    gap_ms = service.phrase_gap_ms(ctx, project_id, mapping)
     batch: list[VoiceLine] = []
-    voices: dict[str, dict[str, Any]] = {}
+    runs: dict[str, _LineRun] = {}
     for sid in scene_ids:
         li = inputs.get(sid)
         slot = li.slot if li is not None else None
@@ -124,43 +134,58 @@ async def voice_generate(
             finish(sid, {"status": "failed", "error": f"{name} uses recorded lines."})
             continue
         speed = _effective_speed(slot.speed, li.speed)
-        voices[sid] = {"info": info, "speed": speed, "text": li.text}
-        batch.append(
-            VoiceLine(
-                id=sid,
-                text=li.text,
-                voice=voice_name,
-                ref_audio=ref_audio,
-                ref_text=slot.reference_text if slot.mode == "cloned" else None,
-                speed=speed,
-            )
+        plan = plan_line(
+            li.raw_text,
+            li.emotion,
+            mapping=mapping,
+            voice_model=voice_model,
+            speed=speed,
+            age=li.age,
+            gap_ms=gap_ms,
         )
+        run = _LineRun(info=info, speed=speed, text=li.raw_text, plan=plan)
+        runs[sid] = run
+        many = len(plan.phrases) > 1
+        for n, ph in enumerate(plan.phrases, start=1):
+            batch.append(
+                VoiceLine(
+                    id=f"{sid}#{n}" if many else sid,
+                    text=ph.model_text,
+                    voice=voice_name,
+                    ref_audio=ref_audio,
+                    ref_text=slot.reference_text if slot.mode == "cloned" else None,
+                    speed=speed,
+                    instruct=ph.instruct,
+                    duration_scale=ph.duration_scale,
+                    semitones=ph.post.semitones,
+                    tempo=ph.post.tempo,
+                    gain_db=ph.post.gain_db,
+                    generation=ph.generation,
+                    edge_pad_s=0.0 if many else EDGE_PAD_S,
+                )
+            )
 
     def on_line(result: VoiceResult) -> None:
-        if result.error or result.path is None or result.duration_s is None:
-            finish(result.id, {"status": "failed", "error": result.error or "No audio."})
+        sid, _, number = result.id.partition("#")
+        run = runs[sid]
+        if run.closed:
             return
-        meta = voices[result.id]
-        ref = meta["info"].get("reference_artifact_id")
-        take = service.write_take(
-            ctx,
-            project_id,
-            result.id,
-            result.path,
-            duration_s=result.duration_s,
-            text=meta["text"],
-            speed=meta["speed"],
-            voice=meta["info"],
-            source="tts",
-            model_key=model_key,
-            model_id=model_id,
-            revision=revision,
-            adapter=ENGINE,
-            version=ENGINE_VERSION,
-            inputs=[ref] if ref else [],
-            job_id=job.id,
-        )
-        finish(result.id, {"status": "done", "take_id": take.id})
+        if result.error or result.path is None or result.duration_s is None:
+            run.closed = True
+            finish(sid, {"status": "failed", "error": result.error or "No audio."})
+            return
+        run.results[int(number) if number else 1] = result
+        if len(run.results) < len(run.plan.phrases):
+            return
+        run.closed = True
+        try:
+            take = _write_line_take(
+                ctx, job, project_id, sid, run, out_dir, model_key, model_id, revision
+            )
+        except (ValueError, AdapterError) as exc:
+            finish(sid, {"status": "failed", "error": str(exc)})
+            return
+        finish(sid, {"status": "done", "take_id": take.id})
 
     out_dir = ctx.settings.cache_tmp / job.id
     try:
@@ -176,6 +201,79 @@ async def voice_generate(
     finally:
         publish()
         shutil.rmtree(out_dir, ignore_errors=True)
+
+
+@dataclass
+class _LineRun:
+    """One line being rendered: its plan and the phrase results that have arrived."""
+
+    info: dict[str, Any]
+    speed: float
+    text: str
+    plan: LinePlan
+    results: dict[int, VoiceResult] = field(default_factory=lambda: {})
+    closed: bool = False
+
+
+def _write_line_take(
+    ctx: AppContext,
+    job: Job,
+    project_id: str,
+    sid: str,
+    run: _LineRun,
+    out_dir: Path,
+    model_key: str,
+    model_id: str,
+    revision: str,
+) -> Artifact:
+    """Join the phrase audio (silence between phrases) and store it as the line's new take."""
+    plan = run.plan
+    ordered = [run.results[n] for n in range(1, len(plan.phrases) + 1)]
+    if len(ordered) == 1 and ordered[0].path is not None and ordered[0].duration_s is not None:
+        path, duration = ordered[0].path, ordered[0].duration_s
+    else:
+        paths = [r.path for r in ordered if r.path is not None]
+        gap = (plan.gap_ms or 0) / 1000
+        gaps = [gap + ph.post.pause_s for ph in plan.phrases[:-1]]
+        path = out_dir / f"{sid}.joined.wav"
+        duration = join_wavs(paths, gaps, path)
+    extra: dict[str, Any] = {}
+    requested = [r.duration_requested_s for r in ordered if r.duration_requested_s is not None]
+    if requested:
+        extra["duration_requested_s"] = round(sum(requested), 4)
+    if plan.age_band is not None:
+        extra["age_band"] = plan.age_band
+    if plan.gap_ms is not None:
+        extra["gap_ms"] = plan.gap_ms
+    if plan.records_phrases:
+        extra["phrases"] = [
+            {
+                **ph.recorded(),
+                "duration_requested_s": r.duration_requested_s,
+                "reference_artifact_id": run.info.get("reference_artifact_id"),
+            }
+            for ph, r in zip(plan.phrases, ordered, strict=True)
+        ]
+    ref = run.info.get("reference_artifact_id")
+    return service.write_take(
+        ctx,
+        project_id,
+        sid,
+        path,
+        duration_s=duration,
+        text=run.text,
+        speed=run.speed,
+        voice=run.info,
+        source="tts",
+        model_key=model_key,
+        model_id=model_id,
+        revision=revision,
+        adapter=ENGINE,
+        version=ENGINE_VERSION,
+        inputs=[ref] if ref else [],
+        job_id=job.id,
+        extra_params=extra,
+    )
 
 
 def _artifact_file(ctx: AppContext, artifact_id: str | None) -> Path | None:

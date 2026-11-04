@@ -403,6 +403,15 @@ class VoiceSetEmotionRequest(BaseModel):
     emotion: str | None = None
 
 
+class VoiceSettingsOut(BaseModel):
+    phrase_gap_ms: int
+    default_phrase_gap_ms: int
+
+
+class VoiceSettingsPut(BaseModel):
+    phrase_gap_ms: int
+
+
 class VoiceTimingRequest(BaseModel):
     speed: float | None = None
     pause_before: float | None = None

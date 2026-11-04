@@ -32,6 +32,7 @@ PAUSE_MAX = 1.0
 TARGET_LUFS = -16.0
 OUT_RATE = 48000
 PEAK_LIMIT = 0.89
+EDGE_PAD_S = 0.02  # near-silence kept at each end of a take
 
 # The `voice_model` setting maps to the models.toml key.
 VOICE_MODELS: dict[str, str] = {"omnivoice": "tts", "kokoro": "tts_fallback"}
@@ -93,6 +94,7 @@ class VoiceLine:
     tempo: float = 1.0
     gain_db: float = 0.0
     generation: dict[str, float] = field(default_factory=lambda: {})
+    edge_pad_s: float = EDGE_PAD_S  # 0 for phrases that are joined, so the gap is exact
 
 
 @dataclass
@@ -105,12 +107,15 @@ class VoiceResult:
 
 
 _LUFS_RE = re.compile(r"I:\s+(-?\d+(?:\.\d+)?|-inf)\s+LUFS")
-_TRIM = (
-    "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.02,"
-    "areverse,"
-    "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.02,"
-    "areverse"
-)
+
+
+def _trim(pad_s: float) -> str:
+    """Cut near-silence from both ends, keeping `pad_s` seconds of it."""
+    one = f"silenceremove=start_periods=1:start_threshold=-50dB:start_silence={pad_s:g}"
+    return f"{one},areverse,{one},areverse"
+
+
+_TRIM = _trim(EDGE_PAD_S)
 
 
 def _first_line(text: str) -> str:
@@ -158,12 +163,13 @@ async def postprocess_wav(
     semitones: float = 0.0,
     tempo: float = 1.0,
     gain_db: float = 0.0,
+    edge_pad_s: float = EDGE_PAD_S,
     timeout_s: float = 120.0,
     cancel: CancelToken | None = None,
 ) -> float:
     """Trim edge silence, change tempo and pitch, normalise to -16 LUFS, apply `gain_db` after
     the normalisation, and write a 48 kHz mono 16-bit WAV."""
-    chain = _TRIM
+    chain = _TRIM if edge_pad_s == EDGE_PAD_S else _trim(edge_pad_s)
     if atempo is not None and atempo != 1.0:
         chain += f",atempo={atempo:.4f}"
     if semitones != 0.0 or tempo != 1.0:
@@ -374,6 +380,7 @@ class MlxAudioAdapter:
                         semitones=line.semitones,
                         tempo=line.tempo,
                         gain_db=line.gain_db,
+                        edge_pad_s=line.edge_pad_s,
                         cancel=cancel,
                     )
                     requested = event.get("duration_requested_s")

@@ -31,6 +31,7 @@ from reelforge.db.models import (
     Line,
     Project,
     Scene,
+    Setting,
     StoryChange,
     VoiceSlot,
     utcnow,
@@ -43,6 +44,7 @@ from reelforge.story.schema import Story
 from reelforge.story.staleness import ChangeRow, is_stale
 from reelforge.story.yamlio import parse_story
 from reelforge.voice import slots
+from reelforge.voice.mapping import Mapping, load_mapping
 from reelforge.voice.slots import current_voice_model
 from reelforge.voice.uploads import NotAnAudioClip, probe_seconds, sniff_audio
 
@@ -291,6 +293,56 @@ def voice_changed(ctx: AppContext, project_id: str, key: str) -> None:
     sync_library(ctx, project_id, key)
 
 
+# ---- emotion mapping and project settings -------------------------------------------------
+
+
+GAP_MIN_MS = 0
+GAP_MAX_MS = 1000
+GAP_ERROR = "phrase_gap_ms must be between 0 and 1000."
+
+
+def current_mapping(ctx: AppContext) -> Mapping:
+    """The mapping file, read again on every call so an edit applies to the next take."""
+    return load_mapping(ctx.settings.emotion_mapping_path)
+
+
+def _gap_key(project_id: str) -> str:
+    return f"phrase_gap_ms:{project_id}"
+
+
+def phrase_gap_ms(ctx: AppContext, project_id: str, mapping: Mapping) -> int:
+    """The project's silence between phrases, else the mapping file's default."""
+    with ctx.session_factory() as s:
+        row = s.get(Setting, _gap_key(project_id))
+    if row is not None and isinstance(row.value, int) and not isinstance(row.value, bool):
+        return row.value
+    return mapping.phrase_gap_ms
+
+
+def settings_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
+    with ctx.session_factory() as s:
+        if s.get(Project, project_id) is None:
+            raise ProjectMissing
+    mapping = current_mapping(ctx)
+    return {
+        "phrase_gap_ms": phrase_gap_ms(ctx, project_id, mapping),
+        "default_phrase_gap_ms": mapping.phrase_gap_ms,
+    }
+
+
+def set_phrase_gap(ctx: AppContext, project_id: str, value: int) -> dict[str, Any]:
+    settings_body(ctx, project_id)  # the project must exist
+    if not GAP_MIN_MS <= value <= GAP_MAX_MS:
+        raise VoiceError(422, GAP_ERROR)
+    with ctx.session_factory.begin() as s:
+        row = s.get(Setting, _gap_key(project_id))
+        if row is None:
+            s.add(Setting(key=_gap_key(project_id), value=value))
+        else:
+            row.value = value
+    return settings_body(ctx, project_id)
+
+
 # ---- story, rows and takes -----------------------------------------------------------------
 
 
@@ -471,8 +523,13 @@ def write_take(
     version: str,
     inputs: list[str],
     job_id: str | None,
+    extra_params: dict[str, Any] | None = None,
 ) -> Artifact:
-    """Store a processed WAV as the line's new active take and reopen the line."""
+    """Store a processed WAV as the line's new active take and reopen the line.
+
+    `extra_params` holds the applied values (phrases, age band, gap, requested length); a take
+    with none of them keeps exactly the params it always had.
+    """
     take_no = next_take_no(ctx, project_id, scene_id)
     spec = ArtifactSpec(
         project_id=project_id,
@@ -487,7 +544,13 @@ def write_take(
         model_revision=revision,
         adapter=adapter,
         version=version,
-        params={"text": text, "speed": speed, "voice": voice, "source": source},
+        params={
+            "text": text,
+            "speed": speed,
+            "voice": voice,
+            "source": source,
+            **(extra_params or {}),
+        },
         input_artifact_ids=inputs,
         job_id=job_id,
         duration_s=duration_s,

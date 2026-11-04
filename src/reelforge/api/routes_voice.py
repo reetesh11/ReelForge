@@ -19,12 +19,15 @@ from reelforge.api.schemas import (
     VoiceSelectTakeRequest,
     VoiceSetEmotionRequest,
     VoiceSetRequest,
+    VoiceSettingsOut,
+    VoiceSettingsPut,
     VoiceShortenOut,
     VoicesOut,
     VoiceTimingRequest,
 )
 from reelforge.context import AppContext
 from reelforge.voice import service, slots
+from reelforge.voice.mapping import MappingError
 
 
 def build_router(ctx: AppContext) -> APIRouter:
@@ -52,6 +55,24 @@ def build_router(ctx: AppContext) -> APIRouter:
             return JSONResponse(service.voices_body(ctx, project_id))
         except service.VoiceError as exc:
             raise fail(exc) from None
+
+    @router.get(p + "/voices/settings", response_model=VoiceSettingsOut)
+    async def get_voice_settings(project_id: str) -> JSONResponse:
+        try:
+            return JSONResponse(service.settings_body(ctx, project_id))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        except MappingError as exc:
+            raise HTTPException(500, str(exc)) from None
+
+    @router.put(p + "/voices/settings", response_model=VoiceSettingsOut)
+    async def put_voice_settings(project_id: str, body: VoiceSettingsPut) -> JSONResponse:
+        try:
+            return JSONResponse(service.set_phrase_gap(ctx, project_id, body.phrase_gap_ms))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+        except MappingError as exc:
+            raise HTTPException(500, str(exc)) from None
 
     @router.post(p + "/voices/characters/{key}:set", response_model=VoiceOut)
     async def set_voice(project_id: str, key: str, body: VoiceSetRequest) -> JSONResponse:
