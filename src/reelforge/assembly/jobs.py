@@ -72,7 +72,13 @@ def register_file(
 def source_ids(ctx: AppContext, edl: Edl) -> list[str]:
     """The artifacts an EDL is made of (ones that no longer exist are left out)."""
     wanted = list(
-        dict.fromkeys([*(s.artifact for s in edl.video), *(d.artifact for d in edl.dialogue)])
+        dict.fromkeys(
+            [
+                *(s.artifact for s in edl.video),
+                *(d.artifact for d in edl.dialogue),
+                *(a.artifact for a in edl.audio if a.artifact),
+            ]
+        )
     )
     with ctx.session_factory() as s:
         return [a for a in wanted if s.get(Artifact, a) is not None]
