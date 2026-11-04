@@ -31,7 +31,7 @@ function useUnsavedGuard(dirty: boolean) {
       e.returnValue = "";
     };
     const onClick = (e: MouseEvent) => {
-      const anchor = (e.target as Element | null)?.closest?.("a[href]");
+      const anchor = (e.target as Element | null)?.closest?.("a[href], [data-leave-guard]");
       if (anchor && !window.confirm(LEAVE)) {
         e.preventDefault();
         e.stopPropagation();
