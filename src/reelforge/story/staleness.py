@@ -59,7 +59,7 @@ def diff_stories(old: Story, new: Story) -> list[Affected]:
         changed = {k for k in fa if fa[k] != fb[k]}
         if not changed:
             continue
-        kinds = list(LINE_KINDS) if changed == {"line"} else list(ALL)
+        kinds = list(LINE_KINDS) if changed <= {"line", "emotion"} else list(ALL)
         out.append(Affected("scene", sid, kinds))
     for key in char_keys:
         ca, cb = old.characters.get(key), new.characters.get(key)

@@ -4,6 +4,7 @@ import {
   useCancelJob,
   useGenerate,
   useReopen,
+  useSetAge,
   useUpload,
   useUseLibrary,
   type CastItem,
@@ -43,6 +44,7 @@ export function CastRow({
   const useLibrary = useUseLibrary(projectId);
   const upload = useUpload(projectId);
   const cancel = useCancelJob(projectId);
+  const setAge = useSetAge(projectId);
   const library = useLibraryCharacters();
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -50,13 +52,14 @@ export function CastRow({
   const [instruction, setInstruction] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [ageDraft, setAgeDraft] = useState<string | null>(null);
 
   const progress = item.progress;
   const generating = item.state === "generating";
   const elapsed = useSecondsSince(receivedAt, progress?.elapsed_s ?? 0, generating);
   const total = progress?.total ?? 4;
   const completed = progress?.completed ?? 0;
-  const error = [generate, approve, reopen, useLibrary, upload, cancel]
+  const error = [generate, approve, reopen, useLibrary, upload, cancel, setAge]
     .map((m) => m.error?.message)
     .find((m) => m !== undefined);
 
@@ -84,6 +87,36 @@ export function CastRow({
         <textarea rows={2} value={text} onChange={(e) => setEdited(e.target.value)} />
       </label>
       {item.note ? <p className="meta">{item.note}</p> : null}
+      <div className="actions">
+        <p className="meta">
+          {item.age !== undefined && item.age !== null
+            ? `Age ${item.age}${item.age_band ? ` (${item.age_band})` : ""}`
+            : "No age set"}
+        </p>
+        <label className="field">
+          Age (years)
+          <input
+            type="number"
+            min={1}
+            max={120}
+            step={1}
+            value={ageDraft ?? (item.age !== undefined && item.age !== null ? String(item.age) : "")}
+            onChange={(e) => setAgeDraft(e.target.value)}
+          />
+        </label>
+        <button
+          type="button"
+          disabled={ageDraft === null || setAge.isPending}
+          onClick={() =>
+            setAge.mutate(
+              { key: item.key, age: ageDraft === null || ageDraft.trim() === "" ? null : Number(ageDraft) },
+              { onSuccess: () => setAgeDraft(null) },
+            )
+          }
+        >
+          Save age
+        </button>
+      </div>
 
       {item.approved && item.master_artifact_id ? (
         <div>

@@ -5,6 +5,40 @@ import type { components } from "./schema";
 export type VoiceOut = components["schemas"]["VoiceOut"];
 export type VoiceModelState = components["schemas"]["VoiceModelOut"];
 export type Job = components["schemas"]["JobOut"];
+export type EmotionClip = components["schemas"]["EmotionClipOut"];
+
+export type Emotion = "happy" | "sad" | "fear" | "anger";
+export const EMOTIONS: Array<{ value: Emotion; label: string }> = [
+  { value: "happy", label: "Happy" },
+  { value: "sad", label: "Sad" },
+  { value: "fear", label: "Fear" },
+  { value: "anger", label: "Anger" },
+];
+
+export interface PhraseSettings {
+  text: string;
+  emotion: string | null;
+  tags: string[];
+  tag_position: string;
+  pitch: string;
+  duration_scale: number;
+  duration_factor: number;
+  generation: Record<string, number>;
+  post: { semitones: number; gain_db: number; pause_s: number };
+  reference: "neutral" | "emotion";
+  reference_label: string;
+  duration_requested_s?: number | null;
+}
+
+/** How a line will sound (`effective`) or how a take did sound (`settings`). */
+export interface DeliverySettings {
+  emotion_applied: boolean;
+  speed: number;
+  age_band?: string;
+  gap_ms?: number;
+  duration_requested_s?: number;
+  phrases: PhraseSettings[];
+}
 
 export type LineState =
   | "no_dialogue"
@@ -26,6 +60,7 @@ export interface VoiceTake {
   approved: boolean;
   stale: boolean;
   audio_url: string;
+  settings?: DeliverySettings;
 }
 
 export interface VoiceLine {
@@ -34,6 +69,10 @@ export interface VoiceLine {
   speaker: string | null;
   speaker_name?: string;
   text: string;
+  edit_text?: string;
+  emotion?: Emotion;
+  effective?: DeliverySettings;
+  settings_changed?: boolean;
   language: string;
   state: LineState;
   message?: string;
@@ -55,7 +94,14 @@ export interface VoiceBoardState {
   approved_count: number;
   total: number;
   stale_count: number;
-  characters: Array<{ key: string; name: string; avatar_url?: string | null; voice: VoiceOut | null }>;
+  characters: Array<{
+    key: string;
+    name: string;
+    avatar_url?: string | null;
+    age?: number | null;
+    age_band?: string | null;
+    voice: VoiceOut | null;
+  }>;
   lines: VoiceLine[];
   job: Job | null;
 }
@@ -222,6 +268,7 @@ export type LineActionName =
   | "select-take"
   | "edit-text"
   | "set-timing"
+  | "set-emotion"
   | "speed-up"
   | "extend-scene";
 
@@ -244,6 +291,96 @@ export function useLineAction(projectId: string) {
       });
       if (!res.ok) throw new Error(await detailOf(res, "that didn't work"));
       return (await res.json()) as LineAction;
+    },
+    onSuccess: refresh,
+  });
+}
+
+export function useClipFromTake(projectId: string) {
+  const refresh = useRefresh(projectId);
+  return useMutation({
+    mutationFn: async (args: {
+      key: string;
+      emotion: Emotion;
+      sceneId: string;
+      takeId: string;
+      transcript: string;
+    }): Promise<VoiceOut> => {
+      const res = await globalThis.fetch(
+        `/api/v1/projects/${projectId}/voices/characters/${args.key}/emotion-clips/${args.emotion}:from-take`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scene_id: args.sceneId, take_id: args.takeId, transcript: args.transcript }),
+        },
+      );
+      if (!res.ok) throw new Error(await detailOf(res, "could not save that reference"));
+      return (await res.json()) as VoiceOut;
+    },
+    onSuccess: refresh,
+  });
+}
+
+export function useUploadEmotionClip(projectId: string) {
+  const refresh = useRefresh(projectId);
+  return useMutation({
+    mutationFn: async (args: { key: string; emotion: string; file: File; transcript: string }): Promise<VoiceOut> => {
+      const form = new FormData();
+      form.append("file", args.file);
+      form.append("transcript", args.transcript);
+      const res = await globalThis.fetch(
+        `/api/v1/projects/${projectId}/voices/characters/${args.key}/emotion-clips/${args.emotion}:upload`,
+        { method: "POST", body: form },
+      );
+      if (!res.ok) throw new Error(await detailOf(res, "could not upload that clip"));
+      return (await res.json()) as VoiceOut;
+    },
+    onSuccess: refresh,
+  });
+}
+
+export function useRemoveEmotionClip(projectId: string) {
+  const refresh = useRefresh(projectId);
+  return useMutation({
+    mutationFn: async (args: { key: string; emotion: string }): Promise<VoiceOut> => {
+      const res = await globalThis.fetch(
+        `/api/v1/projects/${projectId}/voices/characters/${args.key}/emotion-clips/${args.emotion}:remove`,
+        { method: "POST" },
+      );
+      if (!res.ok) throw new Error(await detailOf(res, "could not remove that clip"));
+      return (await res.json()) as VoiceOut;
+    },
+    onSuccess: refresh,
+  });
+}
+
+export interface VoiceSettings {
+  phrase_gap_ms: number;
+  default_phrase_gap_ms: number;
+}
+
+export function useVoiceSettings(projectId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.voices(projectId), "settings"],
+    queryFn: async (): Promise<VoiceSettings | null> => {
+      const res = await globalThis.fetch(`/api/v1/projects/${projectId}/voices/settings`);
+      if (!res.ok) return null;
+      const body = (await res.json()) as Partial<VoiceSettings>;
+      return typeof body.phrase_gap_ms === "number" ? (body as VoiceSettings) : null;
+    },
+  });
+}
+
+export function useSetPhraseGap(projectId: string) {
+  const refresh = useRefresh(projectId);
+  return useMutation({
+    mutationFn: async (gap: number): Promise<void> => {
+      const res = await globalThis.fetch(`/api/v1/projects/${projectId}/voices/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phrase_gap_ms: gap }),
+      });
+      if (!res.ok) throw new Error(await detailOf(res, "could not save that setting"));
     },
     onSuccess: refresh,
   });

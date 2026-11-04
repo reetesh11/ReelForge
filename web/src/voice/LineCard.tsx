@@ -1,10 +1,14 @@
 import { useState } from "react";
 import {
+  EMOTIONS,
   previewUrl,
+  useClipFromTake,
   useGenerateVoices,
   useLineAction,
   useShorten,
   useUploadRecording,
+  type DeliverySettings,
+  type Emotion,
   type VoiceLine,
 } from "@/api/voice";
 
@@ -20,29 +24,72 @@ const BADGES: Record<string, string> = {
 const seconds = (value: number | null | undefined): string =>
   value === null || value === undefined ? "" : `${value.toFixed(1)} s`;
 
+const num = (value: number): string => String(Math.round(value * 10000) / 10000);
+
+function Delivery({ line }: { line: VoiceLine }) {
+  const effective: DeliverySettings | undefined = line.effective;
+  return (
+    <details>
+      <summary>How this will sound</summary>
+      {effective === undefined ? <p>Default delivery. No emotion settings applied.</p> : null}
+      {effective !== undefined && !effective.emotion_applied ? (
+        <p>Emotion is not applied for this voice.</p>
+      ) : null}
+      {effective?.age_band ? <p>{`Age band: ${effective.age_band}`}</p> : null}
+      {effective?.gap_ms !== undefined ? <p>{`Silence between phrases: ${effective.gap_ms} ms`}</p> : null}
+      {effective?.phrases.map((ph, i) => (
+        <ul key={i} aria-label={`Phrase ${i + 1}`}>
+          <li>{`Phrase: ${ph.text}`}</li>
+          <li>{`Emotion: ${ph.emotion ?? "none"}`}</li>
+          <li>{`Tags: ${ph.tags.length > 0 ? ph.tags.join(" ") : "none"} (${ph.tag_position})`}</li>
+          <li>{`Pitch: ${ph.pitch || "unchanged"}`}</li>
+          <li>{`Duration scale: ${num(ph.duration_scale)} (length factor ${num(ph.duration_factor)})`}</li>
+          <li>
+            {`Generation: ${
+              Object.keys(ph.generation).length > 0
+                ? Object.entries(ph.generation)
+                    .map(([k, v]) => `${k} ${num(v)}`)
+                    .join(", ")
+                : "defaults"
+            }`}
+          </li>
+          <li>{`Post: ${num(ph.post.semitones)} semitones, ${num(ph.post.gain_db)} dB, ${num(ph.post.pause_s)} s pause`}</li>
+          <li>{ph.reference_label}</li>
+        </ul>
+      ))}
+      {line.settings_changed ? <p>Settings changed since this take</p> : null}
+    </details>
+  );
+}
+
 export function LineCard({
   projectId,
   line,
   recorded,
+  cloned = false,
   onPlay,
 }: {
   projectId: string;
   line: VoiceLine;
   recorded: boolean;
+  cloned?: boolean;
   onPlay: (url: string) => void;
 }) {
   const action = useLineAction(projectId);
   const generate = useGenerateVoices(projectId);
   const shorten = useShorten(projectId);
   const upload = useUploadRecording(projectId);
+  const clip = useClipFromTake(projectId);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(line.text);
+  const [draft, setDraft] = useState(line.edit_text ?? line.text);
+  const [refEmotion, setRefEmotion] = useState<Emotion | null>(null);
+  const [refText, setRefText] = useState("");
   const [proposal, setProposal] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
   const active = line.takes.find((t) => t.active);
   const busy = line.state === "queued" || line.state === "rendering";
-  const error = [action, generate, shorten, upload].map((m) => m.error?.message).find((m) => m !== undefined);
+  const error = [action, generate, shorten, upload, clip].map((m) => m.error?.message).find((m) => m !== undefined);
 
   if (line.state === "no_dialogue") {
     return (
@@ -83,6 +130,27 @@ export function LineCard({
         ) : null}
       </header>
       <p>{line.text}</p>
+      <label className="field">
+        Emotion
+        <select
+          value={line.emotion ?? ""}
+          onChange={(e) =>
+            action.mutate({
+              sceneId: line.scene_id,
+              name: "set-emotion",
+              body: { emotion: e.target.value === "" ? null : e.target.value },
+            })
+          }
+        >
+          <option value="">None</option>
+          {EMOTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Delivery line={line} />
 
       {line.state === "no_voice" ? <p>{line.message}</p> : null}
       {line.state === "failed" ? (
@@ -245,7 +313,7 @@ export function LineCard({
         <button
           type="button"
           onClick={() => {
-            setDraft(line.text);
+            setDraft(line.edit_text ?? line.text);
             setEditing(true);
           }}
         >
@@ -255,6 +323,54 @@ export function LineCard({
           Play scene
         </button>
       </div>
+      {cloned && active && line.speaker ? (
+        <div>
+          <div className="actions">
+            {EMOTIONS.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => {
+                  setRefEmotion(o.value);
+                  setRefText(line.text);
+                }}
+              >
+                {`Use this take as the ${o.label} reference`}
+              </button>
+            ))}
+          </div>
+          {refEmotion ? (
+            <div className="actions">
+              <label className="field">
+                Reference transcript
+                <input type="text" value={refText} onChange={(e) => setRefText(e.target.value)} />
+              </label>
+              <button
+                type="button"
+                disabled={!refText.trim() || clip.isPending}
+                onClick={() =>
+                  line.speaker &&
+                  clip.mutate(
+                    {
+                      key: line.speaker,
+                      emotion: refEmotion,
+                      sceneId: line.scene_id,
+                      takeId: active.id,
+                      transcript: refText,
+                    },
+                    { onSuccess: () => setRefEmotion(null) },
+                  )
+                }
+              >
+                Save reference
+              </button>
+              <button type="button" onClick={() => setRefEmotion(null)}>
+                Cancel reference
+              </button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {error ? <p role="alert">{error}</p> : null}
     </li>
   );

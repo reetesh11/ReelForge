@@ -19,6 +19,7 @@ from reelforge.db.models import (
     utcnow,
 )
 from reelforge.library import service as library
+from reelforge.story.age import age_band
 from reelforge.voice import slots as voice_slots
 
 if TYPE_CHECKING:
@@ -400,6 +401,9 @@ def build_item(
         "approved": approved,
         "voice_reference": slot.voice_reference if slot is not None else "",
     }
+    if char.age is not None:
+        item["age"] = char.age
+        item["age_band"] = age_band(char.age)
     if slot is not None and slot.bible_source == "raw":
         item["note"] = RAW_NOTE
     status = "empty"

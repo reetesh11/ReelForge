@@ -31,16 +31,21 @@ from reelforge.db.models import (
     Line,
     Project,
     Scene,
+    Setting,
     StoryChange,
     VoiceSlot,
     utcnow,
 )
 from reelforge.ids import new_id
 from reelforge.story import service as story_service
+from reelforge.story.age import age_band, check_age
+from reelforge.story.markup import check_emotion, display_text, parse_segments
 from reelforge.story.schema import Story
 from reelforge.story.staleness import ChangeRow, is_stale
 from reelforge.story.yamlio import parse_story
-from reelforge.voice import slots
+from reelforge.voice import effective, slots
+from reelforge.voice.mapping import Mapping, MappingError, load_mapping
+from reelforge.voice.plan import LinePlan, plan_line
 from reelforge.voice.slots import current_voice_model
 from reelforge.voice.uploads import NotAnAudioClip, probe_seconds, sniff_audio
 
@@ -257,36 +262,243 @@ def sync_library(ctx: AppContext, project_id: str, key: str) -> None:
         slots.sync_to_library(ctx, project_id, key, linked.id)
 
 
+def _mark_stale(ctx: AppContext, project_id: str, scene_ids: set[str]) -> None:
+    """Reopen these scenes' lines and write a change row (take and shot) where a take exists."""
+    story = load_story(ctx, project_id)
+    if story is None or not scene_ids:
+        return
+    ensure_rows(ctx, project_id)
+    takes = takes_by_scene(ctx, project_id)
+    now = utcnow()
+    version = story_service.current_version(ctx, project_id)
+    with ctx.session_factory.begin() as s:
+        for scene in story.scenes:
+            if scene.id not in scene_ids:
+                continue
+            sc = s.scalars(
+                select(Scene).where(Scene.project_id == project_id, Scene.story_key == scene.id)
+            ).one()
+            line = s.scalars(select(Line).where(Line.scene_id == sc.id)).one()
+            line.approved_artifact_id = None
+            if version is not None and (takes.get(scene.id) or sc.shot_length_at is not None):
+                s.add(
+                    StoryChange(
+                        project_id=project_id,
+                        story_version_id=version.id,
+                        owner_type=OWNER_SCENE,
+                        owner_id=scene.id,
+                        kinds=["voice_take", "shot"],
+                        created_at=now,
+                    )
+                )
+    recompute_stage(ctx, project_id)
+
+
 def voice_changed(ctx: AppContext, project_id: str, key: str) -> None:
     """A character's voice changed: stale and reopen their lines, then update the library."""
     story = load_story(ctx, project_id)
     if story is not None:
-        ensure_rows(ctx, project_id)
-        takes = takes_by_scene(ctx, project_id)
-        now = utcnow()
-        version = story_service.current_version(ctx, project_id)
-        with ctx.session_factory.begin() as s:
-            for scene in story.scenes:
-                if scene.speaker != key:
-                    continue
-                sc = s.scalars(
-                    select(Scene).where(Scene.project_id == project_id, Scene.story_key == scene.id)
-                ).one()
-                line = s.scalars(select(Line).where(Line.scene_id == sc.id)).one()
-                line.approved_artifact_id = None
-                if version is not None and (takes.get(scene.id) or sc.shot_length_at is not None):
-                    s.add(
-                        StoryChange(
-                            project_id=project_id,
-                            story_version_id=version.id,
-                            owner_type=OWNER_SCENE,
-                            owner_id=scene.id,
-                            kinds=["voice_take", "shot"],
-                            created_at=now,
-                        )
-                    )
-        recompute_stage(ctx, project_id)
+        _mark_stale(ctx, project_id, {sc.id for sc in story.scenes if sc.speaker == key})
     sync_library(ctx, project_id, key)
+
+
+# ---- emotion clips --------------------------------------------------------------------------
+
+CLIPS_CLONED_ONLY = "Emotion clips are only for cloned voices."
+TRANSCRIPT_REQUIRED = "A transcript is required."
+EMOTION_REF_KIND = slots.EMOTION_REF_KIND
+
+
+def _require_clip_target(ctx: AppContext, project_id: str, key: str, emotion: str) -> None:
+    require(ctx, project_id, key)
+    try:
+        check_emotion(emotion)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    slot = slots.get_slot(ctx, project_id, key)
+    if slot is None or slot.mode != "cloned":
+        raise VoiceError(409, CLIPS_CLONED_ONLY)
+
+
+def _voice_body(ctx: AppContext, project_id: str, key: str) -> dict[str, Any]:
+    slot = slots.get_slot(ctx, project_id, key)
+    if slot is None:
+        raise UnknownCharacter
+    return slots.voice_out(ctx, slot)
+
+
+def _store_emotion_clip(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    source: Path | bytes,
+    *,
+    ext: str,
+    seconds: float,
+    transcript: str,
+    origin: str,
+    inputs: list[str],
+) -> None:
+    previous = slots.get_emotion_clip(ctx, project_id, key, emotion)
+    spec = ArtifactSpec(
+        project_id=project_id,
+        owner_type=OWNER_CHARACTER,
+        owner_id=key,
+        kind=EMOTION_REF_KIND,
+        subdir=f"voices/{key}/emotions/{emotion}",
+        prompt=f"{emotion} reference clip",
+        seed=0,
+        model_key="upload",
+        model_revision="",
+        adapter="upload",
+        version="upload-1",
+        params={"emotion": emotion, "transcript": transcript, "source": origin},
+        input_artifact_ids=inputs,
+        duration_s=seconds,
+    )
+    artifact = ctx.store.write(spec, source, ext=ext)
+    slots.put_emotion_clip(
+        ctx,
+        project_id,
+        key,
+        emotion,
+        artifact_id=artifact.id,
+        transcript=transcript,
+        clip_seconds=seconds,
+    )
+    if previous is not None:
+        clip_changed(ctx, project_id, key, previous.artifact_id)
+
+
+async def upload_emotion_clip(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    data: bytes,
+    transcript: str | None,
+) -> dict[str, Any]:
+    _require_clip_target(ctx, project_id, key, emotion)
+    text = (transcript or "").strip()
+    if not text:
+        raise VoiceError(422, TRANSCRIPT_REQUIRED)
+    clip = await screen_clip(ctx, data)
+    try:
+        _store_emotion_clip(
+            ctx, project_id, key, emotion, clip.path, ext=clip.ext, seconds=clip.seconds,
+            transcript=text, origin="upload", inputs=[],
+        )  # fmt: skip
+    finally:
+        clip.path.unlink(missing_ok=True)
+    return _voice_body(ctx, project_id, key)
+
+
+def clip_from_take(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    scene_id: str,
+    take_id: str,
+    transcript: str | None,
+) -> dict[str, Any]:
+    _require_clip_target(ctx, project_id, key, emotion)
+    inputs = line_inputs(ctx, project_id)
+    li = inputs.get(scene_id)
+    take = next(
+        (t for t in takes_by_scene(ctx, project_id).get(scene_id, []) if t.id == take_id), None
+    )
+    if li is None or li.speaker != key or take is None:
+        raise VoiceError(404, "take not found")
+    path = ctx.store.absolute_path(take)
+    if not path.is_file():
+        raise VoiceError(404, "take not found")
+    text = li.text if transcript is None else transcript.strip()
+    if not text:
+        raise VoiceError(422, TRANSCRIPT_REQUIRED)
+    _store_emotion_clip(
+        ctx, project_id, key, emotion, path.read_bytes(), ext="wav",
+        seconds=take.duration_s or 0.0, transcript=text, origin="take", inputs=[take.id],
+    )  # fmt: skip
+    return _voice_body(ctx, project_id, key)
+
+
+def remove_emotion_clip(ctx: AppContext, project_id: str, key: str, emotion: str) -> dict[str, Any]:
+    _require_clip_target(ctx, project_id, key, emotion)
+    previous = slots.get_emotion_clip(ctx, project_id, key, emotion)
+    if previous is not None:
+        slots.delete_emotion_clip(ctx, project_id, key, emotion)
+        clip_changed(ctx, project_id, key, previous.artifact_id)
+    return _voice_body(ctx, project_id, key)
+
+
+def clip_changed(ctx: AppContext, project_id: str, key: str, old_artifact_id: str) -> None:
+    """A clip was replaced or removed: stale only the lines whose active take used it."""
+    inputs = line_inputs(ctx, project_id)
+    takes = takes_by_scene(ctx, project_id)
+    used: set[str] = set()
+    for sid, li in inputs.items():
+        if li.speaker != key:
+            continue
+        active = next((t for t in takes.get(sid, []) if t.is_active), None)
+        phrases: list[dict[str, Any]] = (active.params or {}).get("phrases") or [] if active else []
+        if any(
+            p.get("reference") == "emotion" and p.get("reference_artifact_id") == old_artifact_id
+            for p in phrases
+        ):
+            used.add(sid)
+    _mark_stale(ctx, project_id, used)
+
+
+# ---- emotion mapping and project settings -------------------------------------------------
+
+
+GAP_MIN_MS = 0
+GAP_MAX_MS = 1000
+GAP_ERROR = "phrase_gap_ms must be between 0 and 1000."
+
+
+def current_mapping(ctx: AppContext) -> Mapping:
+    """The mapping file, read again on every call so an edit applies to the next take."""
+    return load_mapping(ctx.settings.emotion_mapping_path)
+
+
+def _gap_key(project_id: str) -> str:
+    return f"phrase_gap_ms:{project_id}"
+
+
+def phrase_gap_ms(ctx: AppContext, project_id: str, mapping: Mapping) -> int:
+    """The project's silence between phrases, else the mapping file's default."""
+    with ctx.session_factory() as s:
+        row = s.get(Setting, _gap_key(project_id))
+    if row is not None and isinstance(row.value, int) and not isinstance(row.value, bool):
+        return row.value
+    return mapping.phrase_gap_ms
+
+
+def settings_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
+    with ctx.session_factory() as s:
+        if s.get(Project, project_id) is None:
+            raise ProjectMissing
+    mapping = current_mapping(ctx)
+    return {
+        "phrase_gap_ms": phrase_gap_ms(ctx, project_id, mapping),
+        "default_phrase_gap_ms": mapping.phrase_gap_ms,
+    }
+
+
+def set_phrase_gap(ctx: AppContext, project_id: str, value: int) -> dict[str, Any]:
+    settings_body(ctx, project_id)  # the project must exist
+    if not GAP_MIN_MS <= value <= GAP_MAX_MS:
+        raise VoiceError(422, GAP_ERROR)
+    with ctx.session_factory.begin() as s:
+        row = s.get(Setting, _gap_key(project_id))
+        if row is None:
+            s.add(Setting(key=_gap_key(project_id), value=value))
+        else:
+            row.value = value
+    return settings_body(ctx, project_id)
 
 
 # ---- story, rows and takes -----------------------------------------------------------------
@@ -377,7 +589,8 @@ def _aware(value: datetime) -> datetime:
 @dataclass
 class LineInput:
     scene_id: str
-    text: str
+    text: str  # what is shown and captioned: no markup, no [...] tags
+    raw_text: str  # the story line as written, with markup and tags
     speaker: str | None
     speaker_name: str | None
     slot: VoiceSlot | None
@@ -389,6 +602,8 @@ class LineInput:
     scene_frames: int | None
     scene_shot_at: datetime | None
     position: int
+    emotion: str | None = None
+    age: int | None = None
 
 
 def line_inputs(ctx: AppContext, project_id: str) -> dict[str, LineInput]:
@@ -413,9 +628,11 @@ def line_inputs(ctx: AppContext, project_id: str) -> dict[str, LineInput]:
         line = lines[row.id]
         speaker = scene.speaker
         char = story.characters.get(speaker) if speaker else None
+        raw = (scene.line or "").strip()
         out[scene.id] = LineInput(
             scene_id=scene.id,
-            text=(scene.line or "").strip(),
+            text=display_text(raw),
+            raw_text=raw,
             speaker=speaker,
             speaker_name=char.name if char is not None else None,
             slot=voices.get(speaker) if speaker else None,
@@ -427,6 +644,8 @@ def line_inputs(ctx: AppContext, project_id: str) -> dict[str, LineInput]:
             scene_frames=row.frames,
             scene_shot_at=row.shot_length_at,
             position=position,
+            emotion=scene.emotion,
+            age=char.age if char is not None else None,
         )
     return out
 
@@ -462,8 +681,13 @@ def write_take(
     version: str,
     inputs: list[str],
     job_id: str | None,
+    extra_params: dict[str, Any] | None = None,
 ) -> Artifact:
-    """Store a processed WAV as the line's new active take and reopen the line."""
+    """Store a processed WAV as the line's new active take and reopen the line.
+
+    `extra_params` holds the applied values (phrases, age band, gap, requested length); a take
+    with none of them keeps exactly the params it always had.
+    """
     take_no = next_take_no(ctx, project_id, scene_id)
     spec = ArtifactSpec(
         project_id=project_id,
@@ -478,7 +702,13 @@ def write_take(
         model_revision=revision,
         adapter=adapter,
         version=version,
-        params={"text": text, "speed": speed, "voice": voice, "source": source},
+        params={
+            "text": text,
+            "speed": speed,
+            "voice": voice,
+            "source": source,
+            **(extra_params or {}),
+        },
         input_artifact_ids=inputs,
         job_id=job_id,
         duration_s=duration_s,
@@ -507,6 +737,9 @@ def characters_body(ctx: AppContext, project_id: str, story: cast_state.StoryCas
     out: list[dict[str, Any]] = []
     for key, char in story.characters.items():
         item: dict[str, Any] = {"key": key, "name": char.name}
+        if char.age is not None:
+            item["age"] = char.age
+            item["age_band"] = age_band(char.age)
         cast_slot = cast_slots.get(key)
         if cast_slot is not None and cast_slot.approved_artifact_id:
             item["avatar_url"] = f"/media/{cast_slot.approved_artifact_id}"
@@ -520,12 +753,19 @@ def characters_body(ctx: AppContext, project_id: str, story: cast_state.StoryCas
 
 
 def _take_out(
-    t: Artifact, text: str, changes: list[ChangeRow], approved_id: str | None
+    t: Artifact,
+    text: str,
+    changes: list[ChangeRow],
+    approved_id: str | None,
+    values_stale: bool = False,
 ) -> dict[str, Any]:
+    params: dict[str, Any] = t.params or {}
     stale = (
-        is_stale(TAKE_KIND, _aware(t.created_at), changes) or (t.params or {}).get("text") != text
+        is_stale(TAKE_KIND, _aware(t.created_at), changes)
+        or params.get("text") != text
+        or values_stale
     )
-    return {
+    out: dict[str, Any] = {
         "id": t.id,
         "take_no": t.take_no,
         "seed": t.seed,
@@ -535,6 +775,10 @@ def _take_out(
         "stale": bool(stale),
         "audio_url": f"/media/{t.id}",
     }
+    recorded = effective.take_settings(params)
+    if recorded is not None:
+        out["settings"] = recorded
+    return out
 
 
 def _line_job_state(
@@ -563,10 +807,48 @@ def _line_job_state(
     return None, None
 
 
+def effective_speed(voice_speed: float, line_speed: float) -> float:
+    return round(min(SPEED_MAX, max(SPEED_MIN, voice_speed * line_speed)), 4)
+
+
+def clip_ids(ctx: AppContext, project_id: str) -> dict[str, dict[str, str]]:
+    """Per character, the artifact id of each emotion clip."""
+    return {
+        key: {emotion: clip.artifact_id for emotion, clip in by_emotion.items()}
+        for key, by_emotion in slots.list_emotion_clips(ctx, project_id).items()
+    }
+
+
+def plan_for(
+    ctx: AppContext, project_id: str, li: LineInput, mapping: Mapping, gap_ms: int
+) -> LinePlan:
+    """The plan a take of this line would follow now."""
+    voice_model = current_voice_model(ctx)
+    voice_speed = li.slot.speed if li.slot is not None else 1.0
+    cloned = li.slot is not None and li.slot.mode == "cloned"
+    clips = clip_ids(ctx, project_id).get(li.speaker or "", {}) if cloned else {}
+    return plan_line(
+        li.raw_text,
+        li.emotion,
+        mapping=mapping,
+        voice_model=voice_model,
+        speed=effective_speed(voice_speed, li.speed),
+        age=li.age,
+        has_clip=lambda emotion: emotion in clips,
+        gap_ms=gap_ms,
+    )
+
+
 def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
     from reelforge.voice.frames import shot_length_s  # noqa: PLC0415
 
     inputs = line_inputs(ctx, project_id)
+    try:
+        mapping: Mapping | None = current_mapping(ctx)
+    except MappingError:
+        mapping = None  # a broken mapping file hides the new values; generation reports it
+    gap_ms = phrase_gap_ms(ctx, project_id, mapping) if mapping is not None else 0
+    clips = clip_ids(ctx, project_id)
     takes = takes_by_scene(ctx, project_id)
     changes = _changes_by_scene(ctx, project_id)
     jobs = voice_jobs(ctx, project_id)
@@ -575,7 +857,20 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
         scene_takes = takes.get(sid, [])
         active = next((t for t in scene_takes if t.is_active), None)
         ch = changes.get(sid, [])
-        take_items = [_take_out(t, li.text, ch, li.approved_artifact_id) for t in scene_takes]
+        plan = plan_for(ctx, project_id, li, mapping, gap_ms) if mapping and li.text else None
+        cloned = li.slot is not None and li.slot.mode == "cloned"
+        speaker_clips = clips.get(li.speaker or "", {}) if cloned else {}
+        take_items = [
+            _take_out(
+                t,
+                li.raw_text,
+                ch,
+                li.approved_artifact_id,
+                plan is not None
+                and effective.values_stale(t.params or {}, plan, mapping, gap_ms, speaker_clips),
+            )
+            for t in scene_takes
+        ]
         active_item = next((t for t in take_items if t["active"]), None)
         line: dict[str, Any] = {
             "scene_id": sid,
@@ -591,6 +886,21 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
         }
         if li.speaker_name:
             line["speaker_name"] = li.speaker_name
+        if li.raw_text != li.text:
+            line["edit_text"] = li.raw_text
+        if li.emotion:
+            line["emotion"] = li.emotion
+        if plan is not None:
+            body = effective.effective_body(plan)
+            if body is not None:
+                line["effective"] = body
+            recorded = effective.take_settings(active.params or {}) if active is not None else None
+            if (
+                active is not None
+                and (active.params or {}).get("source") == "tts"
+                and effective.settings_changed(plan, body, recorded)
+            ):
+                line["settings_changed"] = True
         total_s: float | None = None
         if active is not None and active.duration_s is not None:
             total_s = active.duration_s + li.pause_before + li.pause_after
@@ -782,6 +1092,7 @@ def enqueue_preset_preview(ctx: AppContext, project_id: str, preset_id: str) -> 
 
 VOICE_PROMPTS = Path(__file__).resolve().parent / "prompts"
 SHORTEN_PROMPT = "shorten.v1.md"
+EMPTY_LINE = "The line can't be empty."
 LLM_DOWN = "The language model isn't available. Edit the text yourself."
 TOO_LONG = "Even at 1.25x this is too long."
 
@@ -851,9 +1162,17 @@ def approve_line(ctx: AppContext, project_id: str, scene_id: str) -> dict[str, A
     return line_response(ctx, project_id, scene_id)
 
 
-def _edit_scene(
-    ctx: AppContext, project_id: str, scene_id: str, field: str, value: Any, *, record: bool
+def _edit_story(
+    ctx: AppContext,
+    project_id: str,
+    section: str,
+    key: str,
+    field: str,
+    value: Any,
+    *,
+    record: bool,
 ) -> None:
+    """Set (or, for None, remove) one field of a scene (`section="scenes"`) or character."""
     from reelforge.story.yamlio import (  # noqa: PLC0415
         dump_story_text,
         load_story_text,
@@ -866,27 +1185,81 @@ def _edit_scene(
     doc: Any = load_story_text(current.yaml_text)
     if doc.fa.flow_style() is True:  # a JSON-style document: write clean block YAML
         story = parse_story(current.yaml_text)
-        scenes = [
-            sc.model_copy(update={field: value}) if sc.id == scene_id else sc for sc in story.scenes
-        ]
-        text = story_to_yaml(story.model_copy(update={"scenes": scenes}))
+        if section == "scenes":
+            scenes = [
+                sc.model_copy(update={field: value}) if sc.id == key else sc for sc in story.scenes
+            ]
+            text = story_to_yaml(story.model_copy(update={"scenes": scenes}))
+        else:
+            chars = {
+                k: c.model_copy(update={field: value}) if k == key else c
+                for k, c in story.characters.items()
+            }
+            text = story_to_yaml(story.model_copy(update={"characters": chars}))
     else:
-        for sc in doc["scenes"]:
-            if sc["id"] == scene_id:
-                sc[field] = value
+        entries: Any = doc["scenes"] if section == "scenes" else [doc["characters"].get(key)]
+        for entry in entries:
+            if entry is not None and (section != "scenes" or entry["id"] == key):
+                if value is None:
+                    entry.pop(field, None)
+                else:
+                    entry[field] = value
         text = dump_story_text(doc)
     story_service.save_version(ctx, project_id, text, keep_stage=True, record_changes=record)
+
+
+def _edit_scene(
+    ctx: AppContext, project_id: str, scene_id: str, field: str, value: Any, *, record: bool
+) -> None:
+    _edit_story(ctx, project_id, "scenes", scene_id, field, value, record=record)
 
 
 def edit_text(ctx: AppContext, project_id: str, scene_id: str, text: str) -> dict[str, Any]:
     _require_line(ctx, project_id, scene_id)
     text = text.strip()
     if not text:
-        raise VoiceError(422, "The line can't be empty.")
+        raise VoiceError(422, EMPTY_LINE)
+    try:
+        parse_segments(text)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    if not display_text(text):
+        raise VoiceError(422, EMPTY_LINE)
     _edit_scene(ctx, project_id, scene_id, "line", text, record=True)
     ensure_rows(ctx, project_id)
     clear_approval(ctx, project_id, scene_id)
     recompute_stage(ctx, project_id)
+    return line_response(ctx, project_id, scene_id)
+
+
+def set_character_age(ctx: AppContext, project_id: str, key: str, age: object) -> None:
+    """Save a character's age in the story and stale that character's takes (no job starts)."""
+    try:
+        value = check_age(age)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    story = load_story(ctx, project_id)
+    if story is None or key not in story.characters:
+        raise UnknownCharacter
+    if story.characters[key].age == value:
+        return
+    _edit_story(ctx, project_id, "characters", key, "age", value, record=False)
+    voice_changed(ctx, project_id, key)
+
+
+def set_emotion(
+    ctx: AppContext, project_id: str, scene_id: str, emotion: str | None
+) -> dict[str, Any]:
+    li = _require_line(ctx, project_id, scene_id)
+    try:
+        value = check_emotion(emotion)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    if value != li.emotion:
+        _edit_scene(ctx, project_id, scene_id, "emotion", value, record=True)
+        ensure_rows(ctx, project_id)
+        clear_approval(ctx, project_id, scene_id)
+        recompute_stage(ctx, project_id)
     return line_response(ctx, project_id, scene_id)
 
 
@@ -1012,7 +1385,7 @@ async def upload_recording(
             scene_id,
             out,
             duration_s=duration,
-            text=li.text,
+            text=li.raw_text,
             speed=1.0,
             voice={"mode": "recorded"},
             source="upload",

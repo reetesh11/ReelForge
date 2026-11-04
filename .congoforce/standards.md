@@ -42,11 +42,20 @@ except a bootstrap task, which may fill in the test commands.
 - Frozen M1 tests pin API shapes: `GET /jobs` items keep exactly the M1 `JobOut` keys unless a job has a `result`. Omit new fields on existing responses when empty, or revise the frozen test at a Gate 2.
 - Pass `--base origin/main` to `congoforce new`; a task can otherwise inherit a stale base. Check that the new worktree contains `origin/main` before the spec stage.
 - Never hand-edit a frozen test to get around a failure; the frozen-hash and red checks then fail. Revise it through Gate 2, or the escalation "Revisit a test" route before implementing.
+- Acceptance tests are written before any implementation, so a test that raises whatever the code returns (for example `dict >= dict`) looks red for the right reason. The test-author must run each assertion expression against a hand-built sample value before freezing.
+- Caption burn-in needs an ffmpeg with libass. On macOS plain Homebrew `ffmpeg` lacks the `subtitles` filter: use `brew install ffmpeg-full` and `brew link --force ffmpeg-full`.
+- After a frozen test is revised through "Revisit a test", the red check fails because the code already exists, and Gate 2 opens with a failed-red warning. Approve when the diff is limited to the lines named in the note. The implement stage then needs at least one real commit after the re-freeze.
+- `congoforce check` runs the whole suite and takes about 10 minutes; run it in the background.
 - Stop any running ReelForge app (ports 7400 and 7401) before a task's test stages; the Playwright wrapper needs both ports, and a busy port shows up as a pre-existing baseline failure.
 - A script that runs inside another uv environment must not sit next to a module named like a package it imports (for example `adapters/mlx_audio.py` and `import mlx_audio`): as a script, its folder is first on `sys.path` and shadows the package. Scrub `sys.path` before the real import.
 - Select frozen tests with `pytest -k` instead of naming the frozen file; a hook blocks any shell command that names a frozen file, even to run it.
 - The generated PR body marks manual criteria as met; edit it to say what was actually run on the reference Mac before shipping.
 - `.congoforce/standards.md` and `config.toml` are tracked on `main`; do not leave them untracked, because switching branches would remove them and CongoForce would regenerate a default.
+
+- When an owner answer changes what a criterion means, edit `req.md` and `product-spec.md` so the AC text matches before Gate 2; otherwise the Gate 2 packet and the PR body carry the stale wording.
+- Push the `--base` branch to origin before the ship stage when it is not `main`; `gh pr create` fails otherwise and the task stays blocked until `congoforce answer`.
+- The verifier does not run vitest. For UI criteria run `pnpm --dir web test --run` and state the result in the PR body.
+- When a frozen test measures exact timing (for example a silence gap), check the default trim or padding in the audio path against its tolerance before implementing.
 
 ## Draft notes
 
