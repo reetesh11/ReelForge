@@ -131,6 +131,6 @@ Run on the reference Mac with the real OmniVoice model and the Grumpy Uncle proj
 | 6 | Edit `emotions.toml` (for example make sad slower) and reopen the voice board | The sad take shows "Needs update"; the next take uses the new values and the old take keeps the old ones. | |
 | 7 | Use a sad take as the Sad reference, then make a new sad take | The new take's reference is the Sad clip (see "How this will sound": Sad reference clip) and the voice is closer to the sad delivery. | |
 | 8 | Switch to Kokoro and pick Sad | "Emotion is not applied for this voice." appears and the take is plain; the age shows an Experimental badge. | |
-| 9 | Run `reelforge doctor` on a machine with plain ffmpeg | Pitch and tempo changes fail with the "Install ffmpeg-full" message instead of being skipped. | |
+| 9 | Make a Sad take on a machine whose ffmpeg has no `rubberband` filter (plain Homebrew ffmpeg) | The line fails with the "Install ffmpeg-full" message instead of being skipped. | |
 
 Reviewer: ________  Date: ________
