@@ -38,6 +38,15 @@ revision = "unpinned"
 license = "MIT"
 license_url = "https://huggingface.co/mlx-community/whisper-large-v3-turbo"
 
+# Placeholder sound model (mock backend and tests) until the spike picks the real models;
+# then `audio_music`, `audio_sfx` and `audio_ambience` entries replace it.
+[models.audio_stub]
+id = "placeholder/audio-stub"
+revision = "stub-1"
+license = "Apache-2.0"
+license_url = "https://www.apache.org/licenses/LICENSE-2.0"
+max_seconds = 30.0
+
 # Spike candidates for sound generation (read by tools/audio_spike.py only; load_models
 # ignores this table). A candidate whose licence or Mac support fails the check is left out.
 # `command` is the argv the spike runs on the reference Mac with {prompt}, {seconds}, {out}
