@@ -13,6 +13,9 @@ import {
   type Affected,
   type StoryDetail,
 } from "@/api/story";
+import { ActionBar } from "@/components/ActionBar";
+import { Chip } from "@/components/Chip";
+import { Notice } from "@/components/Notice";
 import { parseDraft, type StoryData } from "./draft";
 import { FormView } from "./FormView";
 import { estimateLength } from "./length";
@@ -157,40 +160,20 @@ export function StoryEditor({ projectId, story }: { projectId: string; story: St
         <span className="meta">{length}</span>
       </div>
 
-      {approved && !readingOld ? <p className="notice">Story approved. Editing it will mark dependent items for update.</p> : null}
-      {notice ? <p role="alert" className="errors">{notice}</p> : null}
-
-      <div className="actions">
-        <button type="button" disabled={readingOld || !dirty || !draft.ok || save.isPending} onClick={() => onSave(text)}>
-          Save
-        </button>
-        <button
-          type="button"
-          disabled={readingOld || dirty || hasErrors || approve.isPending}
-          title={dirty ? "Save your changes first" : undefined}
-          onClick={onApprove}
-        >
-          Approve story
-        </button>
-        <button type="button" onClick={() => void downloadStory(projectId)}>
-          Export story.yaml
-        </button>
-        <label className="link-button">
-          Import story.yaml
-          <input
-            type="file"
-            accept=".yaml,.yml,text/yaml,text/plain"
-            className="visually-hidden"
-            onChange={(e) => void onFile(e.target.files?.[0])}
-          />
-        </label>
-      </div>
+      {approved && !readingOld ? (
+        <Notice tone="info">Story approved. Editing it will mark dependent items for update.</Notice>
+      ) : null}
+      {notice ? (
+        <p role="alert" className="errors">
+          {notice}
+        </p>
+      ) : null}
 
       {versions.data ? <VersionPanel versions={versions.data} viewing={viewing} onSelect={setViewing} /> : null}
 
       {readingOld ? (
         <div>
-          <p className="notice">Viewing an older version (read-only).</p>
+          <Notice tone="warning">Viewing an older version (read-only).</Notice>
           <textarea
             className="yaml-editor"
             aria-label="Version text"
@@ -199,6 +182,7 @@ export function StoryEditor({ projectId, story }: { projectId: string; story: St
           />
           <button
             type="button"
+            className="btn btn-secondary"
             disabled={!viewed.data || save.isPending}
             onClick={() => {
               if (viewed.data) {
@@ -212,11 +196,11 @@ export function StoryEditor({ projectId, story }: { projectId: string; story: St
         </div>
       ) : (
         <>
-          <div role="tablist" aria-label="Editor view" className="tabs">
-            <button type="button" role="tab" aria-selected={tab === "form"} onClick={() => setTab("form")}>
+          <div role="tablist" aria-label="Editor view" className="tabs segmented">
+            <button type="button" role="tab" className="btn btn-secondary" aria-selected={tab === "form"} onClick={() => setTab("form")}>
               Form
             </button>
-            <button type="button" role="tab" aria-selected={tab === "yaml"} onClick={() => setTab("yaml")}>
+            <button type="button" role="tab" className="btn btn-secondary" aria-selected={tab === "yaml"} onClick={() => setTab("yaml")}>
               YAML
             </button>
           </div>
@@ -248,6 +232,45 @@ export function StoryEditor({ projectId, story }: { projectId: string; story: St
           ) : null}
         </>
       )}
+
+      <ActionBar
+        left={
+          <>
+            {dirty ? <Chip tone="amber">Unsaved changes</Chip> : null}
+            <button
+              type="button"
+              className={`btn ${dirty ? "btn-primary" : "btn-secondary"}`}
+              disabled={readingOld || !dirty || !draft.ok || save.isPending}
+              onClick={() => onSave(text)}
+            >
+              Save
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => void downloadStory(projectId)}>
+              Export story.yaml
+            </button>
+            <label className="link-button">
+              Import story.yaml
+              <input
+                type="file"
+                accept=".yaml,.yml,text/yaml,text/plain"
+                className="visually-hidden"
+                onChange={(e) => void onFile(e.target.files?.[0])}
+              />
+            </label>
+          </>
+        }
+        cta={
+          <button
+            type="button"
+            className={`btn ${approved ? "btn-secondary" : "btn-cta"}`}
+            disabled={readingOld || dirty || hasErrors || approve.isPending}
+            title={dirty ? "Save your changes first" : undefined}
+            onClick={onApprove}
+          >
+            Approve story
+          </button>
+        }
+      />
     </section>
   );
 }

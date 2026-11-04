@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
   addCharacter,
   addScene,
@@ -21,6 +21,23 @@ function TextField({ label, value, onChange }: { label: string; value: string; o
     <label>
       {label}
       <input type="text" value={value} onChange={(e) => onChange(e.target.value)} />
+    </label>
+  );
+}
+
+/** A labelled textarea that grows to show all of its text. */
+function AreaField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    if (el.scrollHeight > 0) el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+  return (
+    <label>
+      {label}
+      <textarea ref={ref} className="autogrow" value={value} onChange={(e) => onChange(e.target.value)} />
     </label>
   );
 }
@@ -102,23 +119,26 @@ function CardActions({
 }) {
   return (
     <div className="card-actions">
-      <button type="button" onClick={onDelete}>
+      <button type="button" className="btn btn-danger" onClick={onDelete}>
         Delete
       </button>
-      <button type="button" disabled={index === 0} onClick={() => onMove(index - 1)}>
+      <button type="button" className="btn btn-ghost" disabled={index === 0} onClick={() => onMove(index - 1)}>
         Move up
       </button>
-      <button type="button" disabled={index >= count - 1} onClick={() => onMove(index + 1)}>
+      <button type="button" className="btn btn-ghost" disabled={index >= count - 1} onClick={() => onMove(index + 1)}>
         Move down
       </button>
     </div>
   );
 }
 
-function Card({ label, stale, children }: { label: string; stale: boolean; children: ReactNode }) {
+function Card({ label, title, stale, children }: { label: string; title: string; stale: boolean; children: ReactNode }) {
   return (
     <section className="card" aria-label={label}>
-      <StaleBadge show={stale} />
+      <div className="card-header">
+        <span>{title}</span>
+        <StaleBadge show={stale} />
+      </div>
       {children}
     </section>
   );
@@ -142,6 +162,7 @@ export function FormView({
   stale: ReadonlySet<string>;
   disabled: boolean;
 }) {
+  const [editingSettings, setEditingSettings] = useState(false);
   const characters = Object.entries(asObj(data["characters"]));
   const scenes = Array.isArray(data["scenes"]) ? (data["scenes"] as unknown[]).map(asObj) : [];
   const keys = characters.map(([k]) => k);
@@ -154,9 +175,23 @@ export function FormView({
 
   return (
     <fieldset disabled={disabled} className="form-view">
-      <details className="fold">
-        <summary>Story settings</summary>
-        <div className="card">
+      <section className="card" aria-label="Story settings">
+        <div className="card-header">
+          <span>Story settings</span>
+          <button type="button" className="btn btn-ghost" onClick={() => setEditingSettings((v) => !v)}>
+            {editingSettings ? "Done" : "Edit settings"}
+          </button>
+        </div>
+        {!editingSettings ? (
+          <p className="settings-summary" data-testid="settings-summary">
+            <span>{asStr(data["language"])}</span>
+            <span>{asStr(data["style"])}</span>
+            <span>{asStr(data["aspect"])}</span>
+            <span>{`${asStr(data["fps"])} fps`}</span>
+            <span>{`${asStr(data["target_seconds"])} s target`}</span>
+          </p>
+        ) : (
+        <div className="settings-fields">
           <TextField label="Title" value={asStr(data["title"])} onChange={(v) => edit((t) => setIn(t, ["title"], v))} />
           <SelectField
             label="Story language"
@@ -177,14 +212,15 @@ export function FormView({
             onCommit={(n) => n !== null && setNum(["target_seconds"], n)}
           />
         </div>
-      </details>
+        )}
+      </section>
 
       <h3>Characters</h3>
       {characters.map(([key, raw], i) => {
         const c = asObj(raw);
         const voice = asObj(c["voice"]);
         return (
-          <Card key={key} label={`Character ${key}`} stale={stale.has(`character:${key}`)}>
+          <Card key={key} label={`Character ${key}`} title={asStr(c["name"]) || key} stale={stale.has(`character:${key}`)}>
             <label>
               Key
               <input
@@ -198,7 +234,7 @@ export function FormView({
               />
             </label>
             <TextField label="Name" value={asStr(c["name"])} onChange={(v) => edit((t) => setIn(t, ["characters", key, "name"], v))} />
-            <TextField label="Look" value={asStr(c["look"])} onChange={(v) => edit((t) => setIn(t, ["characters", key, "look"], v))} />
+            <AreaField label="Look" value={asStr(c["look"])} onChange={(v) => edit((t) => setIn(t, ["characters", key, "look"], v))} />
             <TextField
               label="Voice"
               value={asStr(voice["ref"])}
@@ -218,29 +254,31 @@ export function FormView({
           </Card>
         );
       })}
-      <button type="button" onClick={() => edit(addCharacter)}>
-        Add character
-      </button>
+      <div className="card add-card">
+        <button type="button" className="btn btn-secondary" onClick={() => edit(addCharacter)}>
+          Add character
+        </button>
+      </div>
 
       <h3>Scenes</h3>
       {scenes.map((s, i) => {
         const id = asStr(s["id"]);
         const base = ["scenes", i];
         return (
-          <Card key={`${id}-${i}`} label={`Scene ${id}`} stale={stale.has(`scene:${id}`)}>
+          <Card key={`${id}-${i}`} label={`Scene ${id}`} title={`Scene ${i + 1}`} stale={stale.has(`scene:${id}`)}>
             <TextField label="Setting" value={asStr(s["setting"])} onChange={(v) => setOpt([...base, "setting"], v)} />
-            <TextField label="Action" value={asStr(s["action"])} onChange={(v) => edit((t) => setIn(t, [...base, "action"], v))} />
+            <AreaField label="Action" value={asStr(s["action"])} onChange={(v) => edit((t) => setIn(t, [...base, "action"], v))} />
             <SelectField
               label="Speaker"
               value={asStr(s["speaker"])}
               options={[["", "None"], ...keys.map((k): [string, string] => [k, k])]}
               onChange={(v) => setOpt([...base, "speaker"], v)}
             />
-            <TextField label="Line" value={asStr(s["line"])} onChange={(v) => setOpt([...base, "line"], v)} />
+            <AreaField label="Line" value={asStr(s["line"])} onChange={(v) => setOpt([...base, "line"], v)} />
             {s["suggested"] === true ? (
               <div className="card-actions">
                 <span className="badge amber">suggested</span>
-                <button type="button" onClick={() => edit((t) => deleteIn(t, [...base, "suggested"]))}>
+                <button type="button" className="btn btn-secondary" onClick={() => edit((t) => deleteIn(t, [...base, "suggested"]))}>
                   Accept
                 </button>
               </div>
@@ -259,9 +297,11 @@ export function FormView({
           </Card>
         );
       })}
-      <button type="button" onClick={() => edit(addScene)}>
-        Add scene
-      </button>
+      <div className="card add-card">
+        <button type="button" className="btn btn-secondary" onClick={() => edit(addScene)}>
+          Add scene
+        </button>
+      </div>
     </fieldset>
   );
 }
