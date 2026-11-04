@@ -37,3 +37,24 @@ id = "mlx-community/whisper-large-v3-turbo"
 revision = "unpinned"
 license = "MIT"
 license_url = "https://huggingface.co/mlx-community/whisper-large-v3-turbo"
+
+# Spike candidates for sound generation (read by tools/audio_spike.py only; load_models
+# ignores this table). A candidate whose licence or Mac support fails the check is left out.
+# `command` is the argv the spike runs on the reference Mac with {prompt}, {seconds}, {out}
+# and {seed} filled in.
+
+[candidates.acestep]
+id = "ACE-Step/Ace-Step1.5"
+revision = "unpinned"
+kind = "music"
+license = "Apache-2.0"
+license_url = "https://github.com/ace-step/ACE-Step-1.5"
+command = ["ace-step", "--prompt", "{prompt}", "--duration", "{seconds}", "--seed", "{seed}", "--out", "{out}"]
+
+[candidates.moss_soundeffect]
+id = "OpenMOSS-Team/MOSS-SoundEffect"
+revision = "v2.0"
+kind = "sfx"
+license = "Apache-2.0"
+license_url = "https://huggingface.co/OpenMOSS-Team/MOSS-SoundEffect"
+command = ["moss-soundeffect", "--prompt", "{prompt}", "--duration", "{seconds}", "--seed", "{seed}", "--out", "{out}"]
