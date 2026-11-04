@@ -45,7 +45,9 @@ def test_look_is_verbatim_and_product_only_when_asked():
 
 def test_speaker_first_then_mention_order_then_first_character():
     story, scene = _story(speaker="potato", line="hi Tamatar")
-    assert characters_in_scene(story, scene) == ["potato", "tomato"]
+    assert characters_in_scene(story, scene) == ["potato"]  # a line only addresses Tamatar
+    story, scene = _story(line="hi Tamatar")
+    assert characters_in_scene(story, scene) == ["tomato"]
     story, scene = _story(setting="Aloo meets Tamatar")
     assert characters_in_scene(story, scene) == ["potato", "tomato"]
     story, scene = _story()

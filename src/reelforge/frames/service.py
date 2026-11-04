@@ -98,15 +98,22 @@ def characters_in_scene(story: Story, scene: Scene) -> list[str]:
     keys: list[str] = []
     if scene.speaker and scene.speaker in story.characters:
         keys.append(scene.speaker)
-    text = " ".join(filter(None, [scene.action, scene.setting, scene.line]))
-    mentioned: list[tuple[int, str]] = []
-    for key, char in story.characters.items():
-        if key in keys:
-            continue
-        pos = _mention_pos(text, [char.name, key])
-        if pos is not None:
-            mentioned.append((pos, key))
-    keys += [key for _, key in sorted(mentioned)]
+
+    def mentioned_in(text: str) -> list[str]:
+        found: list[tuple[int, str]] = []
+        for key, char in story.characters.items():
+            if key in keys:
+                continue
+            pos = _mention_pos(text, [char.name, key])
+            if pos is not None:
+                found.append((pos, key))
+        return [key for _, key in sorted(found)]
+
+    # Words in a spoken line only count when nobody is speaking: the speaker's line often
+    # addresses someone who is not in the picture.
+    keys += mentioned_in(" ".join(filter(None, [scene.action, scene.setting])))
+    if not keys and scene.line:
+        keys += mentioned_in(scene.line)
     if not keys and story.characters:
         keys.append(next(iter(story.characters)))
     return keys

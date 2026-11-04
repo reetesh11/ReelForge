@@ -409,3 +409,116 @@ class VoiceLineActionOut(BaseModel):
 
 class VoiceShortenOut(BaseModel):
     proposal: str
+
+
+class FrameCharacterOut(BaseModel):
+    key: str
+    name: str
+
+
+class FrameMasterOut(BaseModel):
+    key: str
+    name: str
+    artifact_id: str
+
+
+class FrameSecondCharacter(BaseModel):
+    master_name: str
+    other_name: str
+
+
+class FrameNotes(BaseModel):
+    second_character: FrameSecondCharacter | None = None
+    product: Literal["included", "missing"] | None = None
+    waiting_for_previous_shot: bool | None = None
+    needs_master: str | None = None
+    no_character: bool | None = None
+
+
+class FrameTakeOut(BaseModel):
+    id: str
+    take_no: int
+    seed: int
+    active: bool
+    approved: bool
+    stale: bool
+    source: Literal["render", "upload"]
+    image_url: str
+    inputs: list[str]
+
+
+class FrameCard(BaseModel):
+    """Documentation model: responses are plain dicts with empty keys omitted."""
+
+    scene_id: str
+    position: int
+    characters: list[FrameCharacterOut]
+    master: FrameMasterOut | None
+    framing: Literal["wide", "medium", "closeup"]
+    state: Literal[
+        "no_frame",
+        "queued",
+        "rendering",
+        "ready",
+        "approved",
+        "stale",
+        "failed",
+        "continue_previous",
+    ]
+    message: str | None = None
+    prompt: str
+    prompt_source: Literal["llm", "user", ""]
+    look_removed: bool
+    takes: list[FrameTakeOut]
+    notes: FrameNotes
+    continue_previous: bool
+    job: JobOut | None
+
+
+class FramesOut(BaseModel):
+    stage: StageName
+    approved_count: int
+    total: int
+    stale_count: int
+    jobs: list[JobOut]
+    frames: list[FrameCard]
+
+
+class FrameActionOut(BaseModel):
+    project_stage: StageName
+    approved_count: int
+    total: int
+    frame: FrameCard
+    job: JobOut | None = None
+
+
+class SkippedItem(BaseModel):
+    scene_id: str
+    reason: str
+
+
+class FramesGenerateRequest(BaseModel):
+    mode: Literal["missing", "stale", "scenes"] = "missing"
+    scenes: list[str] | None = None
+
+
+class FramesGenerateOut(BaseModel):
+    jobs: list[JobOut]
+    skipped: list[SkippedItem]
+
+
+class FramesCancelOut(BaseModel):
+    cancelled: int
+
+
+class FrameSetFramingRequest(BaseModel):
+    framing: Literal["wide", "medium", "closeup"]
+
+
+class FrameSavePromptRequest(BaseModel):
+    prompt: str
+    regenerate: bool = False
+
+
+class FrameContinueRequest(BaseModel):
+    enabled: bool
