@@ -56,6 +56,7 @@ class Settings(BaseModel):
     voice_model: Literal["omnivoice", "kokoro"] = "omnivoice"
     voice_mem_gb: float = Field(default=4.0, gt=0, allow_inf_nan=False)
     shot_mem_gb: float = Field(default=16.0, gt=0, allow_inf_nan=False)
+    audio_mem_gb: float = Field(default=8.0, gt=0, allow_inf_nan=False)
     shot_quality: Literal["draft", "final"] = "draft"
     shot_draft_size: str = "320x576"
     shot_final_size: str = "448x768"
@@ -139,6 +140,7 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "image_mem_gb": "image_mem_gb",
         "voice_mem_gb": "voice_mem_gb",
         "shot_mem_gb": "shot_mem_gb",
+        "audio_mem_gb": "audio_mem_gb",
     },
 }
 _TOML_NESTED: dict[tuple[str, str], dict[str, str]] = {
