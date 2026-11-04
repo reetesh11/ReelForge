@@ -1,0 +1,20 @@
+flowchart LR
+  ui[web LineCard / VoiceSetup / CastRow]:::changed -->|set-emotion, edit-text, set-age, emotion-clips| routes[api/routes_voice.py + routes_cast.py]:::changed
+  routes --> vsvc[voice/service.py]:::changed
+  vsvc --> markup[story/markup.py]:::new
+  vsvc --> age[story/age.py]:::new
+  vsvc --> story[story/schema.py + staleness.py]:::changed
+  vsvc --> clips[(voice_emotion_clips table)]:::new
+  vsvc --> gen[voice/generate.py]:::changed
+  gen --> plan[voice/plan.py]:::new
+  plan --> mapping[voice/mapping.py]:::new
+  mapping --> toml[voice/emotions.toml]:::new
+  plan --> markup
+  gen --> adapter[adapters/mlx_audio.py]:::changed
+  adapter -->|batch.jsonl rows| worker[adapters/tts_worker.py]:::changed
+  adapter --> ffmpeg[ffmpeg rubberband + volume]
+  gen --> join[voice/join.py]:::new
+  gen --> take[(Artifact voice_take + params)]:::changed
+  spike[tools/voice_sweep.py]:::new -.->|measured values| toml
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706
