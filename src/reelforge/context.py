@@ -13,6 +13,7 @@ from reelforge.adapters.mock import MockAdapter
 from reelforge.adapters.mock_llm import MockLlm
 from reelforge.adapters.ollama import OllamaAdapter
 from reelforge.artifacts.store import ArtifactStore
+from reelforge.assembly.align import Aligner, MlxWhisperAligner, ProportionalAligner
 from reelforge.config import Settings
 from reelforge.db.migrate import upgrade
 from reelforge.db.models import Artifact
@@ -40,6 +41,7 @@ class AppContext:
     health: HealthMonitor
     adapter: Adapter
     llm: LlmClient
+    aligner: Aligner
     available_gb: Callable[[], float]
     ollama_unload: Callable[[], Awaitable[None]]
     doctor: Callable[[], DoctorReport] | None
@@ -54,6 +56,7 @@ class AppContext:
         ollama_unload: Callable[[], Awaitable[None]] | None = None,
         doctor: Callable[[], DoctorReport] | None = None,
         llm: LlmClient | None = None,
+        aligner: Aligner | None = None,
         migrate: bool = True,
     ) -> AppContext:
         root = settings.data_root
@@ -86,6 +89,9 @@ class AppContext:
                 else OllamaAdapter(settings.ollama_url, llm_model)
             )
         self.llm = llm
+        self.aligner = aligner or (
+            ProportionalAligner() if settings.backend == "mock" else MlxWhisperAligner(settings)
+        )
         self.ollama_unload = ollama_unload
         self.doctor = doctor
         self.health = HealthMonitor(self.run_doctor, self.bus)
