@@ -3,7 +3,9 @@ import { useEffect, useRef } from "react";
 /** Escape closes the dialog; focus returns to whatever opened it. */
 export function useDialog(onClose: () => void) {
   const close = useRef(onClose);
-  close.current = onClose;
+  useEffect(() => {
+    close.current = onClose;
+  });
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     const onKey = (e: KeyboardEvent) => {

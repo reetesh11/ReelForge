@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { AssemblyState } from "@/api/assembly";
 import { useExport } from "@/api/assembly";
+import { ActionBar } from "@/components/ActionBar";
+import { Notice } from "@/components/Notice";
 import { LicenceDialog } from "./LicenceDialog";
 
 export function ExportPanel({ projectId, state }: { projectId: string; state: AssemblyState }) {
@@ -19,12 +21,14 @@ export function ExportPanel({ projectId, state }: { projectId: string; state: As
   return (
     <section aria-label="Export">
       <h3>Export</h3>
-      <div className="actions">
-        <button type="button" disabled={disabled} onClick={start}>
-          Export final
-        </button>
-      </div>
-      {state.blocked_reason ? <p className="notice amber">{state.blocked_reason}</p> : null}
+      <ActionBar
+        cta={
+          <button type="button" className="btn btn-cta" disabled={disabled} onClick={start}>
+            Export final
+          </button>
+        }
+      />
+      {state.blocked_reason ? <Notice tone="warning">{state.blocked_reason}</Notice> : null}
       {running ? (
         <p>
           {exp.step && exp.step_index && exp.step_total
@@ -33,14 +37,14 @@ export function ExportPanel({ projectId, state }: { projectId: string; state: As
         </p>
       ) : null}
       {exp.state === "failed" ? (
-        <div className="notice error">
+        <Notice tone="error">
           <p>{`Export failed at ${exp.failed_step ?? "an unknown step"}. ${exp.error ?? ""}`.trim()}</p>
-          <button type="button" disabled={disabled} onClick={start}>
+          <button type="button" className="btn btn-secondary" disabled={disabled} onClick={start}>
             Retry
           </button>
-        </div>
+        </Notice>
       ) : null}
-      {exp.state === "idle" && latest ? <p className="notice green">{`Exported reel v${latest.version}`}</p> : null}
+      {exp.state === "idle" && latest ? <Notice tone="success">{`Exported reel v${latest.version}`}</Notice> : null}
       {exporter.error ? <p role="alert">{exporter.error.message}</p> : null}
       {asking ? (
         <LicenceDialog
