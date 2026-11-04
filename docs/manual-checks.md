@@ -116,3 +116,21 @@ Run on the reference Mac with the Grumpy Uncle project, all shots approved. The 
 
 Reviewer: ________  Date: ________
 
+
+## M6b Voice emotion, age and speed (2026-11-05)
+
+Run on the reference Mac with the real OmniVoice model and the Grumpy Uncle project (cloned uncle voice). Run `tools/voice_sweep.py` first (see `docs/voice-levers.md`, "How to run the sweep"), paste the results into the Status column and edit `src/reelforge/voice/emotions.toml` until the mapping sounds right. Then regenerate the lines below. The take must also show in the job log: `duration_s` is passed for OmniVoice rows (`duration_requested_s` on the progress line) and `generate(..., duration_s=...)` is accepted by the installed model.
+
+| # | Step | Expect | Result |
+| --- | --- | --- | --- |
+| 1 | Set one line to speed 0.8, make a take, then set 1.25 and make another | The 0.8 take is audibly slower and about 1.25 times as long; the 1.25 take is faster and about 0.8 times as long. Speech stays natural. | |
+| 2 | Set the uncle's age to 67 and regenerate his lines | The take records `age_band` elderly; note whether the cloned voice audibly changes (the age is always sent). | |
+| 3 | Pick Sad on a line and make a take | Slower, lower, quieter, with a sigh; "How this will sound" lists the mapping values. | |
+| 4 | Do the same for Happy, Fear and Anger | Each is audibly different from neutral and from the others; the delivery is acceptable. Record anything that sounds artificial (large pitch shifts). | |
+| 5 | Write `Tum kahan ho? <sad>Mujhe akela chhod diya.</sad>` and make a take | Two phrases joined with a short silence; the seam is not jarring. The screen text and captions show no tags. | |
+| 6 | Edit `emotions.toml` (for example make sad slower) and reopen the voice board | The sad take shows "Needs update"; the next take uses the new values and the old take keeps the old ones. | |
+| 7 | Use a sad take as the Sad reference, then make a new sad take | The new take's reference is the Sad clip (see "How this will sound": Sad reference clip) and the voice is closer to the sad delivery. | |
+| 8 | Switch to Kokoro and pick Sad | "Emotion is not applied for this voice." appears and the take is plain; the age shows an Experimental badge. | |
+| 9 | Run `reelforge doctor` on a machine with plain ffmpeg | Pitch and tempo changes fail with the "Install ffmpeg-full" message instead of being skipped. | |
+
+Reviewer: ________  Date: ________

@@ -50,7 +50,7 @@ Notes:
 | `duration_s` | Fixed output length in seconds. The model fits the speech into it, so a shorter target gives faster speech. | Exists in the MLX build. Effect on naturalness untested. |
 | `speed` | Upstream: above 1.0 faster, below 1.0 slower. | **Ignored in the MLX build.** It is not in `generate()`'s signature and disappears into `**kwargs`. Evidence: scene 3 take at speed 0.9 is 0.937 s against 0.934 s at 1.0. |
 
-**Known defect:** ReelForge passes `speed` to OmniVoice (`adapters/tts_worker.py`), so the speed slider on the voice screen does nothing for it. Fix: convert speed to `duration_s` (estimated length divided by speed) in the worker.
+**Known defect (fixed in M6b):** ReelForge used to pass `speed` to OmniVoice, so the speed slider did nothing for it. The worker now converts speed (and the emotion's duration scale) to `duration_s`: estimated length times `duration_scale` divided by speed, passed only when that factor is not 1.0.
 
 Default length (when `duration_s` is not given) is estimated from the text only: `estimate_duration(text, "Nice to meet you.", 25)` times 1.15. It does not use the reference clip's real speaking rate.
 
@@ -92,7 +92,7 @@ No direct emotion control, no pitch in Hz, no per-word control, no control over 
 
 ## 9. Emotion mapping (draft, hypothesis)
 
-To be replaced by measured values after the sweep. One row per emotion; the pipeline reads this table (later, a config file).
+To be replaced by measured values after the sweep. One row per emotion. The pipeline reads this table from `src/reelforge/voice/emotions.toml` (path overridable with `emotion_mapping_path` under `[paths]` in `config.toml`); the file is read again for every take, so only that file changes after the sweep. The values below are the seeds in that file.
 
 | Emotion | Tag | Pitch (`instruct`) | Duration scale | Post (semitones, gain) | Status |
 | --- | --- | --- | --- | --- | --- |
@@ -120,7 +120,7 @@ How each voice model uses the age:
 | Model | How age applies | Status |
 | --- | --- | --- |
 | OmniVoice, preset or designed voice | `instruct` age band | Documented |
-| OmniVoice, cloned voice | The reference clip normally decides the voice character; age may be ignored or may shift it. Test before relying on it. | **Unknown** |
+| OmniVoice, cloned voice | The age band is always sent in `instruct` (owner decision). The reference clip normally decides the voice character, so the audible effect is checked by the listening test (AC-14). | **Sent always; effect unverified** |
 | Kokoro (fallback) | No age control. Approximate with the choice of preset voice and a small pitch and tempo shift in post. | Hypothesis |
 
 ## 11. Experiment log
