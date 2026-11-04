@@ -18,6 +18,8 @@ from reelforge.db.models import Job, utcnow
 from reelforge.frames.generate import frame_generate
 from reelforge.frames.state import FRAME_JOB
 from reelforge.jobs.preflight import preflight
+from reelforge.shots.generate import shot_generate
+from reelforge.shots.state import SHOT_JOB
 from reelforge.story.structure import structure_story
 from reelforge.voice.generate import voice_generate
 from reelforge.voice.service import VOICE_JOB
@@ -35,6 +37,7 @@ HANDLERS: dict[str, Handler] = {
     "cast.generate": cast_generate,
     VOICE_JOB: voice_generate,
     FRAME_JOB: frame_generate,
+    SHOT_JOB: shot_generate,
 }
 MAX_ATTEMPTS = 2
 
@@ -65,6 +68,7 @@ class Worker:
         self._tasks: dict[str, asyncio.Task[None]] = {}
         self._heavy_active = False
         self._shutting_down = False
+        self.paused_projects: set[str] = set()
 
     async def start(self) -> None:
         if self._main is None:
@@ -112,6 +116,8 @@ class Worker:
         )
         for job in self.ctx.queue.next_queued():
             if job.id in self._tasks:
+                continue
+            if job.type == SHOT_JOB and job.project_id in self.paused_projects:
                 continue
             if job.heavy:
                 if self._heavy_active:
@@ -171,6 +177,11 @@ class Worker:
                     reason = (
                         f"Only {result.free_gb:.1f} GB free, job needs {result.need_gb:.1f} GB. "
                         "Close other apps, or lower image_mem_gb in config.toml."
+                    )
+                elif job.type == SHOT_JOB:
+                    reason = (
+                        f"Not enough free memory for a shot: need {result.need_gb:.1f} GB "
+                        f"(shot_mem_gb), have {result.free_gb:.1f} GB"
                     )
                 elif job.type == VOICE_JOB:
                     reason = (
