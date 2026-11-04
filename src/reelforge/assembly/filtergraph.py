@@ -167,7 +167,7 @@ def build_dialogue_graph(edl: Edl) -> FilterGraph:
         if clip.gain_db:
             filters.append(Filter("volume", {"volume": f"{clip.gain_db}dB"}))
         filters.append(Filter("adelay", {"delays": f"{ms}|{ms}"}))
-        chains.append(Chain([f"{k}:a"], filters, [f"d{k}"]))
+        chains.append(Chain([f"{k - 1}:a"], filters, [f"d{k}"]))
         labels.append(f"d{k}")
     chains.append(
         Chain(

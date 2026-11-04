@@ -39,6 +39,31 @@ def _filters_text() -> str:
     return res.stdout
 
 
+@functools.lru_cache(maxsize=1)
+def _has_filter_complex_script() -> bool:
+    exe = shutil.which("ffmpeg")
+    if exe is None:
+        return False
+    try:
+        res = subprocess.run(  # noqa: S603
+            [exe, "-hide_banner", "-h", "full"],
+            capture_output=True,
+            text=True,
+            timeout=PROBE_TIMEOUT_S,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return "filter_complex_script" in res.stdout
+
+
+def filter_script_args(script: Path) -> list[str]:
+    """The ffmpeg options that read a filter graph from `script` (the name changed in ffmpeg 7)."""
+    if _has_filter_complex_script():
+        return ["-filter_complex_script", str(script)]
+    return ["-/filter_complex", str(script)]
+
+
 def has_filter(name: str) -> bool:
     """True when `ffmpeg -filters` lists the filter (the list is read once)."""
     for line in _filters_text().splitlines():
