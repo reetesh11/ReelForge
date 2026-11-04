@@ -18,7 +18,7 @@ export function NewProjectForm({ onDone }: { onDone: () => void }) {
         Project title
         <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
       </label>
-      <button type="submit" disabled={create.isPending}>
+      <button type="submit" className="btn btn-primary" disabled={create.isPending}>
         Create
       </button>
       {create.isError ? <span className="meta">Couldn't create the project.</span> : null}
