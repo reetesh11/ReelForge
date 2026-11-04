@@ -11,6 +11,7 @@ from reelforge.audio import cues as cue_store
 from reelforge.audio.backends import engine_status
 from reelforge.audio.state import (
     AUDIO_JOB,
+    NEEDS_APPROVAL,
     OWNER_CUE,
     TAKE_KIND,
     AudioError,
@@ -20,7 +21,7 @@ from reelforge.audio.state import (
     put_mix_settings,
     set_picked,
 )
-from reelforge.db.models import Artifact, Project, StoryChange
+from reelforge.db.models import Artifact, Job, Project, StoryChange
 from reelforge.story.audio import resolve_cue, story_timeline
 from reelforge.story.schema import Cue, Story
 from reelforge.story.staleness import ChangeRow, is_stale
@@ -334,3 +335,57 @@ def settings_body(ctx: AppContext, project_id: str) -> dict[str, float]:
 def update_settings(ctx: AppContext, project_id: str, **values: float) -> dict[str, float]:
     require(ctx, project_id)
     return put_mix_settings(ctx, project_id, **values)
+
+
+# ---- generating ----------------------------------------------------------------------------
+
+
+def silence_text(cue_id: str) -> str:
+    return f'Cue "{cue_id}": a silence cue has no audio.'
+
+
+def empty_prompt_text(cue_id: str) -> str:
+    return f'Cue "{cue_id}": prompt is empty.'
+
+
+def file_cue_text(cue_id: str) -> str:
+    return f'Cue "{cue_id}": this cue uses your own file.'
+
+
+def _active_job(ctx: AppContext, project_id: str, cue_id: str) -> Job | None:
+    for job in ctx.queue.list(project_id=project_id):
+        if (
+            job.type == AUDIO_JOB
+            and job.payload.get("cue_id") == cue_id
+            and job.status in ("queued", "running")
+        ):
+            return job
+    return None
+
+
+def generate(ctx: AppContext, project_id: str, cue_id: str) -> Job:
+    """Queue one take of the cue (also Re-take); an unfinished job for the cue is returned."""
+    story = require(ctx, project_id)
+    cue = find_cue(story, cue_id)
+    if cue.kind == "silence":
+        raise AudioError(422, silence_text(cue_id))
+    if cue.source == "file":
+        raise AudioError(422, file_cue_text(cue_id))
+    if cue.state == "suggested":
+        raise AudioError(409, NEEDS_APPROVAL)
+    if not (cue.prompt or "").strip():
+        raise AudioError(422, empty_prompt_text(cue_id))
+    existing = _active_job(ctx, project_id, cue_id)
+    if existing is not None:
+        return existing
+    ok, message = engine_status(ctx)
+    if not ok:
+        raise AudioError(409, message)
+    heavy = ctx.settings.backend != "mock"
+    return ctx.queue.enqueue(
+        type=AUDIO_JOB,
+        project_id=project_id,
+        payload={"cue_id": cue_id, "stage": "sound"},
+        heavy=heavy,
+        mem_need_gb=ctx.settings.audio_mem_gb if heavy else 0.0,
+    )

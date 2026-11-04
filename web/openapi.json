@@ -17,7 +17,8 @@
           "owner_type": {
             "enum": [
               "scene",
-              "character"
+              "character",
+              "audio_cue"
             ],
             "title": "Owner Type",
             "type": "string"
@@ -6329,6 +6330,57 @@
           }
         },
         "summary": "Dismiss Cue",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:generate": {
+      "post": {
+        "operationId": "generate_api_v1_projects__project_id__audio_cues__cue_id__generate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate",
         "tags": [
           "audio"
         ]

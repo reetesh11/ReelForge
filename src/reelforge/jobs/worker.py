@@ -13,6 +13,8 @@ from reelforge.adapters.base import AdapterError, CancelToken, TransientError
 from reelforge.adapters.runner import CommandResult, current_log_path, current_observer
 from reelforge.artifacts.service import generate_artifact
 from reelforge.assembly.jobs import FINAL_JOB, PREVIEW_JOB, assemble_final, assemble_preview
+from reelforge.audio.generate import audio_generate
+from reelforge.audio.state import AUDIO_JOB
 from reelforge.cast.generate import cast_generate
 from reelforge.cast.state import GENERATE_JOB
 from reelforge.db.models import Job, utcnow
@@ -39,6 +41,7 @@ HANDLERS: dict[str, Handler] = {
     VOICE_JOB: voice_generate,
     FRAME_JOB: frame_generate,
     SHOT_JOB: shot_generate,
+    AUDIO_JOB: audio_generate,
     PREVIEW_JOB: assemble_preview,
     FINAL_JOB: assemble_final,
 }
@@ -186,6 +189,11 @@ class Worker:
                     reason = (
                         f"Not enough free memory for a shot: need {result.need_gb:.1f} GB "
                         f"(shot_mem_gb), have {result.free_gb:.1f} GB"
+                    )
+                elif job.type == AUDIO_JOB:
+                    reason = (
+                        f"Not enough free memory for sound: need {result.need_gb:.1f} GB "
+                        f"(audio_mem_gb), have {result.free_gb:.1f} GB"
                     )
                 elif job.type == VOICE_JOB:
                     reason = (

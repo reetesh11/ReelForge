@@ -8,11 +8,13 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
+from reelforge.api.routes_jobs import job_body
 from reelforge.api.schemas import (
     AudioMoveRequest,
     AudioOut,
     AudioSettingsOut,
     AudioSettingsRequest,
+    JobOut,
     VoiceSelectTakeRequest,
 )
 from reelforge.audio import service
@@ -85,5 +87,9 @@ def build_router(ctx: AppContext) -> APIRouter:
         project_id: str, cue_id: str, body: VoiceSelectTakeRequest
     ) -> JSONResponse:
         return respond(lambda: service.select_take(ctx, project_id, cue_id, body.take_id))
+
+    @router.post("/audio/cues/{cue_id}:generate", status_code=202, response_model=JobOut)
+    async def generate(project_id: str, cue_id: str) -> JSONResponse:
+        return respond(lambda: job_body(service.generate(ctx, project_id, cue_id)), 202)
 
     return router

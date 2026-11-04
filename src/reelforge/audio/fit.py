@@ -25,8 +25,9 @@ def _copies(source_s: float, seconds: float, crossfade_s: float) -> int:
     return max(2, math.ceil((seconds - source_s) / step) + 1)
 
 
-def _graph(source_s: float, seconds: float, crossfade_s: float) -> str:
-    fmt = f"aresample={SAMPLE_RATE},aformat=sample_fmts=s16:channel_layouts=stereo"
+def _graph(source_s: float, seconds: float, crossfade_s: float, channels: int) -> str:
+    layout = "mono" if channels == 1 else "stereo"
+    fmt = f"aresample={SAMPLE_RATE},aformat=sample_fmts=s16:channel_layouts={layout}"
     tail = f"atrim=duration={seconds:.6f},asetpts=PTS-STARTPTS,apad=whole_dur={seconds:.6f}"
     if source_s >= seconds - 1e-6:
         return f"[0:a]{fmt},{tail}[out]"
@@ -48,8 +49,10 @@ def _graph(source_s: float, seconds: float, crossfade_s: float) -> str:
     return ";".join(parts)
 
 
-async def fit_to_length(src: Path, dst: Path, seconds: float, *, crossfade_s: float = 1.0) -> None:
-    """Write `dst` as 48 kHz stereo 16-bit WAV of exactly `seconds` (within 1 ms)."""
+async def fit_to_length(
+    src: Path, dst: Path, seconds: float, *, crossfade_s: float = 1.0, channels: int = 2
+) -> None:
+    """Write `dst` as 48 kHz 16-bit WAV (stereo, or mono for stored takes) of exactly `seconds`."""
     if not seconds >= MIN_SECONDS:
         raise FitError("The cue has no length.")
     exe = shutil.which("ffmpeg")
@@ -59,13 +62,13 @@ async def fit_to_length(src: Path, dst: Path, seconds: float, *, crossfade_s: fl
         source_s = ffmpeg.media_duration(src, "audio")
     except (ValueError, OSError):
         raise FitError("That file is not an audio clip.") from None
-    graph = _graph(source_s, seconds, max(0.0, crossfade_s))
+    graph = _graph(source_s, seconds, max(0.0, crossfade_s), channels)
     dst.parent.mkdir(parents=True, exist_ok=True)
     part = dst.with_name(f".{dst.name}.part")
     argv = [
         exe, "-y", "-nostdin", "-hide_banner", "-nostats", "-loglevel", "error",
         "-i", str(src), "-filter_complex", graph, "-map", "[out]",
-        "-ar", str(SAMPLE_RATE), "-ac", "2", "-c:a", "pcm_s16le", "-f", "wav", str(part),
+        "-ar", str(SAMPLE_RATE), "-ac", str(channels), "-c:a", "pcm_s16le", "-f", "wav", str(part),
     ]  # fmt: skip
     res = await run_command(argv, timeout_s=FIT_TIMEOUT_S)
     if res.exit_code != 0:

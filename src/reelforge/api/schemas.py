@@ -120,7 +120,7 @@ class HealthOut(BaseModel):
 
 
 class AffectedItem(BaseModel):
-    owner_type: Literal["scene", "character"]
+    owner_type: Literal["scene", "character", "audio_cue"]
     owner_id: str
     kinds: list[str]
 
