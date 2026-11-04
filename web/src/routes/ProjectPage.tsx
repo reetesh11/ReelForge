@@ -2,6 +2,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { NotFoundError, useProject, useStages } from "@/api/queries";
 import { StoryUnavailableError, useStory } from "@/api/story";
 import { CastScreen } from "@/cast/CastScreen";
+import { AssemblyScreen } from "@/assembly/AssemblyScreen";
 import { StageStepper } from "@/components/StageStepper";
 import { FrameBoard } from "@/frames/FrameBoard";
 import { ShotBoard } from "@/shots/ShotBoard";
@@ -19,6 +20,7 @@ const VOICE_STAGES = new Set([
 ]);
 
 const FRAME_STAGES = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
+const ASSEMBLY_STAGES = new Set(["SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 const SHOT_STAGES = new Set(["FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 
 export function ProjectPage() {
@@ -28,7 +30,7 @@ export function ProjectPage() {
   const story = useStory(projectId);
   const [params, setParams] = useSearchParams();
   const screen = params.get("screen");
-  const show = (next: "voices" | "frames" | "shots") => setParams(next === "voices" ? {} : { screen: next });
+  const show = (next: "voices" | "frames" | "shots" | "assembly") => setParams(next === "voices" ? {} : { screen: next });
 
   if (project.isPending) return <p>Loading...</p>;
   if (project.isError) {
@@ -58,7 +60,10 @@ export function ProjectPage() {
         <FrameBoard projectId={projectId} onBack={() => show("voices")} onContinue={() => show("shots")} />
       ) : null}
       {SHOT_STAGES.has(project.data.stage) && screen === "shots" ? (
-        <ShotBoard projectId={projectId} onBack={() => show("frames")} />
+        <ShotBoard projectId={projectId} onBack={() => show("frames")} onContinue={() => show("assembly")} />
+      ) : null}
+      {ASSEMBLY_STAGES.has(project.data.stage) && screen === "assembly" ? (
+        <AssemblyScreen projectId={projectId} onBack={() => show("shots")} />
       ) : null}
     </section>
   );

@@ -7,9 +7,11 @@ const SHOTS_DONE = new Set(["SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 export function ShotBoard({
   projectId,
   onBack,
+  onContinue,
 }: {
   projectId: string;
   onBack?: () => void;
+  onContinue?: () => void;
 }) {
   const shots = useShots(projectId);
   const renderAll = useRenderAll(projectId);
@@ -47,7 +49,7 @@ export function ShotBoard({
         ))}
       </ul>
       <div className="actions">
-        <button type="button" disabled={!SHOTS_DONE.has(board.stage)}>
+        <button type="button" disabled={!SHOTS_DONE.has(board.stage)} onClick={onContinue}>
           Continue to assembly
         </button>
       </div>
