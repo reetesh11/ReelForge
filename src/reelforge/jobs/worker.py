@@ -12,6 +12,7 @@ import structlog
 from reelforge.adapters.base import AdapterError, CancelToken, TransientError
 from reelforge.adapters.runner import CommandResult, current_log_path, current_observer
 from reelforge.artifacts.service import generate_artifact
+from reelforge.assembly.jobs import FINAL_JOB, PREVIEW_JOB, assemble_final, assemble_preview
 from reelforge.cast.generate import cast_generate
 from reelforge.cast.state import GENERATE_JOB
 from reelforge.db.models import Job, utcnow
@@ -38,8 +39,11 @@ HANDLERS: dict[str, Handler] = {
     VOICE_JOB: voice_generate,
     FRAME_JOB: frame_generate,
     SHOT_JOB: shot_generate,
+    PREVIEW_JOB: assemble_preview,
+    FINAL_JOB: assemble_final,
 }
 MAX_ATTEMPTS = 2
+KEEP_MESSAGE = {PREVIEW_JOB, FINAL_JOB}  # the last step name stays on a finished job
 
 
 class _Observer:
@@ -282,8 +286,8 @@ class Worker:
                 exit_code=0,
                 command=observer.command,
                 pid=None,
-                message=None,
                 error=None,
+                **({} if job.type in KEEP_MESSAGE else {"message": None}),
             )
         finally:
             queue.tokens.pop(job.id, None)

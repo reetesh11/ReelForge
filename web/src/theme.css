@@ -372,3 +372,39 @@ textarea {
 .badge.green {
   border-color: var(--green);
 }
+
+.player {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+.player-frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  max-width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  background: #000;
+  overflow: hidden;
+}
+
+.player-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.safe-zone-overlay {
+  position: absolute;
+  border: 2px dashed var(--amber);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.player-controls {
+  flex-wrap: wrap;
+  align-items: center;
+}

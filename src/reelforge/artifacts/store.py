@@ -245,3 +245,64 @@ class ArtifactStore:
         if self.on_created is not None:
             self.on_created(row)
         return row
+
+    def register_in_place(
+        self, spec: ArtifactSpec, path: Path, *, kind_active: bool = True
+    ) -> Artifact:
+        """Register a file that already sits under the project folder.
+
+        The file is not moved and no sidecar is written; other rows are left as they are.
+        """
+        fp = self.inputs_fp(spec)
+        root = self.data_root.resolve()
+        resolved = path.resolve()
+        if not resolved.is_relative_to(root) or not resolved.is_file():
+            raise ValueError("path must be an existing file inside the data root")
+        rel = resolved.relative_to(root).as_posix()
+        sha = _sha256_file(resolved)
+        with self._lock:
+            with self.session_factory.begin() as s:
+                if s.get(Project, spec.project_id) is None:
+                    raise ValueError(f"project {spec.project_id} not found")
+                take = (
+                    s.scalar(
+                        select(func.max(Artifact.take_no)).where(
+                            Artifact.project_id == spec.project_id,
+                            Artifact.owner_type == spec.owner_type,
+                            Artifact.owner_id == spec.owner_id,
+                            Artifact.kind == spec.kind,
+                        )
+                    )
+                    or 0
+                ) + 1
+                row = Artifact(
+                    id=new_id(),
+                    project_id=spec.project_id,
+                    owner_type=spec.owner_type,
+                    owner_id=spec.owner_id,
+                    kind=spec.kind,
+                    take_no=take,
+                    path=rel,
+                    sha256=sha,
+                    inputs_fp=fp,
+                    prompt=spec.prompt,
+                    version=spec.version,
+                    params=spec.params,
+                    model_key=spec.model_key,
+                    seed=spec.seed,
+                    status="ready",
+                    is_active=kind_active,
+                    duration_s=spec.duration_s,
+                    width=spec.width,
+                    height=spec.height,
+                    created_by_job=spec.job_id,
+                    created_at=utcnow(),
+                )
+                s.add(row)
+                s.flush()
+                for input_id in spec.input_artifact_ids:
+                    s.add(ArtifactInput(artifact_id=row.id, input_artifact_id=input_id))
+                s.expunge(row)
+        if self.on_created is not None:
+            self.on_created(row)
+        return row

@@ -57,7 +57,7 @@ UNLOCKED_STAGES = (
     "VOICES_APPROVED",
     "FRAMES_APPROVED",
     "SHOTS_APPROVED",
-    "ASSEMBLED",
+    "REEL_EXPORTED",
     "EXPORTED",
 )
 NOT_AUDIO = "That file isn't an audio clip."

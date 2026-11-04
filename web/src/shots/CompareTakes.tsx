@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Shot, ShotTake } from "@/api/shots";
+import { Player } from "@/player/Player";
 
 function Side({
   label,
@@ -13,7 +14,7 @@ function Side({
   return (
     <div>
       <p className="meta">{`${label}: Take ${take.take_no}${take.active ? " - Active" : ""}`}</p>
-      <video aria-label={`${label} video`} src={take.video_url} loop muted autoPlay playsInline width={180} />
+      <Player src={take.video_url} label={`${label} video`} loop muted autoPlay width={180} grouped={false} controls={false} />
       <button type="button" disabled={take.active} onClick={() => onMakeActive(take.id)}>
         Make active
       </button>

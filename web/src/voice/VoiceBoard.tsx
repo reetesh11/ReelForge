@@ -49,7 +49,7 @@ function JobStatus({
   );
 }
 
-const VOICES_DONE = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "ASSEMBLED", "EXPORTED"]);
+const VOICES_DONE = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 
 export function VoiceBoard({ projectId, onContinue }: { projectId: string; onContinue?: () => void }) {
   const voices = useVoices(projectId);

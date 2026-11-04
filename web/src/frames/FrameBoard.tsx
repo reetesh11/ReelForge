@@ -2,7 +2,7 @@ import { useCancelFrames, useFrames, useGenerateFrames, type FramesState } from 
 import { useElapsed } from "@/components/useElapsed";
 import { FrameCard } from "./FrameCard";
 
-const FRAMES_DONE = new Set(["FRAMES_APPROVED", "SHOTS_APPROVED", "ASSEMBLED", "EXPORTED"]);
+const FRAMES_DONE = new Set(["FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 
 function Progress({ board }: { board: FramesState }) {
   const running = board.jobs.find((j) => j.status === "running");

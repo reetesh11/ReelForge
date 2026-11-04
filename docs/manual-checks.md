@@ -95,3 +95,24 @@ and artifact and described in the prompt, but its pixels are not sent. Note whet
 | 13 | Upload an own 9:16 clip of up to 20 s | It becomes a new take and its last frame is cut. | |
 
 Reviewer: ________  Date: ________
+
+## M6 Assembly (2026-11-04)
+
+Run on the reference Mac with the Grumpy Uncle project, all shots approved. The reference Mac now uses ffmpeg-full (`brew unlink ffmpeg; brew install ffmpeg-full; brew link --force ffmpeg-full`), which has the `subtitles`, `ass` and `drawtext` filters, so real caption burn-in runs there. The plain Homebrew ffmpeg has no libass: on it the mock backend skips burn-in and the real backend refuses to export.
+
+| # | Step | Expect | Result |
+| --- | --- | --- | --- |
+| 1 | `ffmpeg -filters \| grep -E 'subtitles\|ass\|drawtext'` | `subtitles`, `ass` and `drawtext` lines are listed (ffmpeg-full). | |
+| 2 | Open Assembly from Shots ("Continue to assembly") | The EDL is built and a preview appears and plays in the phone-shaped player. | |
+| 3 | Step with Previous frame / Next frame and the arrow keys | The picture moves by exactly one frame; the safe-zone overlay toggles. | |
+| 4 | Read the captions on the preview (real alignment with Whisper) | Words highlight in time with the voice; no "Word timing unavailable" notes. | |
+| 5 | Set the caption style to Hindi Devanagari on a Hindi line | The line is drawn in the Devanagari font (Kohinoor Devanagari by default) with no missing glyphs. | |
+| 6 | Move a shot, trim another, add a crossfade, nudge a dialogue clip | After about 1 s a new preview builds; dialogue stays in sync with its shot. | |
+| 7 | Edit a caption's text | The preview shows the new text; no new voice take appears. | |
+| 8 | Export final | A licence check appears for non-commercial models; after "Export anyway" the progress shows ten steps and "Exported reel v1". | |
+| 9 | Play the exported reel in the app and in QuickTime | 1080x1920, 24 fps, captions burned in, loudness around -14 LUFS, dialogue in sync. | |
+| 9a | Extract and look at a burned caption frame (e.g. `ffmpeg -ss 2 -i final.mp4 -frames:v 1 frame.png`), once for a Latin line and once for a Devanagari line | The caption text is visible inside the safe zone, correctly shaped, with no missing glyphs (Latin and Devanagari). | |
+| 10 | Edit and export again | "Reel v2" appears; "Reel v1" still opens and plays unchanged. | |
+
+Reviewer: ________  Date: ________
+
