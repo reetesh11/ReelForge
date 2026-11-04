@@ -274,7 +274,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Project Stage",
@@ -702,7 +702,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Stage",
@@ -857,7 +857,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Project Stage",
@@ -1326,7 +1326,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Stage",
@@ -1905,7 +1905,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Stage",
@@ -1953,7 +1953,7 @@
                   "VOICES_APPROVED",
                   "FRAMES_APPROVED",
                   "SHOTS_APPROVED",
-                  "ASSEMBLED",
+                  "REEL_EXPORTED",
                   "EXPORTED"
                 ],
                 "type": "string"
@@ -2178,7 +2178,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Project Stage",
@@ -2544,7 +2544,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Stage",
@@ -3240,7 +3240,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Project Stage",
@@ -3618,7 +3618,7 @@
               "VOICES_APPROVED",
               "FRAMES_APPROVED",
               "SHOTS_APPROVED",
-              "ASSEMBLED",
+              "REEL_EXPORTED",
               "EXPORTED"
             ],
             "title": "Stage",

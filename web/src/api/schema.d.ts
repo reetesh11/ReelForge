@@ -1325,7 +1325,7 @@ export interface components {
              * Project Stage
              * @enum {string}
              */
-            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Total */
             total: number;
         };
@@ -1450,7 +1450,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Total */
             total: number;
         };
@@ -1509,7 +1509,7 @@ export interface components {
              * Project Stage
              * @enum {string}
              */
-            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Total */
             total: number;
         };
@@ -1670,7 +1670,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Stale Count */
             stale_count: number;
             /** Total */
@@ -1847,7 +1847,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Stages Approved */
             stages_approved: number;
             /** Title */
@@ -1861,7 +1861,7 @@ export interface components {
         /** ProjectPatch */
         ProjectPatch: {
             /** Stage */
-            stage?: ("DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED") | null;
+            stage?: ("DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED") | null;
             /** Title */
             title?: string | null;
         };
@@ -1943,7 +1943,7 @@ export interface components {
              * Project Stage
              * @enum {string}
              */
-            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             shot: components["schemas"]["ShotCard"];
             /** Total */
             total: number;
@@ -2077,7 +2077,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Stale Count */
             stale_count: number;
             /** Total */
@@ -2320,7 +2320,7 @@ export interface components {
              * Project Stage
              * @enum {string}
              */
-            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Total */
             total: number;
         };
@@ -2443,7 +2443,7 @@ export interface components {
              * Stage
              * @enum {string}
              */
-            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
             /** Stale Count */
             stale_count: number;
             /** Total */

@@ -14,7 +14,7 @@ StageName = Literal[
     "VOICES_APPROVED",
     "FRAMES_APPROVED",
     "SHOTS_APPROVED",
-    "ASSEMBLED",
+    "REEL_EXPORTED",
     "EXPORTED",
 ]
 JobStatus = Literal["queued", "running", "succeeded", "failed", "cancelled"]

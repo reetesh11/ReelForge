@@ -59,6 +59,9 @@ class Settings(BaseModel):
     shot_final_size: str = "448x768"
     shot_timeout_s: float = Field(default=1800.0, gt=0, allow_inf_nan=False)
     max_clip_mb: int = Field(default=100, ge=1)
+    preview_debounce_s: float = Field(default=1.0, ge=0, allow_inf_nan=False)
+    devanagari_font: Path = Path("/System/Library/Fonts/Kohinoor.ttc")
+    devanagari_font_family: str = "Kohinoor Devanagari"
 
     @field_validator("host")
     @classmethod
@@ -77,7 +80,9 @@ class Settings(BaseModel):
             raise ValueError(f"both sides must be a multiple of 32, got {value!r}")
         return value.lower()
 
-    @field_validator("data_root", "models_path", "ltx_path", "mlx_audio_path", "mflux_command")
+    @field_validator(
+        "data_root", "models_path", "ltx_path", "mlx_audio_path", "mflux_command", "devanagari_font"
+    )
     @classmethod
     def _expand(cls, value: Path | None) -> Path | None:
         return value.expanduser() if value is not None else None
@@ -114,6 +119,9 @@ _TOML_MAP: dict[str, dict[str, str]] = {
         "shot_final_size": "shot_final_size",
         "shot_timeout_s": "shot_timeout_s",
         "max_clip_mb": "max_clip_mb",
+        "preview_debounce_s": "preview_debounce_s",
+        "devanagari_font": "devanagari_font",
+        "devanagari_font_family": "devanagari_font_family",
     },
     "limits": {
         "image_mem_gb": "image_mem_gb",

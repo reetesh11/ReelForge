@@ -2,7 +2,7 @@ import { useRenderAll, useShots } from "@/api/shots";
 import { QueuePanel } from "./QueuePanel";
 import { ShotCard } from "./ShotCard";
 
-const SHOTS_DONE = new Set(["SHOTS_APPROVED", "ASSEMBLED", "EXPORTED"]);
+const SHOTS_DONE = new Set(["SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 
 export function ShotBoard({
   projectId,

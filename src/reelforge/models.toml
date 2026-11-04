@@ -31,3 +31,9 @@ id = "qwen3:8b"
 revision = "unpinned"
 license = "Apache-2.0"
 license_url = "https://huggingface.co/Qwen/Qwen3-8B"
+
+[models.align]
+id = "mlx-community/whisper-large-v3-turbo"
+revision = "unpinned"
+license = "MIT"
+license_url = "https://huggingface.co/mlx-community/whisper-large-v3-turbo"
