@@ -122,18 +122,47 @@ def _wav_seconds(path: Path) -> float:
         return w.getnframes() / w.getframerate()
 
 
+NO_RUBBERBAND = (
+    'ffmpeg is missing the "rubberband" filter, needed for pitch and tempo changes. '
+    "Install ffmpeg-full."
+)
+
+
+def ffmpeg_has_filter(name: str) -> bool:
+    """Whether the installed ffmpeg lists the filter `name` (asked every time, never cached)."""
+    try:
+        res = subprocess.run(  # noqa: S603
+            ["ffmpeg", "-hide_banner", "-filters"],  # noqa: S607
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return any(len(parts := ln.split()) >= 2 and parts[1] == name for ln in res.stdout.splitlines())
+
+
 async def postprocess_wav(
     src: Path,
     dst: Path,
     *,
     atempo: float | None = None,
+    semitones: float = 0.0,
+    tempo: float = 1.0,
+    gain_db: float = 0.0,
     timeout_s: float = 120.0,
     cancel: CancelToken | None = None,
 ) -> float:
-    """Trim edge silence, apply `atempo`, normalise to -16 LUFS, write 48 kHz mono 16-bit WAV."""
+    """Trim edge silence, change tempo and pitch, normalise to -16 LUFS, apply `gain_db` after
+    the normalisation, and write a 48 kHz mono 16-bit WAV."""
     chain = _TRIM
     if atempo is not None and atempo != 1.0:
         chain += f",atempo={atempo:.4f}"
+    if semitones != 0.0 or tempo != 1.0:
+        if not ffmpeg_has_filter("rubberband"):
+            raise AdapterError(NO_RUBBERBAND)
+        chain += f",rubberband=pitch={2 ** (semitones / 12):.6f}:tempo={tempo:.6f}"
     dst.parent.mkdir(parents=True, exist_ok=True)
     measure = await run_command(
         [
@@ -156,6 +185,7 @@ async def postprocess_wav(
     gain = 0.0
     if found and found[-1] != "-inf":
         gain = TARGET_LUFS - float(found[-1])
+    gain += gain_db
     final = (
         f"{chain},volume={gain:.3f}dB,alimiter=limit={PEAK_LIMIT}:level=disabled,"
         f"aresample={OUT_RATE}"
