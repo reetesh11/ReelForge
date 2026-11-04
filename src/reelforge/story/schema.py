@@ -91,6 +91,36 @@ class Music(BaseModel):
     duck_under_speech: bool | None = None
 
 
+CUE_KINDS = ("music", "sfx", "ambience", "silence")
+
+
+class CueTime(BaseModel):
+    model_config = _STRICT
+
+    scene: str
+    at: Literal["scene_start", "scene_end"] = "scene_start"
+    offset: float = 0.0
+
+
+class Cue(BaseModel):
+    """One sound cue tied to the scenes. Only `suggested` is ever stored as a state."""
+
+    model_config = _STRICT
+
+    id: Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")]
+    kind: str
+    start: CueTime
+    end: CueTime | None = None
+    duration: float | None = None
+    prompt: str | None = None
+    source: str = "generate"
+    gain_db: float | None = None
+    fade_in_s: float | None = None
+    fade_out_s: float | None = None
+    duck: bool | None = None
+    state: Literal["suggested"] | None = None
+
+
 class Captions(BaseModel):
     model_config = _STRICT
 
@@ -121,6 +151,7 @@ class Story(BaseModel):
     product: Product | None = None
     scenes: list[Scene] = Field(min_length=1)
     music: Music | None = None
+    audio: list[Cue] | None = None
     captions: Captions | None = None
 
     @model_validator(mode="after")
@@ -140,6 +171,10 @@ class Story(BaseModel):
                 issues.append(
                     (f"scenes[{i}].continue_from", f"{scene.continue_from} is not a scene id")
                 )
+        if not issues and self.audio:
+            from reelforge.story.audio import cue_issues  # noqa: PLC0415
+
+            issues.extend(cue_issues(self))
         if issues:
             raise CrossFieldIssues(issues)
         return self
