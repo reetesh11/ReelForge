@@ -1,0 +1,60 @@
+# The single emotion table. Every value is a seed from docs/voice-levers.md section 9 until the
+# owner runs tools/voice_sweep.py and listens; edit only this file afterwards. It is re-read for
+# every take and every voice board, so an edit applies to the next take.
+
+[phrase]
+gap_ms = 150            # silence between phrases of one line (the project setting overrides it)
+
+[emotion.happy]
+tags = ["[laughter]"]
+tag_position = "prefix"
+pitch = "high pitch"    # an OmniVoice instruct pitch value, or ""
+duration_scale = 0.90
+[emotion.happy.post]
+semitones = 2.0
+gain_db = 0.0
+pause_s = 0.0
+
+[emotion.sad]
+tags = ["[sigh]"]
+tag_position = "prefix"
+pitch = "low pitch"
+duration_scale = 1.25
+[emotion.sad.post]
+semitones = -2.0
+gain_db = -3.0
+pause_s = 0.0
+
+[emotion.fear]
+tags = ["[surprise-ah]"]
+tag_position = "prefix"
+pitch = "high pitch"
+duration_scale = 0.85
+[emotion.fear.post]
+semitones = 1.0
+gain_db = 0.0
+pause_s = 0.2
+
+[emotion.anger]
+tags = ["[dissatisfaction-hnn]"]
+tag_position = "prefix"
+pitch = "low pitch"
+duration_scale = 0.95
+[emotion.anger.post]
+semitones = 0.0
+gain_db = 2.0
+pause_s = 0.0
+
+# Kokoro has no age control (experimental): a preset to prefer when the character has no voice
+# yet, and a small pitch shift in post.
+[kokoro_age.child]
+prefer = ["hf_beta", "hf_alpha"]
+semitones = 2.0
+
+[kokoro_age.teenager]
+prefer = ["hf_alpha", "hm_psi"]
+semitones = 1.0
+
+[kokoro_age.elderly]
+prefer = ["hm_omega", "hf_alpha"]
+semitones = -1.0
