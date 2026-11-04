@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 
+from reelforge.artifacts.store import ArtifactSpec
 from reelforge.assembly.build import approved_shot_takes
 from reelforge.audio import cues as cue_store
 from reelforge.audio.backends import engine_status
+from reelforge.audio.fit import FitError, fit_to_length
 from reelforge.audio.state import (
     AUDIO_JOB,
     NEEDS_APPROVAL,
@@ -21,6 +23,7 @@ from reelforge.audio.state import (
     put_mix_settings,
     set_picked,
 )
+from reelforge.audio.uploads import screen_audio
 from reelforge.db.models import Artifact, Job, Project, StoryChange
 from reelforge.story.audio import resolve_cue, story_timeline
 from reelforge.story.schema import Cue, Story
@@ -389,3 +392,63 @@ def generate(ctx: AppContext, project_id: str, cue_id: str) -> Job:
         heavy=heavy,
         mem_need_gb=ctx.settings.audio_mem_gb if heavy else 0.0,
     )
+
+
+# ---- own files -----------------------------------------------------------------------------
+
+
+async def upload(
+    ctx: AppContext,
+    project_id: str,
+    cue_id: str,
+    data: bytes,
+    file_name: str,
+    licence_note: str,
+) -> dict[str, Any]:
+    """Fit the owner's file to the cue length and keep it as the cue's picked take."""
+    story = require(ctx, project_id)
+    cue = find_cue(story, cue_id)
+    if cue.kind == "silence":
+        raise AudioError(422, silence_text(cue_id))
+    if cue.source != "file":
+        raise AudioError(422, f'Cue "{cue_id}": this cue does not use your own file.')
+    span = cue_span(story, cue, timeline(ctx, project_id, story))
+    length = span[1] - span[0] if span is not None else 0.0
+    if length <= 0:
+        raise AudioError(422, f'Cue "{cue_id}" has no length.')
+    clip = await screen_audio(ctx, data)
+    fitted = clip.path.with_name(f"{clip.path.stem}.fit.wav")
+    try:
+        try:
+            await fit_to_length(clip.path, fitted, length, channels=1)
+        except FitError as exc:
+            raise AudioError(415, str(exc)) from None
+        name = file_name.strip() or f"{cue_id}.{clip.ext}"
+        take = ctx.store.write(
+            ArtifactSpec(
+                project_id=project_id,
+                owner_type=OWNER_CUE,
+                owner_id=cue_id,
+                kind=TAKE_KIND,
+                subdir=f"audio/{cue_id}",
+                prompt="uploaded file",
+                seed=0,
+                model_key="upload",
+                model_revision="",
+                adapter="upload",
+                version="upload-1",
+                params={
+                    "source": "upload",
+                    "file_name": name,
+                    "licence_note": licence_note.strip(),
+                },
+                duration_s=length,
+            ),
+            fitted,
+            ext="wav",
+        )
+    finally:
+        clip.path.unlink(missing_ok=True)
+        fitted.unlink(missing_ok=True)
+    set_picked(ctx, project_id, cue_id, take.id)
+    return audio_body(ctx, project_id)

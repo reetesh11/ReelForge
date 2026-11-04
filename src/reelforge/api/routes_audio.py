@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
 from reelforge.api.routes_jobs import job_body
@@ -91,5 +91,25 @@ def build_router(ctx: AppContext) -> APIRouter:
     @router.post("/audio/cues/{cue_id}:generate", status_code=202, response_model=JobOut)
     async def generate(project_id: str, cue_id: str) -> JSONResponse:
         return respond(lambda: job_body(service.generate(ctx, project_id, cue_id)), 202)
+
+    @router.post("/audio/cues/{cue_id}:upload", status_code=201, response_model=AudioOut)
+    async def upload(
+        project_id: str,
+        cue_id: str,
+        file: UploadFile,
+        licence_note: Annotated[str, Form()] = "",
+    ) -> JSONResponse:
+        try:
+            service.require(ctx, project_id)
+            data = await file.read(ctx.settings.max_upload_mb * 1024 * 1024 + 1)
+            body = await service.upload(
+                ctx, project_id, cue_id, data, file.filename or "", licence_note
+            )
+        except AudioError as exc:
+            out = fail(exc)
+            if isinstance(out, HTTPException):
+                raise out from None
+            return out
+        return JSONResponse(body, status_code=201)
 
     return router
