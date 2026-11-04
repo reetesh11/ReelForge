@@ -132,9 +132,9 @@ def test_state_before_build(tmp_path):
         for s in a["shots"]:
             assert [t["active"] for t in s["takes"]] == [True]
             assert s["takes"][0]["video_url"] == f"/media/{s['takes'][0]['id']}"
-        assert {p["id"]: p["label"] for p in a["caption_presets"]} >= {
+        assert {p["id"]: p["label"] for p in a["caption_presets"]}.items() >= {
             "bold_pop": "Bold pop", "clean_subtitle": "Clean subtitle", "hindi_devanagari": "Hindi Devanagari",
-        }
+        }.items()
         assert a["licence_warnings"] == [] or isinstance(a["licence_warnings"], list)
         r = w.client.get(f"{base(pid)}/assembly/edl")
         assert r.status_code == 404 and r.json() == {"detail": "edl not built"}
