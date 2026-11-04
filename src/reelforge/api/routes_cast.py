@@ -14,6 +14,7 @@ from reelforge.api.schemas import (
     CastGenerateRequest,
     CastItemOut,
     CastOut,
+    CastSetAgeRequest,
     CastUseLibraryRequest,
     JobOut,
 )
@@ -22,6 +23,7 @@ from reelforge.cast.backends import probe_backend
 from reelforge.cast.licence import licence_warning
 from reelforge.cast.uploads import NotAnImage, TooLarge, sniff_image
 from reelforge.context import AppContext
+from reelforge.voice import service as voice_service
 
 NOT_AN_IMAGE = "That file isn't a PNG or JPEG image."
 
@@ -120,6 +122,15 @@ def build_router(ctx: AppContext) -> APIRouter:
     async def reopen(project_id: str, key: str) -> JSONResponse:
         check(project_id, key)
         service.reopen(ctx, project_id, key)
+        return action_body(project_id, key)
+
+    @router.post("/{project_id}/cast/{key}:set-age", response_model=CastActionOut)
+    async def set_age(project_id: str, key: str, body: CastSetAgeRequest) -> JSONResponse:
+        check(project_id, key)
+        try:
+            voice_service.set_character_age(ctx, project_id, key, body.age)
+        except voice_service.VoiceError as exc:
+            raise HTTPException(exc.status, exc.message) from None
         return action_body(project_id, key)
 
     @router.post("/{project_id}/cast/{key}:use-library", response_model=CastActionOut)
