@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -98,6 +99,27 @@ def _help_flags(exe: Path) -> dict[str, set[str] | None]:
         cached = {sub: _run_help(exe, sub) for sub in REQUIRED_FLAGS}
         _HELP_CACHE[key] = cached
     return cached
+
+
+AUDIO_PAD_MARGIN_S = 0.25
+
+
+def _pad_audio(src: Path, dst: Path, clip_s: float) -> Path:
+    """Pad a voice take with silence so LTX a2v has enough audio latent frames.
+
+    A line shorter than the clip makes ltx-2-mlx refuse it. apad only adds
+    silence when the take is shorter, so longer takes pass through unchanged.
+    """
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        return src
+    whole = f"{clip_s + AUDIO_PAD_MARGIN_S:.3f}"
+    proc = subprocess.run(  # noqa: S603
+        [ffmpeg, "-y", "-v", "error", "-i", str(src), "-af", f"apad=whole_dur={whole}", str(dst)],
+        capture_output=True,
+        check=False,
+    )
+    return dst if proc.returncode == 0 and dst.is_file() else src
 
 
 class LtxAdapter:
@@ -202,7 +224,10 @@ class LtxAdapter:
             str(task.input_paths[0]),
         ]
         if mode == "a2v":
-            argv += ["--audio", str(task.input_paths[1])]
+            audio = await asyncio.to_thread(
+                _pad_audio, task.input_paths[1], out_dir / "audio_padded.wav", frames / max(fps, 1)
+            )
+            argv += ["--audio", str(audio)]
         else:
             argv.append("--no-audio")
         argv += [
