@@ -13,8 +13,6 @@ from reelforge.adapters.base import AdapterError, CancelToken
 from reelforge.adapters.mlx_audio import (
     EDGE_PAD_S,
     PRESETS,
-    SPEED_MAX,
-    SPEED_MIN,
     VOICE_MODELS,
     MlxAudioAdapter,
     VoiceLine,
@@ -52,10 +50,6 @@ def _model(ctx: AppContext) -> tuple[str, str, str, str]:
 def _adapter(ctx: AppContext) -> MlxAudioAdapter:
     s = ctx.settings
     return MlxAudioAdapter(s.mlx_audio_path, backend=s.backend, timeout_s=s.command_timeout_s)
-
-
-def _effective_speed(voice_speed: float, line_speed: float) -> float:
-    return round(min(SPEED_MAX, max(SPEED_MIN, voice_speed * line_speed)), 4)
 
 
 async def voice_generate(
@@ -133,7 +127,7 @@ async def voice_generate(
         else:
             finish(sid, {"status": "failed", "error": f"{name} uses recorded lines."})
             continue
-        speed = _effective_speed(slot.speed, li.speed)
+        speed = service.effective_speed(slot.speed, li.speed)
         plan = plan_line(
             li.raw_text,
             li.emotion,

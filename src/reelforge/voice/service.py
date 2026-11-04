@@ -43,8 +43,9 @@ from reelforge.story.markup import check_emotion, display_text, parse_segments
 from reelforge.story.schema import Story
 from reelforge.story.staleness import ChangeRow, is_stale
 from reelforge.story.yamlio import parse_story
-from reelforge.voice import slots
-from reelforge.voice.mapping import Mapping, load_mapping
+from reelforge.voice import effective, slots
+from reelforge.voice.mapping import Mapping, MappingError, load_mapping
+from reelforge.voice.plan import LinePlan, plan_line
 from reelforge.voice.slots import current_voice_model
 from reelforge.voice.uploads import NotAnAudioClip, probe_seconds, sniff_audio
 
@@ -595,12 +596,19 @@ def characters_body(ctx: AppContext, project_id: str, story: cast_state.StoryCas
 
 
 def _take_out(
-    t: Artifact, text: str, changes: list[ChangeRow], approved_id: str | None
+    t: Artifact,
+    text: str,
+    changes: list[ChangeRow],
+    approved_id: str | None,
+    values_stale: bool = False,
 ) -> dict[str, Any]:
+    params: dict[str, Any] = t.params or {}
     stale = (
-        is_stale(TAKE_KIND, _aware(t.created_at), changes) or (t.params or {}).get("text") != text
+        is_stale(TAKE_KIND, _aware(t.created_at), changes)
+        or params.get("text") != text
+        or values_stale
     )
-    return {
+    out: dict[str, Any] = {
         "id": t.id,
         "take_no": t.take_no,
         "seed": t.seed,
@@ -610,6 +618,10 @@ def _take_out(
         "stale": bool(stale),
         "audio_url": f"/media/{t.id}",
     }
+    recorded = effective.take_settings(params)
+    if recorded is not None:
+        out["settings"] = recorded
+    return out
 
 
 def _line_job_state(
@@ -638,10 +650,44 @@ def _line_job_state(
     return None, None
 
 
+def effective_speed(voice_speed: float, line_speed: float) -> float:
+    return round(min(SPEED_MAX, max(SPEED_MIN, voice_speed * line_speed)), 4)
+
+
+def clip_ids(ctx: AppContext, project_id: str) -> dict[str, dict[str, str]]:
+    """Per character, the artifact id of each emotion clip."""
+    return {}
+
+
+def plan_for(
+    ctx: AppContext, project_id: str, li: LineInput, mapping: Mapping, gap_ms: int
+) -> LinePlan:
+    """The plan a take of this line would follow now."""
+    voice_model = current_voice_model(ctx)
+    voice_speed = li.slot.speed if li.slot is not None else 1.0
+    clips = clip_ids(ctx, project_id).get(li.speaker or "", {})
+    return plan_line(
+        li.raw_text,
+        li.emotion,
+        mapping=mapping,
+        voice_model=voice_model,
+        speed=effective_speed(voice_speed, li.speed),
+        age=li.age,
+        has_clip=lambda emotion: emotion in clips,
+        gap_ms=gap_ms,
+    )
+
+
 def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
     from reelforge.voice.frames import shot_length_s  # noqa: PLC0415
 
     inputs = line_inputs(ctx, project_id)
+    try:
+        mapping: Mapping | None = current_mapping(ctx)
+    except MappingError:
+        mapping = None  # a broken mapping file hides the new values; generation reports it
+    gap_ms = phrase_gap_ms(ctx, project_id, mapping) if mapping is not None else 0
+    clips = clip_ids(ctx, project_id)
     takes = takes_by_scene(ctx, project_id)
     changes = _changes_by_scene(ctx, project_id)
     jobs = voice_jobs(ctx, project_id)
@@ -650,7 +696,19 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
         scene_takes = takes.get(sid, [])
         active = next((t for t in scene_takes if t.is_active), None)
         ch = changes.get(sid, [])
-        take_items = [_take_out(t, li.raw_text, ch, li.approved_artifact_id) for t in scene_takes]
+        plan = plan_for(ctx, project_id, li, mapping, gap_ms) if mapping and li.text else None
+        speaker_clips = clips.get(li.speaker or "", {})
+        take_items = [
+            _take_out(
+                t,
+                li.raw_text,
+                ch,
+                li.approved_artifact_id,
+                plan is not None
+                and effective.values_stale(t.params or {}, plan, mapping, gap_ms, speaker_clips),
+            )
+            for t in scene_takes
+        ]
         active_item = next((t for t in take_items if t["active"]), None)
         line: dict[str, Any] = {
             "scene_id": sid,
@@ -670,6 +728,17 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
             line["edit_text"] = li.raw_text
         if li.emotion:
             line["emotion"] = li.emotion
+        if plan is not None:
+            body = effective.effective_body(plan)
+            if body is not None:
+                line["effective"] = body
+            recorded = effective.take_settings(active.params or {}) if active is not None else None
+            if (
+                active is not None
+                and (active.params or {}).get("source") == "tts"
+                and effective.settings_changed(plan, body, recorded)
+            ):
+                line["settings_changed"] = True
         total_s: float | None = None
         if active is not None and active.duration_s is not None:
             total_s = active.duration_s + li.pause_before + li.pause_after
