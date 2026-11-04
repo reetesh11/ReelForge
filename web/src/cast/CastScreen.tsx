@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useCast, useGenerate, useUseLibrary } from "@/api/cast";
+import { StateMessage } from "@/components/StateMessage";
 import { BackendDown } from "./BackendDown";
 import { CastRow } from "./CastRow";
 import { LibraryPicker } from "./LibraryPicker";
@@ -11,6 +12,14 @@ export function CastScreen({ projectId }: { projectId: string }) {
   const useLibrary = useUseLibrary(projectId);
   const [picking, setPicking] = useState(false);
 
+  if (cast.isPending) {
+    return (
+      <section>
+        <h2>Cast</h2>
+        <StateMessage>Loading...</StateMessage>
+      </section>
+    );
+  }
   if (!cast.data) return null;
   const { image_backend: backend, characters } = cast.data;
   const backendDown = backend.kind === "draw_things" && !backend.reachable;
@@ -36,13 +45,14 @@ export function CastScreen({ projectId }: { projectId: string }) {
           onUseMflux={useMflux}
         />
       ) : null}
-      <div className="actions">
-        <button type="button" onClick={() => setPicking(true)}>
+      <div className="status-strip" data-testid="status-strip">
+        <span>{`${cast.data.approved_count} of ${cast.data.total} characters approved`}</span>
+        <button type="button" className="btn btn-ghost" onClick={() => setPicking(true)}>
           Use characters from library
         </button>
       </div>
-      {characters.length === 0 ? <p>This story has no characters to cast.</p> : null}
-      <ul aria-label="Cast characters" className="list">
+      {characters.length === 0 ? <p className="state-message">This story has no characters to cast.</p> : null}
+      <ul aria-label="Cast characters" className="card-stack">
         {characters.map((item) => (
           <CastRow
             key={item.key}
@@ -54,7 +64,6 @@ export function CastScreen({ projectId }: { projectId: string }) {
           />
         ))}
       </ul>
-      <p>{`${cast.data.approved_count} of ${cast.data.total} characters approved`}</p>
       {picking ? (
         <LibraryPicker
           targets={characters.map((c) => ({ key: c.key, name: c.name }))}

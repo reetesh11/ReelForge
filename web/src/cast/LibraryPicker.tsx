@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLibraryCharacters } from "@/api/library";
+import { useDialog } from "@/components/useDialog";
 
 export function LibraryPicker({
   targets,
@@ -12,6 +13,7 @@ export function LibraryPicker({
   onPick: (key: string, characterId: string) => void;
   onClose: () => void;
 }) {
+  useDialog(onClose);
   const library = useLibraryCharacters();
   const [target, setTarget] = useState(fixedKey ?? targets[0]?.key ?? "");
 
@@ -30,10 +32,10 @@ export function LibraryPicker({
           </select>
         </label>
       )}
-      {library.isPending ? <p>Loading...</p> : null}
-      {library.isError ? <p>Couldn't load the library.</p> : null}
+      {library.isPending ? <p className="state-message">Loading...</p> : null}
+      {library.isError ? <p className="state-message error">Couldn't load the library.</p> : null}
       {library.data && library.data.length === 0 ? (
-        <p>No characters in your library yet. Approve a cast to save characters here.</p>
+        <p className="state-message">No characters in your library yet. Approve a cast to save characters here.</p>
       ) : null}
       <ul className="list">
         {(library.data ?? []).map((c) => (
@@ -41,6 +43,7 @@ export function LibraryPicker({
             <span>{c.name}</span>
             <button
               type="button"
+              className="btn btn-primary"
               aria-label={`Use ${c.name}`}
               disabled={!c.master_image_url || !target}
               onClick={() => onPick(target, c.id)}
@@ -50,7 +53,7 @@ export function LibraryPicker({
           </li>
         ))}
       </ul>
-      <button type="button" onClick={onClose}>
+      <button type="button" className="btn btn-secondary" onClick={onClose}>
         Close
       </button>
     </div>
