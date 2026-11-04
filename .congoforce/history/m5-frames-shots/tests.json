@@ -1,0 +1,143 @@
+{
+  "acceptance": [
+    {
+      "criterion": "AC-1",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "frame job gets master image(s) and prompt with look verbatim; master choice; two characters"
+    },
+    {
+      "criterion": "AC-2",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "pack image as second input; missing pack image; pack outside data root"
+    },
+    {
+      "criterion": "AC-3",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "talking shot inputs (key frame, voice take), 8k+1 frames, action shot has no audio"
+    },
+    {
+      "criterion": "AC-4",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "re-roll adds a take to that shot only; re-roll without a shot is 409"
+    },
+    {
+      "criterion": "AC-5",
+      "file": "tests/acceptance/test_m5_ltx_adapter.py",
+      "tests": 9,
+      "expect_red": true,
+      "description": "REQUIRED_FLAGS, parse_flags, LtxAdapter.check variants, doctor check_ltx message"
+    },
+    {
+      "criterion": "AC-6",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 5,
+      "expect_red": true,
+      "description": "exit 137/-9 classified OOM once, Draft retry, other failure not OOM"
+    },
+    {
+      "criterion": "AC-7",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "shot_mem_gb preflight message, setting used, one heavy job at a time"
+    },
+    {
+      "criterion": "AC-8",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "last_frame artifact extracted; continue shot uses it as start image"
+    },
+    {
+      "criterion": "AC-9",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 6,
+      "expect_red": true,
+      "description": "render-all queue, estimates, reorder, pause, cancel"
+    },
+    {
+      "criterion": "AC-10",
+      "file": "tests/acceptance/test_m5_shots.py",
+      "tests": 4,
+      "expect_red": true,
+      "description": "action change / new voice take / changed frame stale only the affected scene"
+    },
+    {
+      "criterion": "AC-11",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "FRAMES_APPROVED and SHOTS_APPROVED gates (frames side here, shots side in shots file)"
+    },
+    {
+      "criterion": "AC-12",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "uploaded frame checked by content and size, generated name (clip upload in shots file)"
+    },
+    {
+      "criterion": "AC-13",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 23,
+      "expect_red": true,
+      "description": "all M5 flows run on mock backend; autouse network guard in conftest"
+    },
+    {
+      "criterion": "AC-14",
+      "file": "tests/acceptance/test_m5_unchanged.py",
+      "tests": 4,
+      "expect_red": false,
+      "description": "ltx stub details, doctor key, defaults, existing MockLlm schemas, GET /jobs keys"
+    },
+    {
+      "criterion": "AC-16",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 1,
+      "expect_red": true,
+      "description": "approving a stale frame/shot is rejected by the API (test_approve_errors); button state is UI"
+    },
+    {
+      "criterion": "AC-17",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 3,
+      "expect_red": true,
+      "description": "generate-all one job per frame in story order; cancel stops active jobs"
+    },
+    {
+      "criterion": "AC-18",
+      "file": "tests/acceptance/test_m5_frames.py",
+      "tests": 2,
+      "expect_red": true,
+      "description": "continue-previous uses extracted last frame once it exists"
+    },
+    {
+      "criterion": "R5, R6",
+      "file": "tests/acceptance/test_m5_ltx_adapter.py",
+      "tests": 8,
+      "expect_red": true,
+      "description": "run() argv for a2v/generate, steps, timeout, cancel"
+    },
+    {
+      "criterion": "R7",
+      "file": "tests/acceptance/test_m5_settings.py",
+      "tests": 6,
+      "expect_red": true,
+      "description": "shot_mem_gb default/precedence/validation, flag, quality and sizes, models.toml steps"
+    }
+  ],
+  "untestable": [
+    {
+      "criterion": "AC-15",
+      "reason": "manual check on the reference Mac with real models, recorded in docs/manual-checks.md"
+    }
+  ]
+}

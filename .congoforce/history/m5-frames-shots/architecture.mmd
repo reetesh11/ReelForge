@@ -1,0 +1,32 @@
+flowchart LR
+  web[web ProjectPage]:::changed -->|REST| rf[api/routes_frames.py]:::new
+  web -->|REST| rs[api/routes_shots.py]:::new
+  rf --> fsvc[frames/service.py]:::new
+  rs --> ssvc[shots/service.py]:::new
+  fsvc --> fstate[frames/state.py FrameSlot]:::new
+  ssvc --> sstate[shots/state.py ShotSlot]:::new
+  fsvc --> q[jobs/queue.py JobQueue]
+  ssvc --> q
+  q --> wk[jobs/worker.py]:::changed
+  wk --> fgen[frames/generate.py gen_frame]:::new
+  wk --> sgen[shots/generate.py gen_shot]:::new
+  fgen --> imgb[cast/backends.py resolve_image_adapter]
+  imgb --> dt[adapters/drawthings.py]
+  imgb --> mock[adapters/mock.py]:::changed
+  sgen --> vb[shots/backends.py]:::new
+  vb --> ltx[adapters/ltx.py LtxAdapter]:::changed
+  vb --> mock
+  ltx --> run[adapters/runner.py run_command]
+  mock --> run
+  sgen --> lf[shots/media.py last frame, ffprobe]:::new
+  fgen --> store[artifacts/store.py]
+  sgen --> store
+  fsvc --> cast[cast/state.py masters, bible_line]
+  ssvc --> voice[voice/service.py takes, frames]:::changed
+  doctor[doctor.py check_ltx]:::changed --> ltx
+  fgen --> llm[adapters/mock_llm.py]:::changed
+  cfg[config.py shot_mem_gb]:::changed --> wk
+  mig[(migration 0005)]:::new --> fstate
+  mig --> sstate
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706
