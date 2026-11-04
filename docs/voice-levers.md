@@ -132,6 +132,16 @@ How each voice model uses the age:
 
 Planned: a parameter sweep with the cloned uncle voice, varying one lever at a time and measuring duration, median pitch, pitch spread, loudness and brightness; then listening tests per emotion.
 
+### How to run the sweep
+
+Reference Mac only (real model). Run the script inside the mlx-audio environment, from the repo root:
+
+```
+<mlx_audio_path>/.venv/bin/python tools/voice_sweep.py --ref PATH --ref-text TEXT --out sweep.md
+```
+
+`--ref` is the cloned uncle's reference clip, `--ref-text` the words spoken in it, `--out` the Markdown table (it is also printed). Add `--model ID` to try another model id. The script changes one lever at a time (a no-lever baseline, `duration_s`, each `instruct` value, `guidance_scale`, `class_temperature`, `position_temperature`, `t_shift`, `num_steps`, each nonverbal tag) and measures duration, median pitch, pitch spread, loudness and brightness. Paste the results into the Status column and the experiment log, then edit `emotions.toml` only.
+
 ## 12. Models we looked at and set aside
 
 Chatterbox Multilingual V3 (MIT, Hindi, cloning, `exaggeration` dial) is the only alternative worth a listening test if OmniVoice falls short. Indic Parler-TTS has the richest text-described emotion, speed and pitch but no voice cloning. svara-TTS (3B, licence not stated) and Qwen3-TTS (no Hindi, emotion and cloning mutually exclusive) are ruled out.
