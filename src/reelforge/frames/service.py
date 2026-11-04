@@ -30,6 +30,7 @@ from reelforge.frames.state import (
 from reelforge.ids import new_id
 from reelforge.jobs.queue import JobStateError
 from reelforge.shots import kinds as shot_kinds
+from reelforge.story.markup import display_text
 from reelforge.story.schema import Scene, Story
 from reelforge.story.staleness import ChangeRow, is_stale
 from reelforge.voice import service as voice_service
@@ -113,7 +114,7 @@ def characters_in_scene(story: Story, scene: Scene) -> list[str]:
     # addresses someone who is not in the picture.
     keys += mentioned_in(" ".join(filter(None, [scene.action, scene.setting])))
     if not keys and scene.line:
-        keys += mentioned_in(scene.line)
+        keys += mentioned_in(display_text(scene.line))
     if not keys and story.characters:
         keys.append(next(iter(story.characters)))
     return keys
@@ -179,7 +180,7 @@ def prompt_basis(story: Story, facts: SceneFacts, product: bool) -> str:
     parts = [
         facts.scene.action,
         facts.scene.setting or "",
-        facts.scene.line or "",
+        display_text(facts.scene.line or ""),
         facts.framing,
         story.style,
         master.look if master is not None else "",

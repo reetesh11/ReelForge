@@ -37,6 +37,8 @@ from reelforge.db.models import (
 )
 from reelforge.ids import new_id
 from reelforge.story import service as story_service
+from reelforge.story.age import age_band, check_age
+from reelforge.story.markup import check_emotion, display_text, parse_segments
 from reelforge.story.schema import Story
 from reelforge.story.staleness import ChangeRow, is_stale
 from reelforge.story.yamlio import parse_story
@@ -377,7 +379,8 @@ def _aware(value: datetime) -> datetime:
 @dataclass
 class LineInput:
     scene_id: str
-    text: str
+    text: str  # what is shown and captioned: no markup, no [...] tags
+    raw_text: str  # the story line as written, with markup and tags
     speaker: str | None
     speaker_name: str | None
     slot: VoiceSlot | None
@@ -389,6 +392,8 @@ class LineInput:
     scene_frames: int | None
     scene_shot_at: datetime | None
     position: int
+    emotion: str | None = None
+    age: int | None = None
 
 
 def line_inputs(ctx: AppContext, project_id: str) -> dict[str, LineInput]:
@@ -413,9 +418,11 @@ def line_inputs(ctx: AppContext, project_id: str) -> dict[str, LineInput]:
         line = lines[row.id]
         speaker = scene.speaker
         char = story.characters.get(speaker) if speaker else None
+        raw = (scene.line or "").strip()
         out[scene.id] = LineInput(
             scene_id=scene.id,
-            text=(scene.line or "").strip(),
+            text=display_text(raw),
+            raw_text=raw,
             speaker=speaker,
             speaker_name=char.name if char is not None else None,
             slot=voices.get(speaker) if speaker else None,
@@ -427,6 +434,8 @@ def line_inputs(ctx: AppContext, project_id: str) -> dict[str, LineInput]:
             scene_frames=row.frames,
             scene_shot_at=row.shot_length_at,
             position=position,
+            emotion=scene.emotion,
+            age=char.age if char is not None else None,
         )
     return out
 
@@ -507,6 +516,9 @@ def characters_body(ctx: AppContext, project_id: str, story: cast_state.StoryCas
     out: list[dict[str, Any]] = []
     for key, char in story.characters.items():
         item: dict[str, Any] = {"key": key, "name": char.name}
+        if char.age is not None:
+            item["age"] = char.age
+            item["age_band"] = age_band(char.age)
         cast_slot = cast_slots.get(key)
         if cast_slot is not None and cast_slot.approved_artifact_id:
             item["avatar_url"] = f"/media/{cast_slot.approved_artifact_id}"
@@ -575,7 +587,7 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
         scene_takes = takes.get(sid, [])
         active = next((t for t in scene_takes if t.is_active), None)
         ch = changes.get(sid, [])
-        take_items = [_take_out(t, li.text, ch, li.approved_artifact_id) for t in scene_takes]
+        take_items = [_take_out(t, li.raw_text, ch, li.approved_artifact_id) for t in scene_takes]
         active_item = next((t for t in take_items if t["active"]), None)
         line: dict[str, Any] = {
             "scene_id": sid,
@@ -591,6 +603,10 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
         }
         if li.speaker_name:
             line["speaker_name"] = li.speaker_name
+        if li.raw_text != li.text:
+            line["edit_text"] = li.raw_text
+        if li.emotion:
+            line["emotion"] = li.emotion
         total_s: float | None = None
         if active is not None and active.duration_s is not None:
             total_s = active.duration_s + li.pause_before + li.pause_after
@@ -782,6 +798,7 @@ def enqueue_preset_preview(ctx: AppContext, project_id: str, preset_id: str) -> 
 
 VOICE_PROMPTS = Path(__file__).resolve().parent / "prompts"
 SHORTEN_PROMPT = "shorten.v1.md"
+EMPTY_LINE = "The line can't be empty."
 LLM_DOWN = "The language model isn't available. Edit the text yourself."
 TOO_LONG = "Even at 1.25x this is too long."
 
@@ -851,9 +868,17 @@ def approve_line(ctx: AppContext, project_id: str, scene_id: str) -> dict[str, A
     return line_response(ctx, project_id, scene_id)
 
 
-def _edit_scene(
-    ctx: AppContext, project_id: str, scene_id: str, field: str, value: Any, *, record: bool
+def _edit_story(
+    ctx: AppContext,
+    project_id: str,
+    section: str,
+    key: str,
+    field: str,
+    value: Any,
+    *,
+    record: bool,
 ) -> None:
+    """Set (or, for None, remove) one field of a scene (`section="scenes"`) or character."""
     from reelforge.story.yamlio import (  # noqa: PLC0415
         dump_story_text,
         load_story_text,
@@ -866,27 +891,81 @@ def _edit_scene(
     doc: Any = load_story_text(current.yaml_text)
     if doc.fa.flow_style() is True:  # a JSON-style document: write clean block YAML
         story = parse_story(current.yaml_text)
-        scenes = [
-            sc.model_copy(update={field: value}) if sc.id == scene_id else sc for sc in story.scenes
-        ]
-        text = story_to_yaml(story.model_copy(update={"scenes": scenes}))
+        if section == "scenes":
+            scenes = [
+                sc.model_copy(update={field: value}) if sc.id == key else sc for sc in story.scenes
+            ]
+            text = story_to_yaml(story.model_copy(update={"scenes": scenes}))
+        else:
+            chars = {
+                k: c.model_copy(update={field: value}) if k == key else c
+                for k, c in story.characters.items()
+            }
+            text = story_to_yaml(story.model_copy(update={"characters": chars}))
     else:
-        for sc in doc["scenes"]:
-            if sc["id"] == scene_id:
-                sc[field] = value
+        entries: Any = doc["scenes"] if section == "scenes" else [doc["characters"].get(key)]
+        for entry in entries:
+            if entry is not None and (section != "scenes" or entry["id"] == key):
+                if value is None:
+                    entry.pop(field, None)
+                else:
+                    entry[field] = value
         text = dump_story_text(doc)
     story_service.save_version(ctx, project_id, text, keep_stage=True, record_changes=record)
+
+
+def _edit_scene(
+    ctx: AppContext, project_id: str, scene_id: str, field: str, value: Any, *, record: bool
+) -> None:
+    _edit_story(ctx, project_id, "scenes", scene_id, field, value, record=record)
 
 
 def edit_text(ctx: AppContext, project_id: str, scene_id: str, text: str) -> dict[str, Any]:
     _require_line(ctx, project_id, scene_id)
     text = text.strip()
     if not text:
-        raise VoiceError(422, "The line can't be empty.")
+        raise VoiceError(422, EMPTY_LINE)
+    try:
+        parse_segments(text)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    if not display_text(text):
+        raise VoiceError(422, EMPTY_LINE)
     _edit_scene(ctx, project_id, scene_id, "line", text, record=True)
     ensure_rows(ctx, project_id)
     clear_approval(ctx, project_id, scene_id)
     recompute_stage(ctx, project_id)
+    return line_response(ctx, project_id, scene_id)
+
+
+def set_character_age(ctx: AppContext, project_id: str, key: str, age: object) -> None:
+    """Save a character's age in the story and stale that character's takes (no job starts)."""
+    try:
+        value = check_age(age)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    story = load_story(ctx, project_id)
+    if story is None or key not in story.characters:
+        raise UnknownCharacter
+    if story.characters[key].age == value:
+        return
+    _edit_story(ctx, project_id, "characters", key, "age", value, record=False)
+    voice_changed(ctx, project_id, key)
+
+
+def set_emotion(
+    ctx: AppContext, project_id: str, scene_id: str, emotion: str | None
+) -> dict[str, Any]:
+    li = _require_line(ctx, project_id, scene_id)
+    try:
+        value = check_emotion(emotion)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    if value != li.emotion:
+        _edit_scene(ctx, project_id, scene_id, "emotion", value, record=True)
+        ensure_rows(ctx, project_id)
+        clear_approval(ctx, project_id, scene_id)
+        recompute_stage(ctx, project_id)
     return line_response(ctx, project_id, scene_id)
 
 
@@ -1012,7 +1091,7 @@ async def upload_recording(
             scene_id,
             out,
             duration_s=duration,
-            text=li.text,
+            text=li.raw_text,
             speed=1.0,
             voice={"mode": "recorded"},
             source="upload",

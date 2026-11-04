@@ -17,6 +17,7 @@ from reelforge.api.schemas import (
     VoiceModelPut,
     VoiceOut,
     VoiceSelectTakeRequest,
+    VoiceSetEmotionRequest,
     VoiceSetRequest,
     VoiceShortenOut,
     VoicesOut,
@@ -136,6 +137,15 @@ def build_router(ctx: AppContext) -> APIRouter:
     async def edit_text(project_id: str, scene_id: str, body: VoiceEditTextRequest) -> JSONResponse:
         try:
             return JSONResponse(service.edit_text(ctx, project_id, scene_id, body.text))
+        except service.VoiceError as exc:
+            raise fail(exc) from None
+
+    @line_route("set-emotion")
+    async def set_emotion(
+        project_id: str, scene_id: str, body: VoiceSetEmotionRequest
+    ) -> JSONResponse:
+        try:
+            return JSONResponse(service.set_emotion(ctx, project_id, scene_id, body.emotion))
         except service.VoiceError as exc:
             raise fail(exc) from None
 

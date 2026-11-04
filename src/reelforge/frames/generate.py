@@ -24,6 +24,7 @@ from reelforge.frames.state import (
     get_slot,
     update_slot,
 )
+from reelforge.story.markup import display_text
 from reelforge.story.schema import Story
 
 if TYPE_CHECKING:
@@ -42,7 +43,9 @@ async def _scene_sentence(ctx: AppContext, facts: service.SceneFacts) -> str:
     try:
         raw = await ctx.llm.chat(
             prompts.scene_messages(
-                action=scene.action, setting=scene.setting or "", line=scene.line or ""
+                action=scene.action,
+                setting=scene.setting or "",
+                line=display_text(scene.line or ""),
             ),
             schema=prompts.scene_schema(),
         )

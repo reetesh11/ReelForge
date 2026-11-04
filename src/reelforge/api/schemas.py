@@ -251,6 +251,10 @@ class CastApproveRequest(BaseModel):
     candidate_id: str
 
 
+class CastSetAgeRequest(BaseModel):
+    age: Any = None  # checked by `check_age`, which gives the 422 message
+
+
 class CastUseLibraryRequest(BaseModel):
     character_id: str
 
@@ -294,6 +298,8 @@ class CastItemOut(BaseModel):
     master_sha256: str | None = None
     seed: int | None = None
     voice_reference: str
+    age: int | None = None
+    age_band: str | None = None
     library_character_id: str | None = None
     variant_of_library_id: str | None = None
 
@@ -391,6 +397,10 @@ class VoiceSelectTakeRequest(BaseModel):
 
 class VoiceEditTextRequest(BaseModel):
     text: str
+
+
+class VoiceSetEmotionRequest(BaseModel):
+    emotion: str | None = None
 
 
 class VoiceTimingRequest(BaseModel):
