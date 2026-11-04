@@ -4,6 +4,7 @@ import { StoryUnavailableError, useStory } from "@/api/story";
 import { CastScreen } from "@/cast/CastScreen";
 import { StageStepper } from "@/components/StageStepper";
 import { FrameBoard } from "@/frames/FrameBoard";
+import { ShotBoard } from "@/shots/ShotBoard";
 import { StoryEditor } from "@/story/StoryEditor";
 import { StoryInput } from "@/story/StoryInput";
 import { VoiceBoard } from "@/voice/VoiceBoard";
@@ -18,6 +19,7 @@ const VOICE_STAGES = new Set([
 ]);
 
 const FRAME_STAGES = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "ASSEMBLED", "EXPORTED"]);
+const SHOT_STAGES = new Set(["FRAMES_APPROVED", "SHOTS_APPROVED", "ASSEMBLED", "EXPORTED"]);
 
 export function ProjectPage() {
   const { projectId = "" } = useParams();
@@ -54,6 +56,9 @@ export function ProjectPage() {
       ) : null}
       {FRAME_STAGES.has(project.data.stage) && screen === "frames" ? (
         <FrameBoard projectId={projectId} onBack={() => show("voices")} onContinue={() => show("shots")} />
+      ) : null}
+      {SHOT_STAGES.has(project.data.stage) && screen === "shots" ? (
+        <ShotBoard projectId={projectId} onBack={() => show("frames")} />
       ) : null}
     </section>
   );
