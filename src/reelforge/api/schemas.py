@@ -181,6 +181,18 @@ class StructureRequest(BaseModel):
     answers: list[StoryAnswer] = []
 
 
+class VoiceOut(BaseModel):
+    mode: Literal["preset", "cloned", "recorded"]
+    model: Literal["omnivoice", "kokoro"] | None
+    voice_id: str | None
+    reference_url: str | None = None
+    reference_text: str
+    speed: float
+    language: str
+    clip_seconds: float | None = None
+    model_mismatch: bool
+
+
 class LibraryCharacterOut(BaseModel):
     """Documentation model: responses are plain dicts with empty keys omitted."""
 
@@ -199,6 +211,7 @@ class LibraryCharacterOut(BaseModel):
     license: str | None = None
     license_url: str | None = None
     parent_character_id: str | None = None
+    voice: VoiceOut | None = None
 
 
 class LibraryCreate(BaseModel):
@@ -306,3 +319,93 @@ class CastActionOut(BaseModel):
     approved_count: int
     total: int
     character: CastItemOut
+
+
+class VoiceModelChoice(BaseModel):
+    key: str
+    label: str
+
+
+class VoiceModelOut(BaseModel):
+    voice_model: Literal["omnivoice", "kokoro"]
+    label: str
+    model_id: str
+    choices: list[VoiceModelChoice]
+
+
+class VoiceModelPut(BaseModel):
+    voice_model: str
+
+
+class VoiceSetRequest(BaseModel):
+    mode: Literal["preset", "cloned", "recorded"]
+    voice_id: str | None = None
+    reference_text: str | None = None
+    speed: float | None = None
+
+
+class VoiceClearOut(BaseModel):
+    voice: None = None
+
+
+class VoiceModelInUse(BaseModel):
+    key: str
+    label: str
+    model_id: str
+
+
+class VoicePresetOut(BaseModel):
+    id: str
+    label: str
+
+
+class VoiceCharacterOut(BaseModel):
+    key: str
+    name: str
+    avatar_url: str | None = None
+    voice: VoiceOut | None
+
+
+class VoicesOut(BaseModel):
+    """Documentation model: responses are plain dicts with empty keys omitted."""
+
+    stage: StageName
+    voice_model: VoiceModelInUse
+    presets: list[VoicePresetOut]
+    approved_count: int
+    total: int
+    stale_count: int
+    characters: list[VoiceCharacterOut]
+    lines: list[dict[str, Any]]
+    job: JobOut | None
+
+
+class VoiceGenerateRequest(BaseModel):
+    mode: Literal["missing", "stale", "lines"] = "missing"
+    lines: list[str] | None = None
+
+
+class VoiceSelectTakeRequest(BaseModel):
+    take_id: str
+
+
+class VoiceEditTextRequest(BaseModel):
+    text: str
+
+
+class VoiceTimingRequest(BaseModel):
+    speed: float | None = None
+    pause_before: float | None = None
+    pause_after: float | None = None
+
+
+class VoiceLineActionOut(BaseModel):
+    project_stage: StageName
+    approved_count: int
+    total: int
+    line: dict[str, Any]
+    message: str | None = None
+
+
+class VoiceShortenOut(BaseModel):
+    proposal: str

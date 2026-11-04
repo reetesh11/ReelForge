@@ -95,6 +95,30 @@ def _append_log(path: Path, result: CommandResult) -> None:
         )
 
 
+async def _communicate(
+    proc: asyncio.subprocess.Process, on_line: Callable[[str], None]
+) -> tuple[bytes, bytes]:
+    """Like `proc.communicate()`, but each stdout line is passed to `on_line` as it arrives."""
+    stdout, stderr = proc.stdout, proc.stderr
+    if stdout is None or stderr is None:
+        return await proc.communicate()
+    chunks: list[bytes] = []
+
+    async def pump_out(stream: asyncio.StreamReader) -> None:
+        while True:
+            raw = await stream.readline()
+            if not raw:
+                return
+            chunks.append(raw)
+            try:
+                on_line(raw.decode("utf-8", "replace").rstrip("\r\n"))
+            except Exception as exc:  # noqa: BLE001 - a bad callback must not kill the command
+                log.warning("adapter.stdout_callback_failed", error=str(exc))
+
+    _, err = await asyncio.gather(pump_out(stdout), stderr.read())
+    return b"".join(chunks), err
+
+
 async def run_command(
     argv: Sequence[str],
     *,
@@ -104,6 +128,7 @@ async def run_command(
     sample_interval_s: float = 2.0,
     log_path: Path | None = None,
     job_id: str | None = None,
+    on_stdout_line: Callable[[str], None] | None = None,
 ) -> CommandResult:
     args = [str(a) for a in argv]
     log.info("adapter.command", argv=args, timeout_s=timeout_s, job_id=job_id)
@@ -142,7 +167,9 @@ async def run_command(
     if observer:
         observer.started(args, proc.pid)
     sampler = asyncio.create_task(_sample(proc.pid, sample_interval_s, peak))
-    comm = asyncio.create_task(proc.communicate())
+    comm = asyncio.create_task(
+        _communicate(proc, on_stdout_line) if on_stdout_line else proc.communicate()
+    )
     waiters: set[asyncio.Task[object]] = {comm}  # type: ignore[arg-type]
     cancel_task: asyncio.Task[None] | None = None
     if cancel is not None:

@@ -15,6 +15,12 @@ fails with "Only X GB free, job needs Y GB. Close other apps, or lower image_mem
 config.toml."; close other apps or lower the value, then click Retry. Restart `reelforge up`
 after changing it.
 
+Voice memory: a voice job waits until `voice_mem_gb` GB are free (default 4.0). Set it with
+`voice_mem_gb = 4.0` under `[limits]` in config.toml, the `REELFORGE_VOICE_MEM_GB` environment
+variable, or `--voice-mem-gb` on `reelforge up` / `reelforge doctor`. The voice model (OmniVoice
+by default, Kokoro as the fallback) is set with `voice_model` under `[runtime]`,
+`REELFORGE_VOICE_MODEL`, `--voice-model`, or the Settings page.
+
 | # | Step | Expect | Result |
 | --- | --- | --- | --- |
 | 1 | `reelforge doctor` | The `draw_things` check passes and names no missing model. | |
@@ -31,5 +37,28 @@ after changing it.
 | 12 | Open Library | Both characters are listed with their master images. | |
 | 13 | New project, "Use from library" | The master image is copied without any generation. | |
 | 14 | With about 8 GB available, generate candidates; then restart with `REELFORGE_IMAGE_MEM_GB=20` and generate again | First run renders 4 images. Second run fails with "Only X GB free, job needs 20.0 GB. Close other apps, or lower image_mem_gb in config.toml."; Retry is offered. | |
+
+## M4 Voice (AC-13): real OmniVoice and Kokoro on the reference Mac
+
+Setup: the mlx-audio uv project is arm64 (`uv python install cpython-3.12-macos-aarch64-none`), `[tools.mlx_audio] project_path`
+points at it, and the models from `models.toml` (OmniVoice, Kokoro fallback) are downloaded. Run `reelforge up --backend real`.
+`voice_mem_gb` (default 4.0) is the memory a voice job needs; the voice model is chosen on the Settings page or with `voice_model`.
+
+Known limitation to record here: the exact OmniVoice call arguments for the voice description and for cloning (`ref_audio`,
+`ref_text`) cannot be tested without the model; note any cloning quirk below.
+
+| # | Step | Expect | Result |
+| --- | --- | --- | --- |
+| 1 | `reelforge doctor` | `mlx_audio` passes with "mlx-audio ready (selftest passed)". | |
+| 2 | Open Settings | The line "Voice model: OmniVoice (mlx-community/OmniVoice-bfloat16)" shows; no licence warning for either model. | |
+| 3 | In a cast row, pick the Asha preset and click Preview | A short Hindi sample plays in a female voice. Repeat with Ravi (male). | |
+| 4 | Generate all lines for a five-line story | Each line sounds like clear Hindi, trimmed (no long silences), at an even level. | |
+| 5 | Upload a clean 6 s reference clip with its transcript, set the voice to Cloned, make a new take | The take resembles the clip's voice. Record any limitation. | |
+| 6 | Change the Voice model to Kokoro (fallback), pick a Kokoro preset, make a new take | A Hindi take is made; the cast row shows "Voice made with OmniVoice." for characters set earlier. | |
+| 7 | Drag Speed to 0.8 and 1.25 and make new takes | Takes are slower and faster without pitch change. | |
+| 8 | Set Pause before and Pause after to 0.5 and click Play scene | The pauses are audible. | |
+| 9 | Approve every line | The stage becomes `VOICES_APPROVED`; each approved line shows "Shot length: N frames (X s)" with N = 8k + 1. | |
+| 10 | Edit one approved line's text | Only that line becomes "Needs update"; the other lines stay approved. | |
+| 11 | With about 3 GB available, generate lines | The job fails with "Not enough free memory for voice: need 4.0 GB, have X GB. Lower voice_mem_gb or close other apps." | |
 
 Reviewer: ________  Date: ________

@@ -17,6 +17,8 @@ from reelforge.cast.state import GENERATE_JOB
 from reelforge.db.models import Job, utcnow
 from reelforge.jobs.preflight import preflight
 from reelforge.story.structure import structure_story
+from reelforge.voice.generate import voice_generate
+from reelforge.voice.service import VOICE_JOB
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -29,6 +31,7 @@ HANDLERS: dict[str, Handler] = {
     "artifact.generate": generate_artifact,
     "story.structure": structure_story,
     "cast.generate": cast_generate,
+    VOICE_JOB: voice_generate,
 }
 MAX_ATTEMPTS = 2
 
@@ -165,6 +168,11 @@ class Worker:
                     reason = (
                         f"Only {result.free_gb:.1f} GB free, job needs {result.need_gb:.1f} GB. "
                         "Close other apps, or lower image_mem_gb in config.toml."
+                    )
+                elif job.type == VOICE_JOB:
+                    reason = (
+                        f"Not enough free memory for voice: need {result.need_gb:.1f} GB, "
+                        f"have {result.free_gb:.1f} GB. Lower voice_mem_gb or close other apps."
                     )
                 ctx.queue.transition(
                     job.id,

@@ -43,3 +43,27 @@ def test_non_loopback_service_url_is_refused(tmp_path):
     s = Settings(data_root=tmp_path, ollama_url="http://example.com:11434")
     res = CHECKS["ollama"](s)
     assert res.status == "fail" and "loopback" in res.detail
+
+
+def _stub_env(tmp_path, code: int, err: str = ""):
+    import stat
+
+    proj = tmp_path / "mlx"
+    py = proj / ".venv" / "bin" / "python"
+    py.parent.mkdir(parents=True)
+    py.write_text(f"#!/bin/sh\necho '{err}' >&2\nexit {code}\n")
+    py.chmod(py.stat().st_mode | stat.S_IXUSR)
+    return proj
+
+
+def test_mlx_audio_selftest_passes(tmp_path):
+    res = CHECKS["mlx_audio"](Settings(data_root=tmp_path, mlx_audio_path=_stub_env(tmp_path, 0)))
+    assert res.status == "pass" and res.detail == "mlx-audio ready (selftest passed)"
+
+
+def test_mlx_audio_selftest_fails(tmp_path):
+    s = Settings(data_root=tmp_path, mlx_audio_path=_stub_env(tmp_path, 1, "no weights"))
+    res = CHECKS["mlx_audio"](s)
+    assert res.status == "fail" and res.severity == "blocking"
+    assert res.detail == "tts_worker selftest failed: no weights"
+    assert res.fix and "cpython-3.12-macos-aarch64-none" in res.fix

@@ -80,6 +80,12 @@ def _canned_bible_line(messages: list[ChatMessage]) -> str:
     return f"Character: {name}. Look: {look}."
 
 
+def _canned_shorter_line(messages: list[ChatMessage]) -> str:
+    first = messages[-1]["content"].splitlines()[0].removeprefix("Line: ")
+    words = first.split()
+    return " ".join(words[: max(1, (len(words) + 1) // 2)])
+
+
 class MockLlm:
     name = "mock-llm"
 
@@ -98,6 +104,8 @@ class MockLlm:
         self.calls.append([dict(m) for m in messages])
         if "bible_line" in schema.get("properties", {}):
             return json.dumps({"bible_line": _canned_bible_line(messages)})
+        if "shorter_line" in schema.get("properties", {}):
+            return json.dumps({"shorter_line": _canned_shorter_line(messages)})
         if not self.responses:
             return json.dumps({"story": canned_story(), "questions": []})
         index = min(len(self.calls) - 1, len(self.responses) - 1)

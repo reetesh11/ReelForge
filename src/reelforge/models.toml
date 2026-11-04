@@ -14,6 +14,12 @@ license = "LTX-2 Community License"
 license_url = "https://huggingface.co/Lightricks/LTX-2"
 
 [models.tts]
+id = "mlx-community/OmniVoice-bfloat16"
+revision = "unpinned"
+license = "Apache-2.0"
+license_url = "https://huggingface.co/mlx-community/OmniVoice-bfloat16"
+
+[models.tts_fallback]
 id = "mlx-community/Kokoro-82M-bf16"
 revision = "unpinned"
 license = "Apache-2.0"

@@ -5,6 +5,16 @@ import { CastScreen } from "@/cast/CastScreen";
 import { StageStepper } from "@/components/StageStepper";
 import { StoryEditor } from "@/story/StoryEditor";
 import { StoryInput } from "@/story/StoryInput";
+import { VoiceBoard } from "@/voice/VoiceBoard";
+
+const VOICE_STAGES = new Set([
+  "CAST_APPROVED",
+  "VOICES_APPROVED",
+  "FRAMES_APPROVED",
+  "SHOTS_APPROVED",
+  "ASSEMBLED",
+  "EXPORTED",
+]);
 
 export function ProjectPage() {
   const { projectId = "" } = useParams();
@@ -33,6 +43,7 @@ export function ProjectPage() {
       {story.data === null ? <StoryInput projectId={projectId} /> : null}
       {story.data ? <StoryEditor projectId={projectId} story={story.data} /> : null}
       {project.data.stage !== "DRAFT" ? <CastScreen projectId={projectId} /> : null}
+      {VOICE_STAGES.has(project.data.stage) ? <VoiceBoard projectId={projectId} /> : null}
     </section>
   );
 }

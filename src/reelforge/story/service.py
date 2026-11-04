@@ -70,8 +70,19 @@ def _try_parse(text: str) -> Story | None:
         return None
 
 
-def save_version(ctx: AppContext, project_id: str, text: str) -> SavedVersion:
-    """Validate and store `text` as the new current version (raw text kept as submitted)."""
+def save_version(
+    ctx: AppContext,
+    project_id: str,
+    text: str,
+    *,
+    keep_stage: bool = False,
+    record_changes: bool = True,
+) -> SavedVersion:
+    """Validate and store `text` as the new current version (raw text kept as submitted).
+
+    `keep_stage` leaves the project stage alone (and the new version inherits the previous
+    version's approval); `record_changes=False` skips the `story_changes` rows.
+    """
     new_story = parse_story(text)
     stage_changed = False
     affected: list[Affected] = []
@@ -89,6 +100,7 @@ def save_version(ctx: AppContext, project_id: str, text: str) -> SavedVersion:
             version=number,
             yaml_text=text,
             is_current=True,
+            approved_at=previous.approved_at if keep_stage and previous is not None else None,
             created_at=utcnow(),
         )
         s.add(row)
@@ -99,7 +111,7 @@ def save_version(ctx: AppContext, project_id: str, text: str) -> SavedVersion:
                 if old_story is not None:
                     affected = diff_stories(old_story, new_story)
                 now = utcnow()
-                for a in affected:
+                for a in affected if record_changes else []:
                     s.add(
                         StoryChange(
                             project_id=project_id,
@@ -110,8 +122,9 @@ def save_version(ctx: AppContext, project_id: str, text: str) -> SavedVersion:
                             created_at=now,
                         )
                     )
-                project.stage = "DRAFT"
-                stage_changed = True
+                if not keep_stage:
+                    project.stage = "DRAFT"
+                    stage_changed = True
         project.updated_at = utcnow()
         s.flush()
         saved = _saved(row, affected)

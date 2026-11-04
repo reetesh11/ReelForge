@@ -15,6 +15,8 @@ export const queryKeys = {
   storyVersions: (id: string) => ["project", id, "story", "versions"] as const,
   storyVersion: (id: string, n: number) => ["project", id, "story", "version", n] as const,
   cast: (id: string) => ["project", id, "stages", "cast"] as const,
+  voices: (id: string) => ["project", id, "stages", "voices"] as const,
+  voiceModel: ["voice-model"] as const,
   stale: (id: string) => ["project", id, "stale"] as const,
   job: (jobId: string) => ["job", jobId] as const,
   storySchema: ["story-schema"] as const,
