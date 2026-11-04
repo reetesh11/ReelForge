@@ -176,6 +176,323 @@
         "title": "ArtifactResult",
         "type": "object"
       },
+      "AssemblyBuildRequest": {
+        "properties": {
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          }
+        },
+        "title": "AssemblyBuildRequest",
+        "type": "object"
+      },
+      "AssemblyEditOut": {
+        "properties": {
+          "assembly": {
+            "$ref": "#/components/schemas/AssemblyOut"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "assembly",
+          "notes"
+        ],
+        "title": "AssemblyEditOut",
+        "type": "object"
+      },
+      "AssemblyEditRequest": {
+        "properties": {
+          "in_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In S"
+          },
+          "offset_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset S"
+          },
+          "op": {
+            "enum": [
+              "reorder",
+              "trim",
+              "swap_take",
+              "set_transition",
+              "nudge_dialogue",
+              "set_caption_text",
+              "set_caption_style"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "out_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Out S"
+          },
+          "scene_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene Id"
+          },
+          "scene_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene Ids"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Style"
+          },
+          "take_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Take Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "title": "AssemblyEditRequest",
+        "type": "object"
+      },
+      "AssemblyOut": {
+        "properties": {
+          "blocked_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blocked Reason"
+          },
+          "caption_presets": {
+            "items": {
+              "$ref": "#/components/schemas/CaptionPresetOut"
+            },
+            "title": "Caption Presets",
+            "type": "array"
+          },
+          "caption_status": {
+            "additionalProperties": {
+              "enum": [
+                "words",
+                "line",
+                "pending"
+              ],
+              "type": "string"
+            },
+            "title": "Caption Status",
+            "type": "object"
+          },
+          "edl": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edl"
+          },
+          "edl_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edl Hash"
+          },
+          "export": {
+            "$ref": "#/components/schemas/ExportStateOut"
+          },
+          "licence_warnings": {
+            "items": {
+              "$ref": "#/components/schemas/LicenceWarningOut"
+            },
+            "title": "Licence Warnings",
+            "type": "array"
+          },
+          "preview": {
+            "$ref": "#/components/schemas/PreviewStateOut"
+          },
+          "shots": {
+            "items": {
+              "$ref": "#/components/schemas/AssemblyShotOut"
+            },
+            "title": "Shots",
+            "type": "array"
+          },
+          "stage": {
+            "enum": [
+              "DRAFT",
+              "STORY_APPROVED",
+              "CAST_APPROVED",
+              "VOICES_APPROVED",
+              "FRAMES_APPROVED",
+              "SHOTS_APPROVED",
+              "REEL_EXPORTED",
+              "EXPORTED"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/ReelVersionOut"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "stage",
+          "blocked_reason",
+          "edl",
+          "edl_hash",
+          "shots",
+          "caption_status",
+          "preview",
+          "export",
+          "versions",
+          "licence_warnings",
+          "caption_presets"
+        ],
+        "title": "AssemblyOut",
+        "type": "object"
+      },
+      "AssemblyShotOut": {
+        "properties": {
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "takes": {
+            "items": {
+              "$ref": "#/components/schemas/AssemblyTakeOut"
+            },
+            "title": "Takes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scene_id",
+          "takes"
+        ],
+        "title": "AssemblyShotOut",
+        "type": "object"
+      },
+      "AssemblyTakeOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "take_no": {
+            "title": "Take No",
+            "type": "integer"
+          },
+          "video_url": {
+            "title": "Video Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "take_no",
+          "active",
+          "video_url"
+        ],
+        "title": "AssemblyTakeOut",
+        "type": "object"
+      },
       "Body_upload_api_v1_projects__project_id__cast__key__upload_post": {
         "properties": {
           "file": {
@@ -255,6 +572,24 @@
           "file"
         ],
         "title": "Body_upload_reference_api_v1_projects__project_id__voices_characters__key__upload_reference_post",
+        "type": "object"
+      },
+      "CaptionPresetOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "CaptionPresetOut",
         "type": "object"
       },
       "CastActionOut": {
@@ -828,6 +1163,101 @@
           "fix"
         ],
         "title": "CheckOut",
+        "type": "object"
+      },
+      "ExportStateOut": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "failed_step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failed Step"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "state": {
+            "enum": [
+              "idle",
+              "running",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "step_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Index"
+          },
+          "step_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Total"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "ExportStateOut",
         "type": "object"
       },
       "FrameActionOut": {
@@ -1852,6 +2282,116 @@
         "title": "LibraryPatch",
         "type": "object"
       },
+      "LicenceWarningOut": {
+        "properties": {
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "version",
+          "licence"
+        ],
+        "title": "LicenceWarningOut",
+        "type": "object"
+      },
+      "PreviewStateOut": {
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "rebuild_in_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rebuild In S"
+          },
+          "state": {
+            "enum": [
+              "none",
+              "up_to_date",
+              "out_of_date",
+              "pending",
+              "rebuilding",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "PreviewStateOut",
+        "type": "object"
+      },
       "ProjectCreate": {
         "properties": {
           "title": {
@@ -2152,6 +2692,44 @@
           "elapsed_s"
         ],
         "title": "QueueRunning",
+        "type": "object"
+      },
+      "ReelVersionOut": {
+        "properties": {
+          "cover_url": {
+            "title": "Cover Url",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "missing": {
+            "title": "Missing",
+            "type": "boolean"
+          },
+          "reel_url": {
+            "title": "Reel Url",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "label",
+          "reel_url",
+          "cover_url",
+          "created_at",
+          "missing"
+        ],
+        "title": "ReelVersionOut",
         "type": "object"
       },
       "ShotActionOut": {
@@ -4334,6 +4912,234 @@
         "summary": "Post Artifact",
         "tags": [
           "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly": {
+      "get": {
+        "operationId": "get_assembly_api_v1_projects__project_id__assembly_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssemblyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Assembly",
+        "tags": [
+          "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly/edl": {
+      "get": {
+        "operationId": "get_edl_api_v1_projects__project_id__assembly_edl_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Edl",
+        "tags": [
+          "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly:build": {
+      "post": {
+        "operationId": "build_api_v1_projects__project_id__assembly_build_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssemblyBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssemblyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Build",
+        "tags": [
+          "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly:edit": {
+      "post": {
+        "operationId": "edit_api_v1_projects__project_id__assembly_edit_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssemblyEditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssemblyEditOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit",
+        "tags": [
+          "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/assembly:preview": {
+      "post": {
+        "operationId": "preview_api_v1_projects__project_id__assembly_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "assembly"
         ]
       }
     },

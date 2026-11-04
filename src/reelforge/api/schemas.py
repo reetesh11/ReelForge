@@ -639,3 +639,108 @@ class ShotSavePromptRequest(BaseModel):
 class QueueMoveRequest(BaseModel):
     job_id: str
     direction: Literal["up", "down"]
+
+
+class AssemblyTakeOut(BaseModel):
+    id: str
+    take_no: int
+    active: bool
+    video_url: str
+
+
+class AssemblyShotOut(BaseModel):
+    scene_id: str
+    takes: list[AssemblyTakeOut]
+
+
+class PreviewStateOut(BaseModel):
+    state: Literal["none", "up_to_date", "out_of_date", "pending", "rebuilding", "failed"]
+    step: str | None = None
+    progress: int | None = None
+    url: str | None = None
+    job_id: str | None = None
+    error: str | None = None
+    rebuild_in_s: float | None = None
+
+
+class ExportStateOut(BaseModel):
+    state: Literal["idle", "running", "failed"]
+    step: str | None = None
+    step_index: int | None = None
+    step_total: int | None = None
+    progress: int | None = None
+    job_id: str | None = None
+    failed_step: str | None = None
+    error: str | None = None
+
+
+class ReelVersionOut(BaseModel):
+    version: int
+    label: str
+    reel_url: str
+    cover_url: str
+    created_at: str
+    missing: bool
+
+
+class LicenceWarningOut(BaseModel):
+    model: str
+    version: str
+    licence: str
+
+
+class CaptionPresetOut(BaseModel):
+    id: str
+    label: str
+
+
+class AssemblyOut(BaseModel):
+    stage: StageName
+    blocked_reason: str | None
+    edl: dict[str, Any] | None
+    edl_hash: str | None
+    shots: list[AssemblyShotOut]
+    caption_status: dict[str, Literal["words", "line", "pending"]]
+    preview: PreviewStateOut
+    export: ExportStateOut
+    versions: list[ReelVersionOut]
+    licence_warnings: list[LicenceWarningOut]
+    caption_presets: list[CaptionPresetOut]
+
+
+class AssemblyBuildRequest(BaseModel):
+    force: bool = False
+
+
+class AssemblyEditRequest(BaseModel):
+    op: Literal[
+        "reorder",
+        "trim",
+        "swap_take",
+        "set_transition",
+        "nudge_dialogue",
+        "set_caption_text",
+        "set_caption_style",
+    ]
+    scene_ids: list[str] | None = None
+    scene_id: str | None = None
+    in_s: float | None = None
+    out_s: float | None = None
+    take_id: str | None = None
+    seconds: float | None = None
+    offset_s: float | None = None
+    text: str | None = None
+    style: str | None = None
+
+
+class AssemblyEditOut(BaseModel):
+    assembly: AssemblyOut
+    notes: list[str]
+
+
+class AssemblyExportRequest(BaseModel):
+    accept_licence_warning: bool = False
+
+
+class AssemblyOpenVersionRequest(BaseModel):
+    version: int

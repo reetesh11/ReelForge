@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from reelforge.assembly import ffmpeg
-from reelforge.assembly.edl import Edl, EdlCaption, EdlDialogue, EdlShot
+from reelforge.assembly.edl import FPS, Edl, EdlCaption, EdlDialogue, EdlShot, to_frames
 from reelforge.assembly.state import AssemblyError
 from reelforge.db.models import Artifact, Project
 from reelforge.shots.state import get_slot
@@ -77,7 +77,7 @@ def build_edl(ctx: AppContext, project_id: str) -> Edl:
     for sid, art in takes.items():
         if art is None:
             continue
-        length = round(_length(ctx.store.absolute_path(art), art, "video"), 2)
+        length = to_frames(_length(ctx.store.absolute_path(art), art, "video")) / FPS
         video.append(
             EdlShot(
                 scene_id=sid,
@@ -101,9 +101,9 @@ def build_edl(ctx: AppContext, project_id: str) -> Edl:
             take = s.get(Artifact, li.approved_artifact_id)
             if take is None:
                 continue
-            offset = round(edl.shot_start_s(index), 2)
-            length = round(_length(ctx.store.absolute_path(take), take, "audio"), 2)
-            duration = round(min(length, max(total - offset, 0.0)), 2)
+            offset = edl.shot_start_s(index)
+            length = _length(ctx.store.absolute_path(take), take, "audio")
+            duration = min(length, max(total - offset, 0.0))
             if duration <= 0:
                 continue
             dialogue.append(
@@ -118,7 +118,7 @@ def build_edl(ctx: AppContext, project_id: str) -> Edl:
                     line_no=len(captions) + 1,
                     text=li.text,
                     start_s=offset,
-                    end_s=round(offset + duration, 2),
+                    end_s=offset + duration,
                 )
             )
     return edl.model_copy(update={"dialogue": dialogue, "captions": captions})

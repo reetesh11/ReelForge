@@ -196,6 +196,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/assembly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Assembly */
+        get: operations["get_assembly_api_v1_projects__project_id__assembly_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/assembly/edl": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Edl */
+        get: operations["get_edl_api_v1_projects__project_id__assembly_edl_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/assembly:build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Build */
+        post: operations["build_api_v1_projects__project_id__assembly_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/assembly:edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Edit */
+        post: operations["edit_api_v1_projects__project_id__assembly_edit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/assembly:preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["preview_api_v1_projects__project_id__assembly_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/cast": {
         parameters: {
             query?: never;
@@ -1289,6 +1374,94 @@ export interface components {
             /** Job Id */
             job_id: string | null;
         };
+        /** AssemblyBuildRequest */
+        AssemblyBuildRequest: {
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
+        };
+        /** AssemblyEditOut */
+        AssemblyEditOut: {
+            assembly: components["schemas"]["AssemblyOut"];
+            /** Notes */
+            notes: string[];
+        };
+        /** AssemblyEditRequest */
+        AssemblyEditRequest: {
+            /** In S */
+            in_s?: number | null;
+            /** Offset S */
+            offset_s?: number | null;
+            /**
+             * Op
+             * @enum {string}
+             */
+            op: "reorder" | "trim" | "swap_take" | "set_transition" | "nudge_dialogue" | "set_caption_text" | "set_caption_style";
+            /** Out S */
+            out_s?: number | null;
+            /** Scene Id */
+            scene_id?: string | null;
+            /** Scene Ids */
+            scene_ids?: string[] | null;
+            /** Seconds */
+            seconds?: number | null;
+            /** Style */
+            style?: string | null;
+            /** Take Id */
+            take_id?: string | null;
+            /** Text */
+            text?: string | null;
+        };
+        /** AssemblyOut */
+        AssemblyOut: {
+            /** Blocked Reason */
+            blocked_reason: string | null;
+            /** Caption Presets */
+            caption_presets: components["schemas"]["CaptionPresetOut"][];
+            /** Caption Status */
+            caption_status: {
+                [key: string]: "words" | "line" | "pending";
+            };
+            /** Edl */
+            edl: {
+                [key: string]: unknown;
+            } | null;
+            /** Edl Hash */
+            edl_hash: string | null;
+            export: components["schemas"]["ExportStateOut"];
+            /** Licence Warnings */
+            licence_warnings: components["schemas"]["LicenceWarningOut"][];
+            preview: components["schemas"]["PreviewStateOut"];
+            /** Shots */
+            shots: components["schemas"]["AssemblyShotOut"][];
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "REEL_EXPORTED" | "EXPORTED";
+            /** Versions */
+            versions: components["schemas"]["ReelVersionOut"][];
+        };
+        /** AssemblyShotOut */
+        AssemblyShotOut: {
+            /** Scene Id */
+            scene_id: string;
+            /** Takes */
+            takes: components["schemas"]["AssemblyTakeOut"][];
+        };
+        /** AssemblyTakeOut */
+        AssemblyTakeOut: {
+            /** Active */
+            active: boolean;
+            /** Id */
+            id: string;
+            /** Take No */
+            take_no: number;
+            /** Video Url */
+            video_url: string;
+        };
         /** Body_upload_api_v1_projects__project_id__cast__key__upload_post */
         Body_upload_api_v1_projects__project_id__cast__key__upload_post: {
             /** File */
@@ -1315,6 +1488,13 @@ export interface components {
             file: string;
             /** Reference Text */
             reference_text?: string | null;
+        };
+        /** CaptionPresetOut */
+        CaptionPresetOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
         };
         /** CastActionOut */
         CastActionOut: {
@@ -1498,6 +1678,28 @@ export interface components {
              * @enum {string}
              */
             status: "pass" | "fail";
+        };
+        /** ExportStateOut */
+        ExportStateOut: {
+            /** Error */
+            error?: string | null;
+            /** Failed Step */
+            failed_step?: string | null;
+            /** Job Id */
+            job_id?: string | null;
+            /** Progress */
+            progress?: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "idle" | "running" | "failed";
+            /** Step */
+            step?: string | null;
+            /** Step Index */
+            step_index?: number | null;
+            /** Step Total */
+            step_total?: number | null;
         };
         /** FrameActionOut */
         FrameActionOut: {
@@ -1823,6 +2025,35 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** LicenceWarningOut */
+        LicenceWarningOut: {
+            /** Licence */
+            licence: string;
+            /** Model */
+            model: string;
+            /** Version */
+            version: string;
+        };
+        /** PreviewStateOut */
+        PreviewStateOut: {
+            /** Error */
+            error?: string | null;
+            /** Job Id */
+            job_id?: string | null;
+            /** Progress */
+            progress?: number | null;
+            /** Rebuild In S */
+            rebuild_in_s?: number | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "none" | "up_to_date" | "out_of_date" | "pending" | "rebuilding" | "failed";
+            /** Step */
+            step?: string | null;
+            /** Url */
+            url?: string | null;
+        };
         /** ProjectCreate */
         ProjectCreate: {
             /** Title */
@@ -1933,6 +2164,21 @@ export interface components {
             scene_id: string;
             /** Total */
             total: number;
+        };
+        /** ReelVersionOut */
+        ReelVersionOut: {
+            /** Cover Url */
+            cover_url: string;
+            /** Created At */
+            created_at: string;
+            /** Label */
+            label: string;
+            /** Missing */
+            missing: boolean;
+            /** Reel Url */
+            reel_url: string;
+            /** Version */
+            version: number;
         };
         /** ShotActionOut */
         ShotActionOut: {
@@ -2935,6 +3181,169 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ArtifactResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_assembly_api_v1_projects__project_id__assembly_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssemblyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_edl_api_v1_projects__project_id__assembly_edl_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    build_api_v1_projects__project_id__assembly_build_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssemblyBuildRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssemblyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_api_v1_projects__project_id__assembly_edit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssemblyEditRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssemblyEditOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_api_v1_projects__project_id__assembly_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
                 };
             };
             /** @description Validation Error */
