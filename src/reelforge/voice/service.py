@@ -262,36 +262,193 @@ def sync_library(ctx: AppContext, project_id: str, key: str) -> None:
         slots.sync_to_library(ctx, project_id, key, linked.id)
 
 
+def _mark_stale(ctx: AppContext, project_id: str, scene_ids: set[str]) -> None:
+    """Reopen these scenes' lines and write a change row (take and shot) where a take exists."""
+    story = load_story(ctx, project_id)
+    if story is None or not scene_ids:
+        return
+    ensure_rows(ctx, project_id)
+    takes = takes_by_scene(ctx, project_id)
+    now = utcnow()
+    version = story_service.current_version(ctx, project_id)
+    with ctx.session_factory.begin() as s:
+        for scene in story.scenes:
+            if scene.id not in scene_ids:
+                continue
+            sc = s.scalars(
+                select(Scene).where(Scene.project_id == project_id, Scene.story_key == scene.id)
+            ).one()
+            line = s.scalars(select(Line).where(Line.scene_id == sc.id)).one()
+            line.approved_artifact_id = None
+            if version is not None and (takes.get(scene.id) or sc.shot_length_at is not None):
+                s.add(
+                    StoryChange(
+                        project_id=project_id,
+                        story_version_id=version.id,
+                        owner_type=OWNER_SCENE,
+                        owner_id=scene.id,
+                        kinds=["voice_take", "shot"],
+                        created_at=now,
+                    )
+                )
+    recompute_stage(ctx, project_id)
+
+
 def voice_changed(ctx: AppContext, project_id: str, key: str) -> None:
     """A character's voice changed: stale and reopen their lines, then update the library."""
     story = load_story(ctx, project_id)
     if story is not None:
-        ensure_rows(ctx, project_id)
-        takes = takes_by_scene(ctx, project_id)
-        now = utcnow()
-        version = story_service.current_version(ctx, project_id)
-        with ctx.session_factory.begin() as s:
-            for scene in story.scenes:
-                if scene.speaker != key:
-                    continue
-                sc = s.scalars(
-                    select(Scene).where(Scene.project_id == project_id, Scene.story_key == scene.id)
-                ).one()
-                line = s.scalars(select(Line).where(Line.scene_id == sc.id)).one()
-                line.approved_artifact_id = None
-                if version is not None and (takes.get(scene.id) or sc.shot_length_at is not None):
-                    s.add(
-                        StoryChange(
-                            project_id=project_id,
-                            story_version_id=version.id,
-                            owner_type=OWNER_SCENE,
-                            owner_id=scene.id,
-                            kinds=["voice_take", "shot"],
-                            created_at=now,
-                        )
-                    )
-        recompute_stage(ctx, project_id)
+        _mark_stale(ctx, project_id, {sc.id for sc in story.scenes if sc.speaker == key})
     sync_library(ctx, project_id, key)
+
+
+# ---- emotion clips --------------------------------------------------------------------------
+
+CLIPS_CLONED_ONLY = "Emotion clips are only for cloned voices."
+TRANSCRIPT_REQUIRED = "A transcript is required."
+EMOTION_REF_KIND = slots.EMOTION_REF_KIND
+
+
+def _require_clip_target(ctx: AppContext, project_id: str, key: str, emotion: str) -> None:
+    require(ctx, project_id, key)
+    try:
+        check_emotion(emotion)
+    except ValueError as exc:
+        raise VoiceError(422, str(exc)) from None
+    slot = slots.get_slot(ctx, project_id, key)
+    if slot is None or slot.mode != "cloned":
+        raise VoiceError(409, CLIPS_CLONED_ONLY)
+
+
+def _voice_body(ctx: AppContext, project_id: str, key: str) -> dict[str, Any]:
+    slot = slots.get_slot(ctx, project_id, key)
+    if slot is None:
+        raise UnknownCharacter
+    return slots.voice_out(ctx, slot)
+
+
+def _store_emotion_clip(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    source: Path | bytes,
+    *,
+    ext: str,
+    seconds: float,
+    transcript: str,
+    origin: str,
+    inputs: list[str],
+) -> None:
+    previous = slots.get_emotion_clip(ctx, project_id, key, emotion)
+    spec = ArtifactSpec(
+        project_id=project_id,
+        owner_type=OWNER_CHARACTER,
+        owner_id=key,
+        kind=EMOTION_REF_KIND,
+        subdir=f"voices/{key}/emotions/{emotion}",
+        prompt=f"{emotion} reference clip",
+        seed=0,
+        model_key="upload",
+        model_revision="",
+        adapter="upload",
+        version="upload-1",
+        params={"emotion": emotion, "transcript": transcript, "source": origin},
+        input_artifact_ids=inputs,
+        duration_s=seconds,
+    )
+    artifact = ctx.store.write(spec, source, ext=ext)
+    slots.put_emotion_clip(
+        ctx,
+        project_id,
+        key,
+        emotion,
+        artifact_id=artifact.id,
+        transcript=transcript,
+        clip_seconds=seconds,
+    )
+    if previous is not None:
+        clip_changed(ctx, project_id, key, previous.artifact_id)
+
+
+async def upload_emotion_clip(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    data: bytes,
+    transcript: str | None,
+) -> dict[str, Any]:
+    _require_clip_target(ctx, project_id, key, emotion)
+    text = (transcript or "").strip()
+    if not text:
+        raise VoiceError(422, TRANSCRIPT_REQUIRED)
+    clip = await screen_clip(ctx, data)
+    try:
+        _store_emotion_clip(
+            ctx, project_id, key, emotion, clip.path, ext=clip.ext, seconds=clip.seconds,
+            transcript=text, origin="upload", inputs=[],
+        )  # fmt: skip
+    finally:
+        clip.path.unlink(missing_ok=True)
+    return _voice_body(ctx, project_id, key)
+
+
+def clip_from_take(
+    ctx: AppContext,
+    project_id: str,
+    key: str,
+    emotion: str,
+    scene_id: str,
+    take_id: str,
+    transcript: str | None,
+) -> dict[str, Any]:
+    _require_clip_target(ctx, project_id, key, emotion)
+    inputs = line_inputs(ctx, project_id)
+    li = inputs.get(scene_id)
+    take = next(
+        (t for t in takes_by_scene(ctx, project_id).get(scene_id, []) if t.id == take_id), None
+    )
+    if li is None or li.speaker != key or take is None:
+        raise VoiceError(404, "take not found")
+    path = ctx.store.absolute_path(take)
+    if not path.is_file():
+        raise VoiceError(404, "take not found")
+    text = li.text if transcript is None else transcript.strip()
+    if not text:
+        raise VoiceError(422, TRANSCRIPT_REQUIRED)
+    _store_emotion_clip(
+        ctx, project_id, key, emotion, path.read_bytes(), ext="wav",
+        seconds=take.duration_s or 0.0, transcript=text, origin="take", inputs=[take.id],
+    )  # fmt: skip
+    return _voice_body(ctx, project_id, key)
+
+
+def remove_emotion_clip(ctx: AppContext, project_id: str, key: str, emotion: str) -> dict[str, Any]:
+    _require_clip_target(ctx, project_id, key, emotion)
+    previous = slots.get_emotion_clip(ctx, project_id, key, emotion)
+    if previous is not None:
+        slots.delete_emotion_clip(ctx, project_id, key, emotion)
+        clip_changed(ctx, project_id, key, previous.artifact_id)
+    return _voice_body(ctx, project_id, key)
+
+
+def clip_changed(ctx: AppContext, project_id: str, key: str, old_artifact_id: str) -> None:
+    """A clip was replaced or removed: stale only the lines whose active take used it."""
+    inputs = line_inputs(ctx, project_id)
+    takes = takes_by_scene(ctx, project_id)
+    used: set[str] = set()
+    for sid, li in inputs.items():
+        if li.speaker != key:
+            continue
+        active = next((t for t in takes.get(sid, []) if t.is_active), None)
+        phrases: list[dict[str, Any]] = (active.params or {}).get("phrases") or [] if active else []
+        if any(
+            p.get("reference") == "emotion" and p.get("reference_artifact_id") == old_artifact_id
+            for p in phrases
+        ):
+            used.add(sid)
+    _mark_stale(ctx, project_id, used)
 
 
 # ---- emotion mapping and project settings -------------------------------------------------
@@ -656,7 +813,10 @@ def effective_speed(voice_speed: float, line_speed: float) -> float:
 
 def clip_ids(ctx: AppContext, project_id: str) -> dict[str, dict[str, str]]:
     """Per character, the artifact id of each emotion clip."""
-    return {}
+    return {
+        key: {emotion: clip.artifact_id for emotion, clip in by_emotion.items()}
+        for key, by_emotion in slots.list_emotion_clips(ctx, project_id).items()
+    }
 
 
 def plan_for(
@@ -665,7 +825,8 @@ def plan_for(
     """The plan a take of this line would follow now."""
     voice_model = current_voice_model(ctx)
     voice_speed = li.slot.speed if li.slot is not None else 1.0
-    clips = clip_ids(ctx, project_id).get(li.speaker or "", {})
+    cloned = li.slot is not None and li.slot.mode == "cloned"
+    clips = clip_ids(ctx, project_id).get(li.speaker or "", {}) if cloned else {}
     return plan_line(
         li.raw_text,
         li.emotion,
@@ -697,7 +858,8 @@ def build_lines(ctx: AppContext, project_id: str) -> list[dict[str, Any]]:
         active = next((t for t in scene_takes if t.is_active), None)
         ch = changes.get(sid, [])
         plan = plan_for(ctx, project_id, li, mapping, gap_ms) if mapping and li.text else None
-        speaker_clips = clips.get(li.speaker or "", {})
+        cloned = li.slot is not None and li.slot.mode == "cloned"
+        speaker_clips = clips.get(li.speaker or "", {}) if cloned else {}
         take_items = [
             _take_out(
                 t,

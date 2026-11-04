@@ -94,6 +94,7 @@ async def voice_generate(
     except MappingError as exc:
         raise AdapterError(str(exc)) from None
     gap_ms = service.phrase_gap_ms(ctx, project_id, mapping)
+    emotion_clips = slots.list_emotion_clips(ctx, project_id)
     batch: list[VoiceLine] = []
     runs: dict[str, _LineRun] = {}
     for sid in scene_ids:
@@ -128,6 +129,7 @@ async def voice_generate(
             finish(sid, {"status": "failed", "error": f"{name} uses recorded lines."})
             continue
         speed = service.effective_speed(slot.speed, li.speed)
+        clips = emotion_clips.get(li.speaker or "", {}) if slot.mode == "cloned" else {}
         plan = plan_line(
             li.raw_text,
             li.emotion,
@@ -135,19 +137,59 @@ async def voice_generate(
             voice_model=voice_model,
             speed=speed,
             age=li.age,
+            has_clip=clips.__contains__,
             gap_ms=gap_ms,
         )
-        run = _LineRun(info=info, speed=speed, text=li.raw_text, plan=plan)
+        refs: list[tuple[Path | None, str | None, str | None]] = []
+        broken: str | None = None
+        for ph in plan.phrases:
+            clip = clips.get(ph.emotion or "") if ph.reference == "emotion" else None
+            if clip is None:
+                refs.append(
+                    (
+                        ref_audio,
+                        slot.reference_text if ref_audio else None,
+                        info.get("reference_artifact_id"),
+                    )
+                )
+                continue
+            clip_path = _artifact_file(ctx, clip.artifact_id)
+            if clip_path is None:
+                broken = (
+                    f"The {ph.emotion} reference clip for {name} is missing. "
+                    "Upload it again or remove it."
+                )
+                break
+            refs.append((clip_path, clip.transcript, clip.artifact_id))
+        if broken is not None:
+            finish(sid, {"status": "failed", "error": broken})
+            continue
+        used_clips = [
+            (ph.emotion, ref[2])
+            for ph, ref in zip(plan.phrases, refs, strict=True)
+            if ph.reference == "emotion"
+        ]
+        if used_clips:
+            info.update(reference_kind="emotion", emotion=used_clips[0][0])
+        run = _LineRun(
+            info=info,
+            speed=speed,
+            text=li.raw_text,
+            plan=plan,
+            reference_ids=[ref[2] for ref in refs],
+            clip_ids=[str(cid) for _, cid in used_clips if cid],
+        )
         runs[sid] = run
         many = len(plan.phrases) > 1
         for n, ph in enumerate(plan.phrases, start=1):
+            phrase_audio, phrase_text, _ = refs[n - 1]
             batch.append(
                 VoiceLine(
                     id=f"{sid}#{n}" if many else sid,
                     text=ph.model_text,
                     voice=voice_name,
-                    ref_audio=ref_audio,
-                    ref_text=slot.reference_text if slot.mode == "cloned" else None,
+                    ref_audio=phrase_audio,
+                    ref_text=phrase_text if slot.mode == "cloned" else None,
                     speed=speed,
                     instruct=ph.instruct,
                     duration_scale=ph.duration_scale,
@@ -205,6 +247,8 @@ class _LineRun:
     speed: float
     text: str
     plan: LinePlan
+    reference_ids: list[str | None] = field(default_factory=lambda: [])
+    clip_ids: list[str] = field(default_factory=lambda: [])
     results: dict[int, VoiceResult] = field(default_factory=lambda: {})
     closed: bool = False
 
@@ -244,9 +288,9 @@ def _write_line_take(
             {
                 **ph.recorded(),
                 "duration_requested_s": r.duration_requested_s,
-                "reference_artifact_id": run.info.get("reference_artifact_id"),
+                "reference_artifact_id": ref_id,
             }
-            for ph, r in zip(plan.phrases, ordered, strict=True)
+            for ph, r, ref_id in zip(plan.phrases, ordered, run.reference_ids, strict=True)
         ]
     ref = run.info.get("reference_artifact_id")
     return service.write_take(
@@ -264,7 +308,7 @@ def _write_line_take(
         revision=revision,
         adapter=ENGINE,
         version=ENGINE_VERSION,
-        inputs=[ref] if ref else [],
+        inputs=[*([ref] if ref else []), *run.clip_ids],
         job_id=job.id,
         extra_params=extra,
     )

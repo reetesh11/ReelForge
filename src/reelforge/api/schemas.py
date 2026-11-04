@@ -190,6 +190,7 @@ class VoiceOut(BaseModel):
     speed: float
     language: str
     clip_seconds: float | None = None
+    emotion_clips: dict[str, dict[str, Any]] | None = None
     model_mismatch: bool
 
 
@@ -401,6 +402,12 @@ class VoiceEditTextRequest(BaseModel):
 
 class VoiceSetEmotionRequest(BaseModel):
     emotion: str | None = None
+
+
+class VoiceClipFromTakeRequest(BaseModel):
+    scene_id: str
+    take_id: str
+    transcript: str | None = None
 
 
 class VoiceSettingsOut(BaseModel):
