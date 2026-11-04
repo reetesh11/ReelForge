@@ -15,6 +15,8 @@ from reelforge.artifacts.service import generate_artifact
 from reelforge.cast.generate import cast_generate
 from reelforge.cast.state import GENERATE_JOB
 from reelforge.db.models import Job, utcnow
+from reelforge.frames.generate import frame_generate
+from reelforge.frames.state import FRAME_JOB
 from reelforge.jobs.preflight import preflight
 from reelforge.story.structure import structure_story
 from reelforge.voice.generate import voice_generate
@@ -32,6 +34,7 @@ HANDLERS: dict[str, Handler] = {
     "story.structure": structure_story,
     "cast.generate": cast_generate,
     VOICE_JOB: voice_generate,
+    FRAME_JOB: frame_generate,
 }
 MAX_ATTEMPTS = 2
 
@@ -164,7 +167,7 @@ class Worker:
             )
             if not result.ok:
                 reason = result.reason
-                if job.type == GENERATE_JOB:
+                if job.type in (GENERATE_JOB, FRAME_JOB):
                     reason = (
                         f"Only {result.free_gb:.1f} GB free, job needs {result.need_gb:.1f} GB. "
                         "Close other apps, or lower image_mem_gb in config.toml."
