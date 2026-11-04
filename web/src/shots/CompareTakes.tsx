@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Shot, ShotTake } from "@/api/shots";
+import { useDialog } from "@/components/useDialog";
 import { Player } from "@/player/Player";
 
 function Side({
@@ -15,7 +16,7 @@ function Side({
     <div>
       <p className="meta">{`${label}: Take ${take.take_no}${take.active ? " - Active" : ""}`}</p>
       <Player src={take.video_url} label={`${label} video`} loop muted autoPlay width={180} grouped={false} controls={false} />
-      <button type="button" disabled={take.active} onClick={() => onMakeActive(take.id)}>
+      <button type="button" className="btn btn-secondary" disabled={take.active} onClick={() => onMakeActive(take.id)}>
         Make active
       </button>
     </div>
@@ -31,6 +32,7 @@ export function CompareTakes({
   onMakeActive: (takeId: string) => void;
   onClose: () => void;
 }) {
+  useDialog(onClose);
   const active = shot.takes.find((t) => t.active) ?? shot.takes[0];
   const others = shot.takes.filter((t) => t.id !== active?.id);
   const [otherId, setOtherId] = useState(others[others.length - 1]?.id ?? "");
@@ -46,11 +48,11 @@ export function CompareTakes({
           ))}
         </select>
       </label>
-      <div className="actions">
+      <div className="compare">
         <Side label="Left" take={active} onMakeActive={onMakeActive} />
         <Side label="Right" take={other} onMakeActive={onMakeActive} />
       </div>
-      <button type="button" onClick={onClose}>
+      <button type="button" className="btn btn-secondary" onClick={onClose}>
         Close
       </button>
     </div>

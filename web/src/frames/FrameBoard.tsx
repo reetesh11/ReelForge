@@ -1,4 +1,5 @@
 import { useCancelFrames, useFrames, useGenerateFrames, type FramesState } from "@/api/frames";
+import { ActionBar } from "@/components/ActionBar";
 import { useElapsed } from "@/components/useElapsed";
 import { FrameCard } from "./FrameCard";
 
@@ -33,37 +34,41 @@ export function FrameBoard({
   return (
     <section aria-label="Key frames">
       <h2>Key frames</h2>
+      <div className="status-strip" data-testid="status-strip">
+        <span>{`${board.approved_count} of ${board.total} frames approved`}</span>
+      </div>
       <div className="actions">
-        <button type="button" onClick={onBack}>
+        <button type="button" className="btn btn-ghost" onClick={onBack}>
           Back to voices
         </button>
-        <button type="button" onClick={() => generate.mutate({ mode: "missing" })}>
+        <button type="button" className="btn btn-primary" onClick={() => generate.mutate({ mode: "missing" })}>
           Generate all frames
         </button>
         {board.stale_count > 0 ? (
-          <button type="button" onClick={() => generate.mutate({ mode: "stale" })}>
+          <button type="button" className="btn btn-secondary" onClick={() => generate.mutate({ mode: "stale" })}>
             Regenerate stale items
           </button>
         ) : null}
         {board.jobs.length > 0 ? (
-          <button type="button" onClick={() => cancel.mutate()}>
+          <button type="button" className="btn btn-secondary" onClick={() => cancel.mutate()}>
             Cancel
           </button>
         ) : null}
-        <span>{`${board.approved_count} of ${board.total} frames approved`}</span>
       </div>
       <Progress board={board} />
       {error ? <p role="alert">{error}</p> : null}
-      <ul aria-label="Frames" className="list">
+      <ul aria-label="Frames" className="card-grid">
         {board.frames.map((frame) => (
           <FrameCard key={frame.scene_id} projectId={projectId} frame={frame} />
         ))}
       </ul>
-      <div className="actions">
-        <button type="button" disabled={!FRAMES_DONE.has(board.stage)} onClick={onContinue}>
-          Continue to shots
-        </button>
-      </div>
+      <ActionBar
+        cta={
+          <button type="button" className="btn btn-cta" disabled={!FRAMES_DONE.has(board.stage)} onClick={onContinue}>
+            Continue to shots
+          </button>
+        }
+      />
     </section>
   );
 }
