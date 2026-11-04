@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
   useRenderShot,
   useShotAction,
@@ -7,6 +7,7 @@ import {
   type Shot,
   type ShotType,
 } from "@/api/shots";
+import { Player } from "@/player/Player";
 import { CompareTakes } from "./CompareTakes";
 
 const BADGES: Record<string, string> = {
@@ -37,7 +38,6 @@ export function ShotCard({
   const action = useShotAction(projectId);
   const render = useRenderShot(projectId);
   const upload = useUploadClip(projectId);
-  const video = useRef<HTMLVideoElement>(null);
   const [draft, setDraft] = useState(shot.motion_prompt);
   const [seen, setSeen] = useState(shot.motion_prompt);
   const [comparing, setComparing] = useState(false);
@@ -70,7 +70,7 @@ export function ShotCard({
       </header>
 
       {active ? (
-        <video ref={video} aria-label="Shot video" src={active.video_url} loop muted playsInline width={180} />
+        <Player src={active.video_url} label="Shot video" loop muted width={180} grouped={false} />
       ) : shot.frame_url ? (
         <img src={shot.frame_url} alt={`Key frame for scene ${shot.scene_id}`} width={180} />
       ) : null}
@@ -176,9 +176,6 @@ export function ShotCard({
         </button>
         <button type="button" disabled={!canRender} onClick={() => go("render")}>
           Render
-        </button>
-        <button type="button" disabled={!active} onClick={() => void video.current?.play()}>
-          Play
         </button>
         <button
           type="button"
