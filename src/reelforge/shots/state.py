@@ -30,6 +30,15 @@ DEFAULT_ESTIMATE_S: dict[tuple[str, str], int] = {
 }
 
 
+class ShotError(Exception):
+    """A request problem; `status` and `message` become the HTTP response."""
+
+    def __init__(self, status: int, message: str) -> None:
+        self.status = status
+        self.message = message
+        super().__init__(message)
+
+
 def get_slot(ctx: AppContext, project_id: str, key: str) -> ShotSlot | None:
     with ctx.session_factory() as s:
         return s.get(ShotSlot, (project_id, key))

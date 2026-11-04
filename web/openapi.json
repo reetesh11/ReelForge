@@ -204,6 +204,20 @@
         "title": "Body_upload_api_v1_projects__project_id__frames__scene_id__upload_post",
         "type": "object"
       },
+      "Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post",
+        "type": "object"
+      },
       "Body_upload_recording_api_v1_projects__project_id__voices_lines__scene_id__upload_recording_post": {
         "properties": {
           "file": {
@@ -1965,6 +1979,635 @@
           }
         },
         "title": "ProjectPatch",
+        "type": "object"
+      },
+      "QueueMoveRequest": {
+        "properties": {
+          "direction": {
+            "enum": [
+              "up",
+              "down"
+            ],
+            "title": "Direction",
+            "type": "string"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "direction"
+        ],
+        "title": "QueueMoveRequest",
+        "type": "object"
+      },
+      "QueueOut": {
+        "properties": {
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/QueueRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "running": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueueRunning"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_s": {
+            "title": "Total S",
+            "type": "integer"
+          },
+          "total_shots": {
+            "title": "Total Shots",
+            "type": "integer"
+          },
+          "total_text": {
+            "title": "Total Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paused",
+          "rows",
+          "total_shots",
+          "total_s",
+          "total_text",
+          "running"
+        ],
+        "title": "QueueOut",
+        "type": "object"
+      },
+      "QueueRow": {
+        "properties": {
+          "can_move": {
+            "title": "Can Move",
+            "type": "boolean"
+          },
+          "estimate_s": {
+            "title": "Estimate S",
+            "type": "integer"
+          },
+          "estimate_text": {
+            "title": "Estimate Text",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "quality": {
+            "enum": [
+              "draft",
+              "final"
+            ],
+            "title": "Quality",
+            "type": "string"
+          },
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "shot_type": {
+            "enum": [
+              "talking",
+              "action",
+              "continue"
+            ],
+            "title": "Shot Type",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "job_id",
+          "scene_id",
+          "position",
+          "shot_type",
+          "quality",
+          "width",
+          "height",
+          "status",
+          "estimate_s",
+          "estimate_text",
+          "can_move"
+        ],
+        "title": "QueueRow",
+        "type": "object"
+      },
+      "QueueRunning": {
+        "properties": {
+          "elapsed_s": {
+            "title": "Elapsed S",
+            "type": "integer"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scene_id",
+          "index",
+          "total",
+          "elapsed_s"
+        ],
+        "title": "QueueRunning",
+        "type": "object"
+      },
+      "ShotActionOut": {
+        "properties": {
+          "approved_count": {
+            "title": "Approved Count",
+            "type": "integer"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "project_stage": {
+            "enum": [
+              "DRAFT",
+              "STORY_APPROVED",
+              "CAST_APPROVED",
+              "VOICES_APPROVED",
+              "FRAMES_APPROVED",
+              "SHOTS_APPROVED",
+              "ASSEMBLED",
+              "EXPORTED"
+            ],
+            "title": "Project Stage",
+            "type": "string"
+          },
+          "shot": {
+            "$ref": "#/components/schemas/ShotCard"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "project_stage",
+          "approved_count",
+          "total",
+          "shot"
+        ],
+        "title": "ShotActionOut",
+        "type": "object"
+      },
+      "ShotCard": {
+        "description": "Documentation model: responses are plain dicts with empty keys omitted.",
+        "properties": {
+          "blockers": {
+            "items": {
+              "enum": [
+                "frame_not_approved",
+                "voice_not_approved",
+                "waiting_previous"
+              ],
+              "type": "string"
+            },
+            "title": "Blockers",
+            "type": "array"
+          },
+          "can_retry_draft": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Can Retry Draft"
+          },
+          "frame_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Url"
+          },
+          "frames": {
+            "title": "Frames",
+            "type": "integer"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "motion_prompt": {
+            "title": "Motion Prompt",
+            "type": "string"
+          },
+          "oom": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oom"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "quality": {
+            "enum": [
+              "draft",
+              "final"
+            ],
+            "title": "Quality",
+            "type": "string"
+          },
+          "scene_id": {
+            "title": "Scene Id",
+            "type": "string"
+          },
+          "shot_length_s": {
+            "title": "Shot Length S",
+            "type": "number"
+          },
+          "shot_type": {
+            "enum": [
+              "talking",
+              "action",
+              "continue"
+            ],
+            "title": "Shot Type",
+            "type": "string"
+          },
+          "shot_type_auto": {
+            "enum": [
+              "talking",
+              "action",
+              "continue"
+            ],
+            "title": "Shot Type Auto",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "no_shot",
+              "queued",
+              "rendering",
+              "ready",
+              "approved",
+              "stale",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "takes": {
+            "items": {
+              "$ref": "#/components/schemas/ShotTakeOut"
+            },
+            "title": "Takes",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scene_id",
+          "position",
+          "shot_type",
+          "shot_type_auto",
+          "quality",
+          "width",
+          "height",
+          "frames",
+          "shot_length_s",
+          "motion_prompt",
+          "state",
+          "blockers",
+          "frame_url",
+          "takes",
+          "job"
+        ],
+        "title": "ShotCard",
+        "type": "object"
+      },
+      "ShotEngineOut": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "title": "ShotEngineOut",
+        "type": "object"
+      },
+      "ShotSavePromptRequest": {
+        "properties": {
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "rerender": {
+            "default": false,
+            "title": "Rerender",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "prompt"
+        ],
+        "title": "ShotSavePromptRequest",
+        "type": "object"
+      },
+      "ShotSetQualityRequest": {
+        "properties": {
+          "quality": {
+            "enum": [
+              "draft",
+              "final"
+            ],
+            "title": "Quality",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quality"
+        ],
+        "title": "ShotSetQualityRequest",
+        "type": "object"
+      },
+      "ShotSetTypeRequest": {
+        "properties": {
+          "shot_type": {
+            "enum": [
+              "talking",
+              "action",
+              "continue"
+            ],
+            "title": "Shot Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shot_type"
+        ],
+        "title": "ShotSetTypeRequest",
+        "type": "object"
+      },
+      "ShotTakeOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inputs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Inputs",
+            "type": "array"
+          },
+          "last_frame_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Frame Id"
+          },
+          "quality": {
+            "enum": [
+              "draft",
+              "final"
+            ],
+            "title": "Quality",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "source": {
+            "enum": [
+              "render",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "take_no": {
+            "title": "Take No",
+            "type": "integer"
+          },
+          "video_url": {
+            "title": "Video Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "take_no",
+          "seed",
+          "active",
+          "approved",
+          "stale",
+          "source",
+          "quality",
+          "video_url",
+          "last_frame_id",
+          "inputs"
+        ],
+        "title": "ShotTakeOut",
+        "type": "object"
+      },
+      "ShotsOut": {
+        "properties": {
+          "approved_count": {
+            "title": "Approved Count",
+            "type": "integer"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/ShotEngineOut"
+          },
+          "queue": {
+            "$ref": "#/components/schemas/QueueOut"
+          },
+          "shots": {
+            "items": {
+              "$ref": "#/components/schemas/ShotCard"
+            },
+            "title": "Shots",
+            "type": "array"
+          },
+          "stage": {
+            "enum": [
+              "DRAFT",
+              "STORY_APPROVED",
+              "CAST_APPROVED",
+              "VOICES_APPROVED",
+              "FRAMES_APPROVED",
+              "SHOTS_APPROVED",
+              "ASSEMBLED",
+              "EXPORTED"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "stale_count": {
+            "title": "Stale Count",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stage",
+          "engine",
+          "approved_count",
+          "total",
+          "stale_count",
+          "shots",
+          "queue"
+        ],
+        "title": "ShotsOut",
+        "type": "object"
+      },
+      "ShotsRenderAllOut": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/JobOut"
+            },
+            "title": "Jobs",
+            "type": "array"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/SkippedItem"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "jobs",
+          "skipped"
+        ],
+        "title": "ShotsRenderAllOut",
+        "type": "object"
+      },
+      "ShotsRenderAllRequest": {
+        "properties": {
+          "mode": {
+            "default": "missing",
+            "enum": [
+              "missing",
+              "stale"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "ShotsRenderAllRequest",
         "type": "object"
       },
       "SkippedItem": {
@@ -4571,6 +5214,838 @@
         "summary": "Generate",
         "tags": [
           "frames"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots": {
+      "get": {
+        "operationId": "get_shots_api_v1_projects__project_id__shots_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Shots",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/queue:cancel": {
+      "post": {
+        "operationId": "queue_cancel_api_v1_projects__project_id__shots_queue_cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue Cancel",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/queue:move": {
+      "post": {
+        "operationId": "queue_move_api_v1_projects__project_id__shots_queue_move_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueueMoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue Move",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/queue:pause": {
+      "post": {
+        "operationId": "queue_pause_api_v1_projects__project_id__shots_queue_pause_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue Pause",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/queue:resume": {
+      "post": {
+        "operationId": "queue_resume_api_v1_projects__project_id__shots_queue_resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue Resume",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:approve": {
+      "post": {
+        "operationId": "approve_api_v1_projects__project_id__shots__scene_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:dequeue": {
+      "post": {
+        "operationId": "dequeue_api_v1_projects__project_id__shots__scene_id__dequeue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dequeue",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:render": {
+      "post": {
+        "operationId": "render_api_v1_projects__project_id__shots__scene_id__render_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Render",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:reroll": {
+      "post": {
+        "operationId": "reroll_api_v1_projects__project_id__shots__scene_id__reroll_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reroll",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:retry-draft": {
+      "post": {
+        "operationId": "retry_draft_api_v1_projects__project_id__shots__scene_id__retry_draft_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Draft",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:save-prompt": {
+      "post": {
+        "operationId": "save_prompt_api_v1_projects__project_id__shots__scene_id__save_prompt_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShotSavePromptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Prompt",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:select-take": {
+      "post": {
+        "operationId": "select_take_api_v1_projects__project_id__shots__scene_id__select_take_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSelectTakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Select Take",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:set-quality": {
+      "post": {
+        "operationId": "set_quality_api_v1_projects__project_id__shots__scene_id__set_quality_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShotSetQualityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Quality",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:set-type": {
+      "post": {
+        "operationId": "set_type_api_v1_projects__project_id__shots__scene_id__set_type_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShotSetTypeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Type",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots/{scene_id}:upload-clip": {
+      "post": {
+        "operationId": "upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "scene_id",
+            "required": true,
+            "schema": {
+              "title": "Scene Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotActionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Clip",
+        "tags": [
+          "shots"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/shots:render-all": {
+      "post": {
+        "operationId": "render_all_api_v1_projects__project_id__shots_render_all_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShotsRenderAllRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShotsRenderAllOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Render All",
+        "tags": [
+          "shots"
         ]
       }
     },

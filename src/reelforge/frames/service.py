@@ -440,7 +440,6 @@ def frames_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
     from reelforge.api.routes_jobs import job_body  # noqa: PLC0415
 
     require(ctx, project_id)
-    recompute_stage(ctx, project_id)
     frames = build_frames(ctx, project_id)
     approved, total, stale = counts(frames)
     order = {f["scene_id"]: f["position"] for f in frames}
@@ -520,6 +519,7 @@ def enqueue_generation(
         raise FrameError(409, "Nothing to generate.")
     batch = new_id()
     jobs = [_enqueue(ctx, project_id, sid, batch, i, len(ids)) for i, sid in enumerate(ids, 1)]
+    recompute_stage(ctx, project_id)
     return jobs, skipped
 
 
@@ -536,7 +536,9 @@ def enqueue_scene(ctx: AppContext, project_id: str, scene_id: str) -> Job:
         raise FrameError(409, "There is no character in this scene.")
     if master.artifact_id is None:
         raise FrameError(409, f"Approve a master for {master.name} in Cast first")
-    return _enqueue(ctx, project_id, scene_id, new_id(), 1, 1)
+    job = _enqueue(ctx, project_id, scene_id, new_id(), 1, 1)
+    recompute_stage(ctx, project_id)
+    return job
 
 
 def cancel_all(ctx: AppContext, project_id: str) -> int:
@@ -550,6 +552,7 @@ def cancel_all(ctx: AppContext, project_id: str) -> int:
             count += 1
         except JobStateError:  # finished in the meantime
             continue
+    recompute_stage(ctx, project_id)
     return count
 
 

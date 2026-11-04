@@ -468,6 +468,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/shots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Shots */
+        get: operations["get_shots_api_v1_projects__project_id__shots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/queue:cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue Cancel */
+        post: operations["queue_cancel_api_v1_projects__project_id__shots_queue_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/queue:move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue Move */
+        post: operations["queue_move_api_v1_projects__project_id__shots_queue_move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/queue:pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue Pause */
+        post: operations["queue_pause_api_v1_projects__project_id__shots_queue_pause_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/queue:resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue Resume */
+        post: operations["queue_resume_api_v1_projects__project_id__shots_queue_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_api_v1_projects__project_id__shots__scene_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:dequeue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dequeue */
+        post: operations["dequeue_api_v1_projects__project_id__shots__scene_id__dequeue_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:render": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Render */
+        post: operations["render_api_v1_projects__project_id__shots__scene_id__render_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:reroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reroll */
+        post: operations["reroll_api_v1_projects__project_id__shots__scene_id__reroll_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:retry-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Draft */
+        post: operations["retry_draft_api_v1_projects__project_id__shots__scene_id__retry_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:save-prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Prompt */
+        post: operations["save_prompt_api_v1_projects__project_id__shots__scene_id__save_prompt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:select-take": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select Take */
+        post: operations["select_take_api_v1_projects__project_id__shots__scene_id__select_take_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:set-quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Quality */
+        post: operations["set_quality_api_v1_projects__project_id__shots__scene_id__set_quality_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:set-type": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Type */
+        post: operations["set_type_api_v1_projects__project_id__shots__scene_id__set_type_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots/{scene_id}:upload-clip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Clip */
+        post: operations["upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/shots:render-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Render All */
+        post: operations["render_all_api_v1_projects__project_id__shots_render_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/stages": {
         parameters: {
             query?: never;
@@ -1024,6 +1296,11 @@ export interface components {
         };
         /** Body_upload_api_v1_projects__project_id__frames__scene_id__upload_post */
         Body_upload_api_v1_projects__project_id__frames__scene_id__upload_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post */
+        Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post: {
             /** File */
             file: string;
         };
@@ -1587,6 +1864,240 @@ export interface components {
             stage?: ("DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED") | null;
             /** Title */
             title?: string | null;
+        };
+        /** QueueMoveRequest */
+        QueueMoveRequest: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "up" | "down";
+            /** Job Id */
+            job_id: string;
+        };
+        /** QueueOut */
+        QueueOut: {
+            /** Paused */
+            paused: boolean;
+            /** Rows */
+            rows: components["schemas"]["QueueRow"][];
+            running: components["schemas"]["QueueRunning"] | null;
+            /** Total S */
+            total_s: number;
+            /** Total Shots */
+            total_shots: number;
+            /** Total Text */
+            total_text: string;
+        };
+        /** QueueRow */
+        QueueRow: {
+            /** Can Move */
+            can_move: boolean;
+            /** Estimate S */
+            estimate_s: number;
+            /** Estimate Text */
+            estimate_text: string;
+            /** Height */
+            height: number;
+            /** Job Id */
+            job_id: string;
+            /** Position */
+            position: number;
+            /**
+             * Quality
+             * @enum {string}
+             */
+            quality: "draft" | "final";
+            /** Scene Id */
+            scene_id: string;
+            /**
+             * Shot Type
+             * @enum {string}
+             */
+            shot_type: "talking" | "action" | "continue";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running";
+            /** Width */
+            width: number;
+        };
+        /** QueueRunning */
+        QueueRunning: {
+            /** Elapsed S */
+            elapsed_s: number;
+            /** Index */
+            index: number;
+            /** Scene Id */
+            scene_id: string;
+            /** Total */
+            total: number;
+        };
+        /** ShotActionOut */
+        ShotActionOut: {
+            /** Approved Count */
+            approved_count: number;
+            job?: components["schemas"]["JobOut"] | null;
+            /**
+             * Project Stage
+             * @enum {string}
+             */
+            project_stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            shot: components["schemas"]["ShotCard"];
+            /** Total */
+            total: number;
+        };
+        /**
+         * ShotCard
+         * @description Documentation model: responses are plain dicts with empty keys omitted.
+         */
+        ShotCard: {
+            /** Blockers */
+            blockers: ("frame_not_approved" | "voice_not_approved" | "waiting_previous")[];
+            /** Can Retry Draft */
+            can_retry_draft?: boolean | null;
+            /** Frame Url */
+            frame_url: string | null;
+            /** Frames */
+            frames: number;
+            /** Height */
+            height: number;
+            job: components["schemas"]["JobOut"] | null;
+            /** Message */
+            message?: string | null;
+            /** Motion Prompt */
+            motion_prompt: string;
+            /** Oom */
+            oom?: boolean | null;
+            /** Position */
+            position: number;
+            /**
+             * Quality
+             * @enum {string}
+             */
+            quality: "draft" | "final";
+            /** Scene Id */
+            scene_id: string;
+            /** Shot Length S */
+            shot_length_s: number;
+            /**
+             * Shot Type
+             * @enum {string}
+             */
+            shot_type: "talking" | "action" | "continue";
+            /**
+             * Shot Type Auto
+             * @enum {string}
+             */
+            shot_type_auto: "talking" | "action" | "continue";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "no_shot" | "queued" | "rendering" | "ready" | "approved" | "stale" | "failed";
+            /** Takes */
+            takes: components["schemas"]["ShotTakeOut"][];
+            /** Width */
+            width: number;
+        };
+        /** ShotEngineOut */
+        ShotEngineOut: {
+            /** Message */
+            message: string;
+            /** Ok */
+            ok: boolean;
+        };
+        /** ShotSavePromptRequest */
+        ShotSavePromptRequest: {
+            /** Prompt */
+            prompt: string;
+            /**
+             * Rerender
+             * @default false
+             */
+            rerender: boolean;
+        };
+        /** ShotSetQualityRequest */
+        ShotSetQualityRequest: {
+            /**
+             * Quality
+             * @enum {string}
+             */
+            quality: "draft" | "final";
+        };
+        /** ShotSetTypeRequest */
+        ShotSetTypeRequest: {
+            /**
+             * Shot Type
+             * @enum {string}
+             */
+            shot_type: "talking" | "action" | "continue";
+        };
+        /** ShotTakeOut */
+        ShotTakeOut: {
+            /** Active */
+            active: boolean;
+            /** Approved */
+            approved: boolean;
+            /** Id */
+            id: string;
+            /** Inputs */
+            inputs: string[];
+            /** Last Frame Id */
+            last_frame_id: string | null;
+            /**
+             * Quality
+             * @enum {string}
+             */
+            quality: "draft" | "final";
+            /** Seed */
+            seed: number;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "render" | "upload";
+            /** Stale */
+            stale: boolean;
+            /** Take No */
+            take_no: number;
+            /** Video Url */
+            video_url: string;
+        };
+        /** ShotsOut */
+        ShotsOut: {
+            /** Approved Count */
+            approved_count: number;
+            engine: components["schemas"]["ShotEngineOut"];
+            queue: components["schemas"]["QueueOut"];
+            /** Shots */
+            shots: components["schemas"]["ShotCard"][];
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "DRAFT" | "STORY_APPROVED" | "CAST_APPROVED" | "VOICES_APPROVED" | "FRAMES_APPROVED" | "SHOTS_APPROVED" | "ASSEMBLED" | "EXPORTED";
+            /** Stale Count */
+            stale_count: number;
+            /** Total */
+            total: number;
+        };
+        /** ShotsRenderAllOut */
+        ShotsRenderAllOut: {
+            /** Jobs */
+            jobs: components["schemas"]["JobOut"][];
+            /** Skipped */
+            skipped: components["schemas"]["SkippedItem"][];
+        };
+        /** ShotsRenderAllRequest */
+        ShotsRenderAllRequest: {
+            /**
+             * Mode
+             * @default missing
+             * @enum {string}
+             */
+            mode: "missing" | "stale";
         };
         /** SkippedItem */
         SkippedItem: {
@@ -2972,6 +3483,540 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FramesGenerateOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_shots_api_v1_projects__project_id__shots_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_cancel_api_v1_projects__project_id__shots_queue_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_move_api_v1_projects__project_id__shots_queue_move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueMoveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_pause_api_v1_projects__project_id__shots_queue_pause_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_resume_api_v1_projects__project_id__shots_queue_resume_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_api_v1_projects__project_id__shots__scene_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dequeue_api_v1_projects__project_id__shots__scene_id__dequeue_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    render_api_v1_projects__project_id__shots__scene_id__render_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reroll_api_v1_projects__project_id__shots__scene_id__reroll_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_draft_api_v1_projects__project_id__shots__scene_id__retry_draft_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_prompt_api_v1_projects__project_id__shots__scene_id__save_prompt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShotSavePromptRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    select_take_api_v1_projects__project_id__shots__scene_id__select_take_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSelectTakeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_quality_api_v1_projects__project_id__shots__scene_id__set_quality_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShotSetQualityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_type_api_v1_projects__project_id__shots__scene_id__set_type_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShotSetTypeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                scene_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_clip_api_v1_projects__project_id__shots__scene_id__upload_clip_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotActionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    render_all_api_v1_projects__project_id__shots_render_all_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShotsRenderAllRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShotsRenderAllOut"];
                 };
             };
             /** @description Validation Error */

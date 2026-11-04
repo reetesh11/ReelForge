@@ -522,3 +522,120 @@ class FrameSavePromptRequest(BaseModel):
 
 class FrameContinueRequest(BaseModel):
     enabled: bool
+
+
+class ShotTakeOut(BaseModel):
+    id: str
+    take_no: int
+    seed: int
+    active: bool
+    approved: bool
+    stale: bool
+    source: Literal["render", "upload"]
+    quality: Literal["draft", "final"]
+    video_url: str
+    last_frame_id: str | None
+    inputs: list[str]
+
+
+class ShotCard(BaseModel):
+    """Documentation model: responses are plain dicts with empty keys omitted."""
+
+    scene_id: str
+    position: int
+    shot_type: Literal["talking", "action", "continue"]
+    shot_type_auto: Literal["talking", "action", "continue"]
+    quality: Literal["draft", "final"]
+    width: int
+    height: int
+    frames: int
+    shot_length_s: float
+    motion_prompt: str
+    state: Literal["no_shot", "queued", "rendering", "ready", "approved", "stale", "failed"]
+    message: str | None = None
+    oom: bool | None = None
+    can_retry_draft: bool | None = None
+    blockers: list[Literal["frame_not_approved", "voice_not_approved", "waiting_previous"]]
+    frame_url: str | None
+    takes: list[ShotTakeOut]
+    job: JobOut | None
+
+
+class ShotEngineOut(BaseModel):
+    ok: bool
+    message: str
+
+
+class QueueRow(BaseModel):
+    job_id: str
+    scene_id: str
+    position: int
+    shot_type: Literal["talking", "action", "continue"]
+    quality: Literal["draft", "final"]
+    width: int
+    height: int
+    status: Literal["queued", "running"]
+    estimate_s: int
+    estimate_text: str
+    can_move: bool
+
+
+class QueueRunning(BaseModel):
+    scene_id: str
+    index: int
+    total: int
+    elapsed_s: int
+
+
+class QueueOut(BaseModel):
+    paused: bool
+    rows: list[QueueRow]
+    total_shots: int
+    total_s: int
+    total_text: str
+    running: QueueRunning | None
+
+
+class ShotsOut(BaseModel):
+    stage: StageName
+    engine: ShotEngineOut
+    approved_count: int
+    total: int
+    stale_count: int
+    shots: list[ShotCard]
+    queue: QueueOut
+
+
+class ShotActionOut(BaseModel):
+    project_stage: StageName
+    approved_count: int
+    total: int
+    shot: ShotCard
+    job: JobOut | None = None
+
+
+class ShotsRenderAllRequest(BaseModel):
+    mode: Literal["missing", "stale"] = "missing"
+
+
+class ShotsRenderAllOut(BaseModel):
+    jobs: list[JobOut]
+    skipped: list[SkippedItem]
+
+
+class ShotSetTypeRequest(BaseModel):
+    shot_type: Literal["talking", "action", "continue"]
+
+
+class ShotSetQualityRequest(BaseModel):
+    quality: Literal["draft", "final"]
+
+
+class ShotSavePromptRequest(BaseModel):
+    prompt: str
+    rerender: bool = False
+
+
+class QueueMoveRequest(BaseModel):
+    job_id: str
+    direction: Literal["up", "down"]

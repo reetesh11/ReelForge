@@ -51,7 +51,11 @@ async def probe_video(path: Path) -> VideoInfo:
         fmt = data.get("format", {})
         width, height = int(stream["width"]), int(stream["height"])
         duration = float(fmt.get("duration") or 0.0)
+        if duration <= 0:  # a still picture is not a clip
+            raise NotAVideo("not a moving picture")
         return VideoInfo(width, height, duration, str(fmt.get("format_name", "")))
+    except NotAVideo:
+        raise
     except (ValueError, KeyError, IndexError, TypeError):
         raise NotAVideo("no video stream") from None
 
