@@ -6,7 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from reelforge.story.schema import Story
+from reelforge.story.audio import resolve_cue, story_timeline
+from reelforge.story.schema import Cue, Story
 
 TOP_LEVEL_FIELDS = (
     "version",
@@ -20,6 +21,8 @@ TOP_LEVEL_FIELDS = (
     "music",
     "captions",
 )
+CUE_TAKE_FIELDS = ("kind", "start", "end", "duration", "prompt", "source")
+CUE_MIX_FIELDS = ("gain_db", "fade_in_s", "fade_out_s", "duck")
 LINE_KINDS = ["voice_take", "shot"]
 ALL = ["*"]
 
@@ -37,14 +40,51 @@ def _scene_fields(scene: Any) -> dict[str, Any]:
     return data
 
 
+def _cue_length(story: Story, cue: Cue) -> float | None:
+    try:
+        start, end = resolve_cue(story, cue, story_timeline(story))
+    except KeyError:
+        return None
+    return end - start
+
+
+def _diff_cues(old: Story, new: Story) -> list[Affected]:
+    """Cue changes: a take-affecting edit stales the take, a mix-only edit stales the mix."""
+    old_cues = {c.id: c for c in old.audio or []}
+    new_cues = {c.id: c for c in new.audio or []}
+    out: list[Affected] = []
+    for cid in list(new_cues) + [i for i in old_cues if i not in new_cues]:
+        a, b = old_cues.get(cid), new_cues.get(cid)
+        if a is None or b is None:
+            out.append(Affected("audio_cue", cid, list(ALL)))
+            continue
+        take = any(getattr(a, f) != getattr(b, f) for f in CUE_TAKE_FIELDS)
+        if not take:
+            la, lb = _cue_length(old, a), _cue_length(new, b)
+            take = la is None or lb is None or abs(la - lb) > 1e-6
+        if take:
+            out.append(Affected("audio_cue", cid, ["audio_take"]))
+        elif any(getattr(a, f) != getattr(b, f) for f in CUE_MIX_FIELDS):
+            out.append(Affected("audio_cue", cid, ["audio_mix"]))
+    return out
+
+
 def diff_stories(old: Story, new: Story) -> list[Affected]:
-    """Which scenes and characters an edit touches; rows are matched by id/key."""
+    """Which scenes, characters and cues an edit touches; rows are matched by id/key."""
+    return _diff_scenes(old, new) + _diff_cues(old, new)
+
+
+def _diff_scenes(old: Story, new: Story) -> list[Affected]:
     old_scenes = {s.id: s for s in old.scenes}
     new_scenes = {s.id: s for s in new.scenes}
     scene_ids = list(new_scenes) + [i for i in old_scenes if i not in new_scenes]
     char_keys = list(new.characters) + [k for k in old.characters if k not in new.characters]
 
-    if any(getattr(old, f) != getattr(new, f) for f in TOP_LEVEL_FIELDS):
+    # once a story has cues, the old `music` note is ignored everywhere
+    fields = TOP_LEVEL_FIELDS
+    if old.audio is not None or new.audio is not None:
+        fields = tuple(f for f in fields if f != "music")
+    if any(getattr(old, f) != getattr(new, f) for f in fields):
         return [Affected("scene", i, list(ALL)) for i in scene_ids] + [
             Affected("character", k, list(ALL)) for k in char_keys
         ]
