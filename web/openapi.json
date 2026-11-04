@@ -358,6 +358,28 @@
       },
       "AssemblyOut": {
         "properties": {
+          "audio_skipped": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Skipped"
+          },
+          "audio_stale": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Stale"
+          },
           "blocked_reason": {
             "anyOf": [
               {

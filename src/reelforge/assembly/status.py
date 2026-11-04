@@ -15,7 +15,7 @@ from reelforge.assembly.build import (
     project_row,
     working_edl_path,
 )
-from reelforge.assembly.edl import CAPTION_PRESETS, Edl, edl_hash, load_edl
+from reelforge.assembly.edl import CAPTION_PRESETS, Edl, edl_hash, edl_json, load_edl
 from reelforge.assembly.jobs import FINAL_JOB, PREVIEW_JOB
 from reelforge.assembly.publish import collect_credits, licence_warnings
 from reelforge.db.models import Artifact, Job, ReelVersion
@@ -203,10 +203,10 @@ def assembly_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
     digest = edl_hash(edl) if edl is not None else None
     jobs = ctx.queue.list(project_id=project_id)
     warnings = licence_warnings(collect_credits(ctx, project_id, edl)) if edl is not None else []
-    return {
+    body: dict[str, Any] = {
         "stage": project.stage,
         "blocked_reason": blocked_reason(ctx, project_id),
-        "edl": edl.model_dump(mode="json") if edl is not None else None,
+        "edl": edl_json(edl) if edl is not None else None,
         "edl_hash": digest,
         "shots": shot_takes_out(ctx, project_id),
         "caption_status": caption_status(ctx, project_id, edl),
@@ -216,3 +216,12 @@ def assembly_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
         "licence_warnings": warnings,
         "caption_presets": [{"id": k, "label": v} for k, v in CAPTION_PRESETS.items()],
     }
+    if edl is not None:
+        from reelforge.audio.build import build_audio_section  # noqa: PLC0415
+
+        cues, mix, skipped = build_audio_section(ctx, project_id, edl)
+        if edl.audio != cues or edl.mix != mix:
+            body["audio_stale"] = True
+        if skipped:
+            body["audio_skipped"] = skipped
+    return body

@@ -25,10 +25,11 @@ from reelforge.assembly.build import (
     working_edl_path,
 )
 from reelforge.assembly.edit import apply_edit, load_working
-from reelforge.assembly.edl import load_edl, save_edl
+from reelforge.assembly.edl import edl_json, load_edl, save_edl
 from reelforge.assembly.jobs import FINAL_JOB
 from reelforge.assembly.publish import collect_credits, licence_warnings
 from reelforge.assembly.state import AssemblyError
+from reelforge.audio.build import refresh_audio
 from reelforge.context import AppContext
 from reelforge.db.models import ReelVersion
 from reelforge.frames.service import stage_at_least
@@ -76,7 +77,7 @@ def build_router(ctx: AppContext) -> APIRouter:
     async def get_edl(project_id: str) -> JSONResponse:
         try:
             gate(project_id)
-            return JSONResponse(load_working(ctx, project_id).model_dump(mode="json"))
+            return JSONResponse(edl_json(load_working(ctx, project_id)))
         except AssemblyError as exc:
             raise fail(exc) from None
 
@@ -85,6 +86,7 @@ def build_router(ctx: AppContext) -> APIRouter:
         try:
             gate(project_id)
             _, notes = apply_edit(ctx, project_id, body.model_dump(exclude_none=True))
+            refresh_audio(ctx, project_id)
             ctx.previews.touch(project_id)
             return JSONResponse({"assembly": status.assembly_body(ctx, project_id), "notes": notes})
         except AssemblyError as exc:

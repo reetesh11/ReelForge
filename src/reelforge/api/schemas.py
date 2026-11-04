@@ -742,6 +742,8 @@ class AssemblyOut(BaseModel):
     versions: list[ReelVersionOut]
     licence_warnings: list[LicenceWarningOut]
     caption_presets: list[CaptionPresetOut]
+    audio_stale: bool | None = None
+    audio_skipped: int | None = None
 
 
 class AssemblyBuildRequest(BaseModel):
