@@ -1,4 +1,4 @@
-"""SQLAlchemy 2 declarative models (17 tables)."""
+"""SQLAlchemy 2 declarative models (19 tables)."""
 
 from __future__ import annotations
 
@@ -191,6 +191,42 @@ class VoiceSlot(Base):
     speed: Mapped[float] = mapped_column(Float, default=1.0, server_default="1.0")
     language: Mapped[str] = mapped_column(String(16), default="hi", server_default="hi")
     clip_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
+
+
+class FrameSlot(Base):
+    """Per project and scene: framing, prompt and approval of the key frame."""
+
+    __tablename__ = "frame_slots"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    story_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    framing: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    prompt: Mapped[str] = mapped_column(Text, default="", server_default="")
+    prompt_source: Mapped[str] = mapped_column(String(8), default="", server_default="")
+    prompt_basis: Mapped[str] = mapped_column(String(64), default="", server_default="")
+    continue_previous: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    approved_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
+
+
+class ShotSlot(Base):
+    """Per project and scene: shot type and quality overrides, motion prompt and approval."""
+
+    __tablename__ = "shot_slots"
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True
+    )
+    story_key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    shot_type: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    quality: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    motion_prompt: Mapped[str] = mapped_column(Text, default="", server_default="")
+    prompt_source: Mapped[str] = mapped_column(String(8), default="", server_default="")
+    prompt_basis: Mapped[str] = mapped_column(String(64), default="", server_default="")
+    approved_artifact_id: Mapped[str | None] = mapped_column(String(26), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True, default=utcnow)
 
 
