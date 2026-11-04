@@ -1845,6 +1845,15 @@ export interface components {
              */
             status: "pass" | "fail";
         };
+        /** EmotionClipOut */
+        EmotionClipOut: {
+            /** Clip Seconds */
+            clip_seconds?: number | null;
+            /** Transcript */
+            transcript: string;
+            /** Url */
+            url: string;
+        };
         /** ExportStateOut */
         ExportStateOut: {
             /** Error */
@@ -2689,6 +2698,10 @@ export interface components {
         };
         /** VoiceCharacterOut */
         VoiceCharacterOut: {
+            /** Age */
+            age?: number | null;
+            /** Age Band */
+            age_band?: string | null;
             /** Avatar Url */
             avatar_url?: string | null;
             /** Key */
@@ -2786,9 +2799,7 @@ export interface components {
             clip_seconds?: number | null;
             /** Emotion Clips */
             emotion_clips?: {
-                [key: string]: {
-                    [key: string]: unknown;
-                };
+                [key: string]: components["schemas"]["EmotionClipOut"];
             } | null;
             /** Language */
             language: string;

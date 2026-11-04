@@ -124,6 +124,25 @@ export function useUpload(projectId: string) {
   });
 }
 
+export function useSetAge(projectId: string) {
+  const refresh = useRefreshCast(projectId);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ key, age }: { key: string; age: number | null }): Promise<void> => {
+      const res = await globalThis.fetch(`/api/v1/projects/${projectId}/cast/${key}:set-age`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ age }),
+      });
+      if (!res.ok) throw new Error(await detailOf(res, "could not save the age"));
+    },
+    onSuccess: async () => {
+      await refresh();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.voices(projectId) });
+    },
+  });
+}
+
 export function useCancelJob(projectId: string) {
   const refresh = useRefreshCast(projectId);
   return useMutation({

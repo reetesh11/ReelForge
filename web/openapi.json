@@ -1245,6 +1245,35 @@
         "title": "CheckOut",
         "type": "object"
       },
+      "EmotionClipOut": {
+        "properties": {
+          "clip_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clip Seconds"
+          },
+          "transcript": {
+            "title": "Transcript",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "transcript"
+        ],
+        "title": "EmotionClipOut",
+        "type": "object"
+      },
       "ExportStateOut": {
         "properties": {
           "error": {
@@ -3777,6 +3806,28 @@
       },
       "VoiceCharacterOut": {
         "properties": {
+          "age": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "age_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age Band"
+          },
           "avatar_url": {
             "anyOf": [
               {
@@ -4053,8 +4104,7 @@
             "anyOf": [
               {
                 "additionalProperties": {
-                  "additionalProperties": true,
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmotionClipOut"
                 },
                 "type": "object"
               },

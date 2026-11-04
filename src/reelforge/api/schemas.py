@@ -181,6 +181,12 @@ class StructureRequest(BaseModel):
     answers: list[StoryAnswer] = []
 
 
+class EmotionClipOut(BaseModel):
+    url: str
+    transcript: str
+    clip_seconds: float | None = None
+
+
 class VoiceOut(BaseModel):
     mode: Literal["preset", "cloned", "recorded"]
     model: Literal["omnivoice", "kokoro"] | None
@@ -190,7 +196,7 @@ class VoiceOut(BaseModel):
     speed: float
     language: str
     clip_seconds: float | None = None
-    emotion_clips: dict[str, dict[str, Any]] | None = None
+    emotion_clips: dict[str, EmotionClipOut] | None = None
     model_mismatch: bool
 
 
@@ -370,6 +376,8 @@ class VoiceCharacterOut(BaseModel):
     key: str
     name: str
     avatar_url: str | None = None
+    age: int | None = None
+    age_band: str | None = None
     voice: VoiceOut | None
 
 
