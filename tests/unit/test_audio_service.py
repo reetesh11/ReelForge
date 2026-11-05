@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "acceptance"))
 
-from m6c_helpers import STD_CUES, at, audio_url, cue, generated, light_world, take_artifacts  # noqa: E402
+from m6c_helpers import STD_CUES, at, audio_url, cue, generated, light_world, take_artifacts  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 from reelforge.audio.state import NEEDS_APPROVAL  # noqa: E402
 

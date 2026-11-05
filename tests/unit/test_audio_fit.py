@@ -5,8 +5,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "acceptance"))
 
-from m4_helpers import read_wav, wav_bytes  # noqa: E402
-from rf_helpers import run_async  # noqa: E402
+from m4_helpers import read_wav, wav_bytes  # noqa: E402  # pyright: ignore[reportMissingImports]
+from rf_helpers import run_async  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 from reelforge.audio.fit import FitError, fit_to_length  # noqa: E402
 

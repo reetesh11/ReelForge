@@ -5,8 +5,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "acceptance"))
 
-from m4_helpers import wav_bytes  # noqa: E402
-from rf_helpers import make_ctx, make_settings, run_async  # noqa: E402
+from m4_helpers import wav_bytes  # noqa: E402  # pyright: ignore[reportMissingImports]
+from rf_helpers import make_ctx, make_settings, run_async  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 from reelforge.audio.state import NOT_AUDIO, AudioError  # noqa: E402
 from reelforge.audio.uploads import screen_audio  # noqa: E402

@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "acceptance"))
 
-from story_helpers import story_dict  # noqa: E402
+from story_helpers import story_dict  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 from reelforge.story.staleness import diff_stories  # noqa: E402
 from reelforge.story.yamlio import parse_story  # noqa: E402

@@ -6,7 +6,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "acceptance"))
 
-from story_helpers import story_dict  # noqa: E402
+from story_helpers import story_dict  # noqa: E402  # pyright: ignore[reportMissingImports]
 
 from reelforge.story.errors import StoryInvalid  # noqa: E402
 from reelforge.story.yamlio import parse_story  # noqa: E402
@@ -29,7 +29,7 @@ def _messages(audio):
 
 
 def test_a_valid_cue_list_loads():
-    assert [c.id for c in _story([_cue("a"), _cue("b")]).audio] == ["a", "b"]
+    assert [c.id for c in _story([_cue("a"), _cue("b")]).audio or []] == ["a", "b"]
 
 
 def test_either_end_or_duration():
