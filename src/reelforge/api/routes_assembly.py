@@ -25,7 +25,7 @@ from reelforge.assembly.build import (
     working_edl_path,
 )
 from reelforge.assembly.edit import apply_edit, load_working
-from reelforge.assembly.edl import edl_json, load_edl, save_edl
+from reelforge.assembly.edl import load_edl, save_edl
 from reelforge.assembly.jobs import FINAL_JOB
 from reelforge.assembly.publish import collect_credits, licence_warnings
 from reelforge.assembly.state import AssemblyError
@@ -77,7 +77,7 @@ def build_router(ctx: AppContext) -> APIRouter:
     async def get_edl(project_id: str) -> JSONResponse:
         try:
             gate(project_id)
-            return JSONResponse(edl_json(load_working(ctx, project_id)))
+            return JSONResponse(load_working(ctx, project_id).model_dump(mode="json"))
         except AssemblyError as exc:
             raise fail(exc) from None
 
