@@ -234,6 +234,7 @@ def audio_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
     body: dict[str, Any] = {
         "engine": {"ok": ok, "message": message},
         "settings": get_mix_settings(ctx, project_id),
+        "scenes": [{"id": sid, "start_s": a, "end_s": b} for sid, (a, b) in tl.items()],
         "cues": out_cues,
     }
     if story.music is not None and story.audio is None:

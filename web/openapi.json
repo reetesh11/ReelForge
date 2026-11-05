@@ -598,6 +598,13 @@
             ],
             "title": "Legacy Music Hint"
           },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/AudioSceneOut"
+            },
+            "title": "Scenes",
+            "type": "array"
+          },
           "settings": {
             "$ref": "#/components/schemas/AudioSettingsOut"
           },
@@ -616,9 +623,33 @@
         "required": [
           "engine",
           "settings",
+          "scenes",
           "cues"
         ],
         "title": "AudioOut",
+        "type": "object"
+      },
+      "AudioSceneOut": {
+        "properties": {
+          "end_s": {
+            "title": "End S",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "start_s": {
+            "title": "Start S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "start_s",
+          "end_s"
+        ],
+        "title": "AudioSceneOut",
         "type": "object"
       },
       "AudioSettingsOut": {

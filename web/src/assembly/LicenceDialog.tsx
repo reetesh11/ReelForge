@@ -1,5 +1,14 @@
 import type { LicenceWarning } from "@/api/assembly";
 
+function line(w: LicenceWarning): string {
+  if (w.cue_id !== undefined && w.model === undefined) {
+    return `${w.file_name ?? w.cue_id} - Licence note not filled in`;
+  }
+  const licence = w.licence.trim() ? w.licence : "Licence not filled in";
+  const head = w.cue_id !== undefined ? `${w.cue_id} ${w.model} ${w.version}` : `${w.model} ${w.version}`;
+  return `${head} - ${licence}`;
+}
+
 export function LicenceDialog({
   warnings,
   onExport,
@@ -18,7 +27,7 @@ export function LicenceDialog({
       </p>
       <ul>
         {warnings.map((w) => (
-          <li key={`${w.model}-${w.version}`}>{`${w.model} ${w.version} - ${w.licence.trim() ? w.licence : "Licence not filled in"}`}</li>
+          <li key={`${w.cue_id ?? ""}-${w.model ?? ""}-${w.version ?? ""}-${w.file_name ?? ""}`}>{line(w)}</li>
         ))}
       </ul>
       <div className="actions">

@@ -30,7 +30,15 @@ function previewBadge(p: Preview): string {
 
 const WORKING = "working";
 
-export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBack: () => void }) {
+export function AssemblyScreen({
+  projectId,
+  onBack,
+  backLabel = "Back to Shots",
+}: {
+  projectId: string;
+  onBack: () => void;
+  backLabel?: string;
+}) {
   const assembly = useAssembly(projectId);
   const build = useBuildAssembly(projectId);
   const edit = useAssemblyEdit(projectId);
@@ -54,7 +62,7 @@ export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBac
       <section aria-label="Assembly">
         <h2>Assembly</h2>
         <button type="button" onClick={onBack}>
-          Back to Shots
+          {backLabel}
         </button>
         <p role="alert">{assembly.error.message}</p>
       </section>
@@ -76,7 +84,7 @@ export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBac
       <h2>Assembly</h2>
       <div className="actions">
         <button type="button" onClick={onBack}>
-          Back to Shots
+          {backLabel}
         </button>
         <label className="field">
           <span className="meta">Version</span>
@@ -114,6 +122,12 @@ export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBac
         </button>
       </div>
       {preview.state === "failed" && preview.error ? <p className="notice error">{preview.error}</p> : null}
+      {state.audio_stale ? (
+        <p className="notice amber">The sound has changed since the last preview. Rebuild the preview to hear it.</p>
+      ) : null}
+      {state.audio_skipped ? (
+        <p className="meta">{`${state.audio_skipped} cues have no audio and are left out of the mix.`}</p>
+      ) : null}
 
       {src ? <Player src={src} label="Reel" /> : <p className="meta">No preview yet.</p>}
 

@@ -846,10 +846,17 @@ class CueOut(BaseModel):
     flags: list[Literal["ends_after_reel"]] | None = None
 
 
+class AudioSceneOut(BaseModel):
+    id: str
+    start_s: float
+    end_s: float
+
+
 class AudioOut(BaseModel):
     engine: AudioEngineOut
     legacy_music_hint: bool | None = None
     settings: AudioSettingsOut
+    scenes: list[AudioSceneOut]
     skipped_count: int | None = None
     cues: list[CueOut]
 
