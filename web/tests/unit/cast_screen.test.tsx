@@ -150,7 +150,7 @@ it("keeps Approve and Refine disabled until a candidate is selected, and enlarge
   expect(approve.disabled).toBe(true);
   expect(refine.disabled).toBe(true);
   expect(within(row).getByLabelText("What small change?")).toBeTruthy();
-  await user.click(within(row).getByRole("radio", { name: "Select candidate seed 6" }));
+  await user.click(within(row).getByRole("button", { name: "Select candidate seed 6" }));
   expect(approve.disabled).toBe(false);
   expect(refine.disabled).toBe(false);
   await user.click(within(row).getByRole("button", { name: "Enlarge seed 5" }));
@@ -167,7 +167,7 @@ it("shows the server message when an upload is rejected", async () => {
   setup(cast([character()]), [upload]);
   const row = await screen.findByLabelText("Character: Tamatar");
   const user = userEvent.setup({ applyAccept: false });
-  await user.upload(within(row).getByLabelText("Upload my own image"), new File(["x"], "x.png", { type: "image/png" }));
+  await user.upload(within(row).getByLabelText("Choose an image file"), new File(["x"], "x.png", { type: "image/png" }));
   await waitFor(() => expect(within(row).getByRole("alert").textContent).toBe("That file isn't a PNG or JPEG image."));
 });
 

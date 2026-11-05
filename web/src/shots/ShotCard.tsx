@@ -7,6 +7,9 @@ import {
   type Shot,
   type ShotType,
 } from "@/api/shots";
+import { Chip, type ChipTone } from "@/components/Chip";
+import { IconButton } from "@/components/IconButton";
+import { Notice } from "@/components/Notice";
 import { Player } from "@/player/Player";
 import { CompareTakes } from "./CompareTakes";
 
@@ -17,6 +20,15 @@ const BADGES: Record<string, string> = {
   ready: "Ready",
   approved: "Approved",
   stale: "Needs update",
+};
+const TONES: Record<string, ChipTone> = {
+  no_shot: "grey",
+  queued: "blue",
+  rendering: "blue",
+  ready: "blue",
+  approved: "green",
+  stale: "amber",
+  failed: "red",
 };
 const TYPE_LABELS: Record<ShotType, string> = { talking: "Talking", action: "Action", continue: "Continue" };
 const QUALITY_LABELS: Record<Quality, string> = { draft: "Draft", final: "Final" };
@@ -54,18 +66,23 @@ export function ShotCard({
   const canRender = engineOk && !busy && !blocked;
 
   return (
-    <li role="group" aria-label={`Scene ${shot.scene_id}`} className="card">
-      <header className="editor-header">
-        <strong>{shot.scene_id}</strong>
-        <span className="meta">{TYPE_LABELS[shot.shot_type]}</span>
-        <span className="meta">{QUALITY_LABELS[shot.quality]}</span>
-        <span className="meta">{`${shot.frames} frames (${shot.shot_length_s.toFixed(2)} s)`}</span>
+    <li
+      role="group"
+      aria-label={`Scene ${shot.scene_id}`}
+      className="card"
+      data-attention={shot.state === "failed" || shot.state === "stale" ? "true" : undefined}
+    >
+      <header className="card-header">
+        <span className="toolbar">
+          <strong>{shot.scene_id}</strong>
+          <span className="meta">{TYPE_LABELS[shot.shot_type]}</span>
+          <span className="meta">{QUALITY_LABELS[shot.quality]}</span>
+          <span className="meta">{`${shot.frames} frames (${shot.shot_length_s.toFixed(2)} s)`}</span>
+        </span>
         {BADGES[shot.state] ? (
-          <span
-            className={shot.state === "stale" ? "badge amber" : shot.state === "approved" ? "badge green" : "badge"}
-          >
-            {BADGES[shot.state]}
-          </span>
+          <Chip tone={TONES[shot.state] ?? "grey"} testId="state-chip">
+            {BADGES[shot.state] as string}
+          </Chip>
         ) : null}
       </header>
 
@@ -76,36 +93,36 @@ export function ShotCard({
       ) : null}
 
       {shot.blockers.map((b) => (
-        <div key={b} className="notice amber">
+        <Notice key={b} tone="warning">
           <p>{BLOCKER_TEXT[b]}</p>
           {b === "voice_not_approved" ? (
-            <button type="button" onClick={() => action.mutate({ sceneId: shot.scene_id, name: "set-type", body: { shot_type: "action" } })}>
+            <button type="button" className="btn btn-secondary" onClick={() => action.mutate({ sceneId: shot.scene_id, name: "set-type", body: { shot_type: "action" } })}>
               Switch to Action
             </button>
           ) : null}
-        </div>
+        </Notice>
       ))}
 
       {shot.state === "failed" && shot.oom ? (
-        <div className="notice error">
+        <Notice tone="error">
           <p>Killed, likely out of memory.</p>
           {shot.can_retry_draft ? (
-            <button type="button" onClick={() => go("retry-draft")}>
+            <button type="button" className="btn btn-secondary" onClick={() => go("retry-draft")}>
               Retry at Draft size
             </button>
           ) : (
             <p className="meta">Close other apps and try again.</p>
           )}
-        </div>
+        </Notice>
       ) : null}
       {shot.state === "failed" && !shot.oom ? (
-        <div className="notice error">
+        <Notice tone="error">
           <p>Couldn't render this shot.</p>
           {shot.message ? <p className="meta">{shot.message}</p> : null}
-          <button type="button" disabled={!engineOk} onClick={() => go("render")}>
+          <button type="button" className="btn btn-secondary" disabled={!engineOk} onClick={() => go("render")}>
             Retry
           </button>
-        </div>
+        </Notice>
       ) : null}
 
       <div className="actions">
@@ -162,6 +179,7 @@ export function ShotCard({
       <div className="actions">
         <button
           type="button"
+          className="btn btn-secondary"
           disabled={!draft.trim()}
           onClick={() => action.mutate({ sceneId: shot.scene_id, name: "save-prompt", body: { prompt: draft, rerender: false } })}
         >
@@ -169,27 +187,21 @@ export function ShotCard({
         </button>
         <button
           type="button"
+          className="btn btn-secondary"
           disabled={!draft.trim() || !canRender}
           onClick={() => action.mutate({ sceneId: shot.scene_id, name: "save-prompt", body: { prompt: draft, rerender: true } })}
         >
           Save and re-render
         </button>
-        <button type="button" disabled={!canRender} onClick={() => go("render")}>
-          Render
-        </button>
-        <button
-          type="button"
+        <IconButton label="Render" icon="shots" disabled={!canRender} onClick={() => go("render")} />
+        <IconButton
+          label="Approve"
+          icon="check"
           disabled={!active || shot.state === "approved" || shot.state === "stale" || busy}
           onClick={() => action.mutate({ sceneId: shot.scene_id, name: "approve" })}
-        >
-          Approve
-        </button>
-        <button type="button" disabled={!active || !canRender} onClick={() => go("reroll")}>
-          Re-roll
-        </button>
-        <button type="button" disabled={shot.takes.length < 2} onClick={() => setComparing(true)}>
-          Compare takes
-        </button>
+        />
+        <IconButton label="Re-roll" icon="regenerate" disabled={!active || !canRender} onClick={() => go("reroll")} />
+        <IconButton label="Compare takes" icon="compare" disabled={shot.takes.length < 2} onClick={() => setComparing(true)} />
         <label className="field">
           Upload own clip
           <input

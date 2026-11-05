@@ -1,7 +1,9 @@
+import { Notice } from "@/components/Notice";
+
 export function LicenceBanner({ warning }: { warning: string }) {
   return (
-    <div role="status" className="notice amber">
-      {warning}
+    <div role="status">
+      <Notice tone="warning">{warning}</Notice>
     </div>
   );
 }

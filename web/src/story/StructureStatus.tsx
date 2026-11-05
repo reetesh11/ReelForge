@@ -5,7 +5,7 @@ export function StructureStatus({ job, error, onRetry }: { job: Job | undefined;
     return (
       <div role="alert" className="notice error">
         <p>{error}</p>
-        <button type="button" onClick={onRetry}>
+        <button type="button" className="btn btn-secondary" onClick={onRetry}>
           Try again
         </button>
       </div>
@@ -16,7 +16,7 @@ export function StructureStatus({ job, error, onRetry }: { job: Job | undefined;
     return (
       <div role="alert" className="notice error">
         <p>{job.error ?? "Structuring failed."}</p>
-        <button type="button" onClick={onRetry}>
+        <button type="button" className="btn btn-secondary" onClick={onRetry}>
           Try again
         </button>
       </div>
@@ -26,7 +26,7 @@ export function StructureStatus({ job, error, onRetry }: { job: Job | undefined;
     return (
       <div className="notice">
         <p>Structuring was cancelled.</p>
-        <button type="button" onClick={onRetry}>
+        <button type="button" className="btn btn-secondary" onClick={onRetry}>
           Try again
         </button>
       </div>

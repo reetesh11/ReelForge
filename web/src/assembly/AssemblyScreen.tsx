@@ -7,6 +7,8 @@ import {
   useRebuildPreview,
   type Preview,
 } from "@/api/assembly";
+import { Chip } from "@/components/Chip";
+import { Notice } from "@/components/Notice";
 import { Player } from "@/player/Player";
 import { CaptionEditor } from "./CaptionEditor";
 import { ExportPanel } from "./ExportPanel";
@@ -53,7 +55,7 @@ export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBac
     return (
       <section aria-label="Assembly">
         <h2>Assembly</h2>
-        <button type="button" onClick={onBack}>
+        <button type="button" className="btn btn-ghost" onClick={onBack}>
           Back to Shots
         </button>
         <p role="alert">{assembly.error.message}</p>
@@ -75,7 +77,7 @@ export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBac
     <section aria-label="Assembly">
       <h2>Assembly</h2>
       <div className="actions">
-        <button type="button" onClick={onBack}>
+        <button type="button" className="btn btn-ghost" onClick={onBack}>
           Back to Shots
         </button>
         <label className="field">
@@ -103,40 +105,51 @@ export function AssemblyScreen({ projectId, onBack }: { projectId: string; onBac
 
       <div className="actions">
         {preview.state === "failed" ? (
-          <button type="button" onClick={() => rebuild.mutate()}>
+          <button type="button" className="btn btn-secondary" onClick={() => rebuild.mutate()}>
             {previewBadge(preview)}
           </button>
         ) : (
-          <span className="badge">{previewBadge(preview)}</span>
+          <Chip tone={preview.state === "up_to_date" ? "green" : preview.state === "rebuilding" ? "blue" : "grey"}>
+            {previewBadge(preview)}
+          </Chip>
         )}
-        <button type="button" disabled={preview.state === "rebuilding"} onClick={() => rebuild.mutate()}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={preview.state === "rebuilding"}
+          onClick={() => rebuild.mutate()}
+        >
           Rebuild preview
         </button>
       </div>
-      {preview.state === "failed" && preview.error ? <p className="notice error">{preview.error}</p> : null}
-
-      {src ? <Player src={src} label="Reel" /> : <p className="meta">No preview yet.</p>}
+      {preview.state === "failed" && preview.error ? <Notice tone="error">{preview.error}</Notice> : null}
 
       {editError ? <p role="alert">{editError}</p> : null}
-      {notes.map((n) => (
-        <p key={n} className="meta">
-          {n}
-        </p>
-      ))}
-
-      {state.edl ? (
-        <>
-          <Timeline edl={state.edl} shots={state.shots} onEdit={send} />
-          <CaptionEditor
-            edl={state.edl}
-            status={state.caption_status}
-            presets={state.caption_presets}
-            rebuilding={preview.state === "rebuilding"}
-            onEdit={send}
-          />
-        </>
-      ) : null}
-      <ExportPanel projectId={projectId} state={state} />
+      <div className="assembly-layout">
+        <div className="assembly-player">
+          {src ? <Player src={src} label="Reel" /> : <p className="meta">No preview yet.</p>}
+        </div>
+        <div className="assembly-side">
+          {notes.map((n) => (
+            <p key={n} className="meta">
+              {n}
+            </p>
+          ))}
+          {state.edl ? (
+            <>
+              <Timeline edl={state.edl} shots={state.shots} onEdit={send} />
+              <CaptionEditor
+                edl={state.edl}
+                status={state.caption_status}
+                presets={state.caption_presets}
+                rebuilding={preview.state === "rebuilding"}
+                onEdit={send}
+              />
+            </>
+          ) : null}
+          <ExportPanel projectId={projectId} state={state} />
+        </div>
+      </div>
     </section>
   );
 }

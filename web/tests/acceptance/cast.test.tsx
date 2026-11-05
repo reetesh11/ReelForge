@@ -118,7 +118,7 @@ describe("Cast screen", () => {
     const banner = await within(section).findByRole("status");
     expect(banner.textContent).toContain(warning);
     const user = userEvent.setup();
-    await user.click(within(section).getByRole("radio", { name: "Select candidate seed 5" }));
+    await user.click(within(section).getByRole("button", { name: "Select candidate seed 5" }));
     await user.click(within(section).getByRole("button", { name: "Approve this one" }));
     const dialog = await screen.findByRole("dialog");
     expect(dialog.textContent).toContain(warning);
@@ -140,7 +140,7 @@ describe("Cast screen", () => {
     renderApp(`/projects/${ID}`);
     const section = await screen.findByLabelText("Cast");
     const user = userEvent.setup();
-    await user.click(await within(section).findByRole("radio", { name: "Select candidate seed 6" }));
+    await user.click(await within(section).findByRole("button", { name: "Select candidate seed 6" }));
     await user.click(within(section).getByRole("button", { name: "Approve this one" }));
     await waitFor(() => expect(posted).toHaveLength(1));
     expect(screen.queryByRole("dialog")).toBeNull();

@@ -25,11 +25,11 @@ export function BackendDown({
         ))}
       </ol>
       <div className="actions">
-        <button type="button" onClick={onRetry}>
+        <button type="button" className="btn btn-primary" onClick={onRetry}>
           Retry
         </button>
         {mfluxAvailable ? (
-          <button type="button" onClick={onUseMflux}>
+          <button type="button" className="btn btn-secondary" onClick={onUseMflux}>
             Use mflux instead
           </button>
         ) : null}

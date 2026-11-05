@@ -1,0 +1,27 @@
+flowchart LR
+  main[main.tsx] --> app[AppRoutes.tsx]:::changed
+  app --> shell[Sidebar and top bar]:::changed
+  app --> banner[ReconnectBanner.tsx]:::changed
+  app --> pp[routes/ProjectPage.tsx]:::changed
+  app --> pl[routes/ProjectsPage.tsx]:::changed
+  pl --> pc[components/ProjectCard.tsx + mini rail]:::changed
+  app --> lib[library pages]:::changed
+  app --> set[routes/SettingsPage.tsx]:::changed
+  pp --> ws[workspace/stages.ts]:::new
+  pp --> hdr[workspace/ProjectHeader.tsx]:::new
+  pp --> rail[components/StageStepper.tsx rail]:::changed
+  pp --> nxt[workspace/NextUpBar.tsx]:::new
+  pp --> bar[components/ActionBar.tsx]:::new
+  pp --> story[story/StoryEditor + FormView]:::changed
+  pp --> cast[cast/CastScreen + CastRow + CandidateGrid]:::changed
+  pp --> boards[voice, frames, shots boards and cards]:::changed
+  pp --> asm[assembly/AssemblyScreen.tsx]:::changed
+  cast --> ib[components/IconButton.tsx + icons.tsx]:::new
+  boards --> ib
+  q[api/queries.ts useProject useStages unchanged] --> pp
+  css[theme.css tokens light and dark]:::changed
+  css -.-> app
+  css -.-> pp
+  guard[tests/unit/tokens.test.ts and noHex.test.ts]:::new -.-> css
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706

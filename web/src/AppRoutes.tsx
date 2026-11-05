@@ -12,19 +12,25 @@ export function AppRoutes() {
   return (
     <div className="layout">
       <nav aria-label="Main" className="nav">
+        <span className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          ReelForge
+        </span>
         <NavLink to="/projects">Projects</NavLink>
         <NavLink to="/settings">Settings &amp; status</NavLink>
         <NavLink to="/library">Library</NavLink>
       </nav>
       <main className="page">
-        <Routes>
-          <Route path="/" element={<Navigate to="/projects" replace />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:projectId" element={<ProjectPage />} />
-          <Route path="/library" element={<LibraryPage />} />
-          <Route path="/library/:characterId" element={<LibraryDetail />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
+        <div className="page-inner">
+          <Routes>
+            <Route path="/" element={<Navigate to="/projects" replace />} />
+            <Route path="/projects" element={<ProjectsPage />} />
+            <Route path="/projects/:projectId" element={<ProjectPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/library/:characterId" element={<LibraryDetail />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+        </div>
       </main>
       <ReconnectBanner connected={connected} />
     </div>

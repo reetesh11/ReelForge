@@ -1,27 +1,21 @@
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { NotFoundError, useProject, useStages } from "@/api/queries";
+import { NotFoundError, useProject, useStages, type Project } from "@/api/queries";
 import { StoryUnavailableError, useStory } from "@/api/story";
-import { CastScreen } from "@/cast/CastScreen";
 import { AssemblyScreen } from "@/assembly/AssemblyScreen";
+import { CastScreen } from "@/cast/CastScreen";
 import { StageStepper } from "@/components/StageStepper";
+import { StateMessage } from "@/components/StateMessage";
 import { FrameBoard } from "@/frames/FrameBoard";
 import { ShotBoard } from "@/shots/ShotBoard";
 import { StoryEditor } from "@/story/StoryEditor";
 import { StoryInput } from "@/story/StoryInput";
 import { VoiceBoard } from "@/voice/VoiceBoard";
+import { NextUpBar } from "@/workspace/NextUpBar";
+import { ProjectHeader } from "@/workspace/ProjectHeader";
+import { resolveStage, type StageKey } from "@/workspace/stages";
 
-const VOICE_STAGES = new Set([
-  "CAST_APPROVED",
-  "VOICES_APPROVED",
-  "FRAMES_APPROVED",
-  "SHOTS_APPROVED",
-  "REEL_EXPORTED",
-  "EXPORTED",
-]);
-
-const FRAME_STAGES = new Set(["VOICES_APPROVED", "FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
-const ASSEMBLY_STAGES = new Set(["SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
-const SHOT_STAGES = new Set(["FRAMES_APPROVED", "SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
+type ProjectStage = Project["stage"];
 
 export function ProjectPage() {
   const { projectId = "" } = useParams();
@@ -29,42 +23,52 @@ export function ProjectPage() {
   const stages = useStages(projectId);
   const story = useStory(projectId);
   const [params, setParams] = useSearchParams();
-  const screen = params.get("screen");
-  const show = (next: "voices" | "frames" | "shots" | "assembly") => setParams(next === "voices" ? {} : { screen: next });
+  // The landing stage is fixed when the project first loads, so approving the last item of a stage
+  // does not move the person to the next panel behind their back.
+  const [pinned, setPinned] = useState<{ id: string; stage: ProjectStage } | null>(null);
+  if (project.data && pinned?.id !== projectId) setPinned({ id: projectId, stage: project.data.stage });
 
-  if (project.isPending) return <p>Loading...</p>;
+  if (project.isPending) return <StateMessage>Loading...</StateMessage>;
   if (project.isError) {
     return project.error instanceof NotFoundError ? (
-      <p>Project not found.</p>
+      <StateMessage>Project not found.</StateMessage>
     ) : (
-      <p>Couldn't load this project.</p>
+      <StateMessage tone="error">Couldn't load this project.</StateMessage>
     );
   }
 
+  const shown = resolveStage(params, pinned?.stage ?? project.data.stage, stages.data);
+  const go = (key: StageKey) => setParams({ stage: key });
+
   return (
     <section>
-      <h1>{project.data.title}</h1>
-      {stages.data ? <StageStepper stages={stages.data} /> : null}
-      {story.isPending ? <p>Loading...</p> : null}
-      {story.error instanceof StoryUnavailableError ? <p>This stage arrives in a later milestone.</p> : null}
-      {story.isError && !(story.error instanceof StoryUnavailableError) ? (
-        <p>Couldn't load the story.</p>
+      <ProjectHeader title={project.data.title} stages={stages.data} />
+      {stages.data ? <StageStepper stages={stages.data} current={shown} onSelect={(key) => go(key as StageKey)} /> : null}
+      {stages.data ? <NextUpBar shown={shown} stages={stages.data} onGo={go} /> : null}
+      {story.error instanceof StoryUnavailableError ? (
+        <StateMessage>This stage arrives in a later milestone.</StateMessage>
       ) : null}
-      {story.data === null ? <StoryInput projectId={projectId} /> : null}
-      {story.data ? <StoryEditor projectId={projectId} story={story.data} /> : null}
-      {project.data.stage !== "DRAFT" ? <CastScreen projectId={projectId} /> : null}
-      {VOICE_STAGES.has(project.data.stage) && (screen === null || screen === "voices") ? (
-        <VoiceBoard projectId={projectId} onContinue={() => show("frames")} />
-      ) : null}
-      {FRAME_STAGES.has(project.data.stage) && screen === "frames" ? (
-        <FrameBoard projectId={projectId} onBack={() => show("voices")} onContinue={() => show("shots")} />
-      ) : null}
-      {SHOT_STAGES.has(project.data.stage) && screen === "shots" ? (
-        <ShotBoard projectId={projectId} onBack={() => show("frames")} onContinue={() => show("assembly")} />
-      ) : null}
-      {ASSEMBLY_STAGES.has(project.data.stage) && screen === "assembly" ? (
-        <AssemblyScreen projectId={projectId} onBack={() => show("shots")} />
-      ) : null}
+      <section className="stage-panel" data-testid={`stage-panel-${shown}`}>
+        {shown === "story" ? (
+          <>
+            {story.isPending ? <StateMessage>Loading...</StateMessage> : null}
+            {story.isError && !(story.error instanceof StoryUnavailableError) ? (
+              <StateMessage tone="error">Couldn't load the story.</StateMessage>
+            ) : null}
+            {story.data === null ? <StoryInput projectId={projectId} /> : null}
+            {story.data ? <StoryEditor projectId={projectId} story={story.data} /> : null}
+          </>
+        ) : null}
+        {shown === "cast" ? <CastScreen projectId={projectId} /> : null}
+        {shown === "voices" ? <VoiceBoard projectId={projectId} onContinue={() => go("frames")} /> : null}
+        {shown === "frames" ? (
+          <FrameBoard projectId={projectId} onBack={() => go("voices")} onContinue={() => go("shots")} />
+        ) : null}
+        {shown === "shots" ? (
+          <ShotBoard projectId={projectId} onBack={() => go("frames")} onContinue={() => go("assembly")} />
+        ) : null}
+        {shown === "assembly" ? <AssemblyScreen projectId={projectId} onBack={() => go("shots")} /> : null}
+      </section>
     </section>
   );
 }

@@ -6,6 +6,8 @@ import {
   type Frame,
   type Framing,
 } from "@/api/frames";
+import { Chip, type ChipTone } from "@/components/Chip";
+import { IconButton } from "@/components/IconButton";
 
 const BADGES: Record<string, string> = {
   no_frame: "No frame yet",
@@ -15,6 +17,17 @@ const BADGES: Record<string, string> = {
   approved: "Approved",
   stale: "Needs update",
   continue_previous: "Continue from previous",
+};
+
+const TONES: Record<string, ChipTone> = {
+  no_frame: "grey",
+  queued: "blue",
+  rendering: "blue",
+  ready: "blue",
+  approved: "green",
+  stale: "amber",
+  failed: "red",
+  continue_previous: "grey",
 };
 
 const FRAMINGS: Array<{ value: Framing; label: string }> = [
@@ -45,17 +58,22 @@ export function FrameCard({ projectId, frame }: { projectId: string; frame: Fram
     action.mutate({ sceneId: frame.scene_id, name: "save-prompt", body: { prompt: draft, regenerate } });
 
   return (
-    <li role="group" aria-label={`Scene ${frame.scene_id}`} className="card">
-      <header className="editor-header">
-        <strong>{frame.scene_id}</strong>
-        {names ? <span className="meta">{names}</span> : null}
-        <span className="meta">{`${frame.takes.length} ${frame.takes.length === 1 ? "take" : "takes"}`}</span>
+    <li
+      role="group"
+      aria-label={`Scene ${frame.scene_id}`}
+      className="card"
+      data-attention={frame.state === "failed" || frame.state === "stale" ? "true" : undefined}
+    >
+      <header className="card-header">
+        <span className="toolbar">
+          <strong>{frame.scene_id}</strong>
+          {names ? <span className="meta">{names}</span> : null}
+          <span className="meta">{`${frame.takes.length} ${frame.takes.length === 1 ? "take" : "takes"}`}</span>
+        </span>
         {BADGES[frame.state] ? (
-          <span
-            className={frame.state === "stale" ? "badge amber" : frame.state === "approved" ? "badge green" : "badge"}
-          >
-            {BADGES[frame.state]}
-          </span>
+          <Chip tone={TONES[frame.state] ?? "grey"} testId="state-chip">
+            {BADGES[frame.state] as string}
+          </Chip>
         ) : null}
       </header>
 
@@ -69,7 +87,7 @@ export function FrameCard({ projectId, frame }: { projectId: string; frame: Fram
         </p>
       ) : null}
       {notes.product === "included" ? <p className="meta">Product pack included</p> : null}
-      {notes.product === "missing" ? <p className="notice amber">Product image missing</p> : null}
+      {notes.product === "missing" ? <p className="notice warning">Product image missing</p> : null}
       {notes.waiting_for_previous_shot ? <p className="meta">Waiting for the previous shot to be rendered</p> : null}
       {notes.needs_master ? <p className="notice amber">{`Approve a master for ${notes.needs_master} in Cast first`}</p> : null}
       {notes.no_character ? <p className="meta">No character in this scene</p> : null}
@@ -81,7 +99,7 @@ export function FrameCard({ projectId, frame }: { projectId: string; frame: Fram
         <div className="notice error">
           <p>Couldn't generate this frame.</p>
           {frame.message ? <p className="meta">{frame.message}</p> : null}
-          <button type="button" onClick={run}>
+          <button type="button" className="btn btn-secondary" onClick={run}>
             Retry
           </button>
         </div>
@@ -129,24 +147,32 @@ export function FrameCard({ projectId, frame }: { projectId: string; frame: Fram
         <textarea aria-label="Frame prompt" rows={4} value={draft} onChange={(e) => setDraft(e.target.value)} />
       </label>
       <div className="actions">
-        <button type="button" disabled={!draft.trim()} onClick={() => savePrompt(false)}>
+        <button type="button" className="btn btn-secondary" disabled={!draft.trim()} onClick={() => savePrompt(false)}>
           Save prompt
         </button>
-        <button type="button" disabled={!draft.trim() || busy || blocked} onClick={() => savePrompt(true)}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={!draft.trim() || busy || blocked}
+          onClick={() => savePrompt(true)}
+        >
           Save and regenerate
         </button>
-        <button type="button" disabled={busy || blocked} onClick={run}>
-          {active ? "Regenerate" : "Generate"}
-        </button>
-        <button
-          type="button"
+        <IconButton
+          label={active ? "Regenerate" : "Generate"}
+          icon="regenerate"
+          disabled={busy || blocked}
+          onClick={run}
+        />
+        <IconButton
+          label="Approve"
+          icon="check"
           disabled={!active || frame.state === "approved" || frame.state === "stale" || busy}
           onClick={() => action.mutate({ sceneId: frame.scene_id, name: "approve" })}
-        >
-          Approve
-        </button>
+        />
         <button
           type="button"
+          className="btn btn-secondary"
           aria-pressed={frame.continue_previous}
           onClick={() =>
             action.mutate({

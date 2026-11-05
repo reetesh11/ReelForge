@@ -38,18 +38,20 @@ test("generate voice lines, approve them all and continue to key frames", async 
 
   await page.goto(`/projects/${project.id}`);
   const row = page.getByLabel("Cast", { exact: true }).getByLabel("Character: Tamatar");
-  await row.getByLabel("Upload my own image").setInputFiles({
+  await row.getByLabel("Choose an image file").setInputFiles({
     name: "photo.png",
     mimeType: "image/png",
     buffer: Buffer.from(PNG_BASE64, "base64"),
   });
-  await expect(row.getByRole("radio")).toHaveCount(1, { timeout: 20_000 });
-  await row.getByRole("radio").first().click();
+  await expect(row.locator("button.tile")).toHaveCount(1, { timeout: 20_000 });
+  await row.locator("button.tile").first().click();
   await row.getByRole("button", { name: "Approve this one" }).click();
   await page.getByRole("button", { name: "Approve anyway" }).click();
   await expect(row.getByText("Approved", { exact: true })).toBeVisible();
 
+  await row.getByText("Voice setup", { exact: true }).click();
   await row.getByLabel("Preset voice").selectOption("ravi");
+  await page.getByRole("list", { name: "Stages" }).getByRole("link", { name: /Voices/ }).click();
   const board = page.getByLabel("Voices", { exact: true });
   await expect(board).toBeVisible();
   await expect(board.getByText("0 of 2 lines approved")).toBeVisible();
