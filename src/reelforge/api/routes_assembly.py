@@ -64,7 +64,7 @@ def build_router(ctx: AppContext) -> APIRouter:
             path = working_edl_path(ctx, project_id)
             changed = body.force or not path.is_file()
             if changed:
-                save_edl(build_edl(ctx, project_id), path)
+                save_edl(build_edl(ctx, project_id), path, full=True)
             out = status.assembly_body(ctx, project_id)
             if changed or out["preview"]["state"] == "none":
                 ctx.previews.touch(project_id)
@@ -110,7 +110,7 @@ def build_router(ctx: AppContext) -> APIRouter:
             if reason is not None:
                 raise AssemblyError(409, reason)
             if not working_edl_path(ctx, project_id).is_file():
-                save_edl(build_edl(ctx, project_id), working_edl_path(ctx, project_id))
+                save_edl(build_edl(ctx, project_id), working_edl_path(ctx, project_id), full=True)
             edl = load_working(ctx, project_id)
             for job in ctx.queue.list(project_id=project_id):
                 if job.type == FINAL_JOB and job.status in ("queued", "running"):
@@ -152,7 +152,7 @@ def build_router(ctx: AppContext) -> APIRouter:
                 edl = load_edl(source)
             except ValueError:
                 raise AssemblyError(404, MISSING_VERSION) from None
-            save_edl(edl, working_edl_path(ctx, project_id))
+            save_edl(edl, working_edl_path(ctx, project_id), full=True)
             ctx.previews.touch(project_id)
             return JSONResponse(status.assembly_body(ctx, project_id))
         except AssemblyError as exc:

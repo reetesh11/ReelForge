@@ -14,7 +14,7 @@ from reelforge.adapters.base import CancelToken
 from reelforge.assembly import ffmpeg
 from reelforge.assembly.align import ALIGN_MODEL_KEY, MlxWhisperAligner
 from reelforge.assembly.build import assembly_dir
-from reelforge.assembly.edl import FPS, HEIGHT, WIDTH, Edl, save_edl
+from reelforge.assembly.edl import FPS, HEIGHT, WIDTH, Edl
 from reelforge.assembly.state import StepError
 from reelforge.cast.licence import is_non_commercial
 from reelforge.db.models import Artifact, ArtifactInput, Project, ReelVersion, utcnow
@@ -231,7 +231,10 @@ def publish_version(
         (staging / "credits.json").write_text(
             json.dumps(credits, indent=2, ensure_ascii=False), encoding="utf-8"
         )
-        save_edl(edl, staging / "edl.json")
+        # same shape as the working file (audio and mix always present)
+        (staging / "edl.json").write_text(
+            json.dumps(edl.model_dump(mode="json"), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         ass = work_dir / "captions.ass"
         if ass.is_file():
             shutil.copy2(ass, staging / "captions.ass")

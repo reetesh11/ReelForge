@@ -474,7 +474,7 @@ def preview_mix(ctx: AppContext, project_id: str) -> Job:
         raise AudioError(409, SHOTS_LOCKED)
     try:
         if refresh_audio(ctx, project_id) is None:
-            save_edl(build_edl(ctx, project_id), working_edl_path(ctx, project_id))
+            save_edl(build_edl(ctx, project_id), working_edl_path(ctx, project_id), full=True)
         return ctx.previews.enqueue_now(project_id)
     except AssemblyError as exc:
         raise AudioError(exc.status, exc.message) from None

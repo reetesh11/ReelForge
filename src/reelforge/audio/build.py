@@ -82,5 +82,5 @@ def refresh_audio(ctx: AppContext, project_id: str) -> Edl | None:
     edl = load_edl(path)
     cues, mix, _ = build_audio_section(ctx, project_id, edl)
     edl = edl.model_copy(update={"audio": cues, "mix": mix})
-    save_edl(edl, path)
+    save_edl(edl, path, full=True)
     return edl

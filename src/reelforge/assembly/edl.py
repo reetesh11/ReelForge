@@ -160,10 +160,13 @@ def load_edl(path: Path) -> Edl:
     return Edl.model_validate_json(path.read_text(encoding="utf-8"))
 
 
-def save_edl(edl: Edl, path: Path) -> None:
+def save_edl(edl: Edl, path: Path, *, full: bool = False) -> None:
+    """Write the EDL; `full` keeps `audio` and `mix` even with no cues (the app's working files)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f".{path.name}.part")
-    text = json.dumps(edl_json(edl), indent=2, ensure_ascii=False)
+    text = json.dumps(
+        edl.model_dump(mode="json") if full else edl_json(edl), indent=2, ensure_ascii=False
+    )
     with tmp.open("w", encoding="utf-8") as fh:
         fh.write(text)
         fh.flush()
