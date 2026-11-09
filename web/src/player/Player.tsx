@@ -124,23 +124,23 @@ export function Player({
       {failed ? (
         <p role="status">
           Couldn't load this video.{" "}
-          <button type="button" onClick={retry}>
+          <button type="button" className="btn btn-secondary" onClick={retry}>
             Retry
           </button>
         </p>
       ) : null}
       {controls ? (
         <div className="player-controls actions">
-          <button type="button" onClick={toggle}>
+          <button type="button" className="btn btn-secondary" onClick={toggle}>
             {playing ? "Pause" : "Play"}
           </button>
-          <button type="button" onClick={() => step(-1)}>
+          <button type="button" className="btn btn-secondary" onClick={() => step(-1)}>
             Previous frame
           </button>
-          <button type="button" onClick={() => step(1)}>
+          <button type="button" className="btn btn-secondary" onClick={() => step(1)}>
             Next frame
           </button>
-          <button type="button" aria-pressed={looping} onClick={() => setLooping((v) => !v)}>
+          <button type="button" className="btn btn-secondary" aria-pressed={looping} onClick={() => setLooping((v) => !v)}>
             Loop
           </button>
           <select
@@ -166,10 +166,10 @@ export function Player({
               setTime(v.currentTime);
             }}
           />
-          <button type="button" onClick={() => setIsMuted((m) => !m)}>
+          <button type="button" className="btn btn-secondary" onClick={() => setIsMuted((m) => !m)}>
             {isMuted ? "Unmute" : "Mute"}
           </button>
-          <button type="button" aria-pressed={zone} onClick={() => setZone((z) => !z)}>
+          <button type="button" className="btn btn-secondary" aria-pressed={zone} onClick={() => setZone((z) => !z)}>
             Safe-zone overlay
           </button>
         </div>

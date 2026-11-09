@@ -53,10 +53,10 @@ export function GapQuestions({
               </label>
               {status[i] === "answered" ? <span className="meta">Answered</span> : null}
               {status[i] === "skipped" ? <span className="meta">Skipped</span> : null}
-              <button type="button" disabled={done || disabled || (text[i] ?? "").trim() === ""} onClick={() => mark(i, "answered")}>
+              <button type="button" className="btn btn-primary" disabled={done || disabled || (text[i] ?? "").trim() === ""} onClick={() => mark(i, "answered")}>
                 Answer
               </button>
-              <button type="button" disabled={done || disabled} onClick={() => mark(i, "skipped")}>
+              <button type="button" className="btn btn-secondary" disabled={done || disabled} onClick={() => mark(i, "skipped")}>
                 Skip
               </button>
             </li>

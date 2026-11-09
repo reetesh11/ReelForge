@@ -158,3 +158,21 @@ Levels (music against dialogue), ducking depth and the silence span acceptable? 
 | Silence | |
 
 Reviewer: ________  Date: ________
+
+## v2 UI redesign (workspace, stage rail, colour, readable config)
+
+Run on the reference Mac with `reelforge up`. Repeat in light and dark (System Settings, Appearance), at 1440 px and 390 px wide, on four projects: one at DRAFT, one at STORY_APPROVED, one at CAST_APPROVED and one at SHOTS_APPROVED. Stop the app first if you also want to run `pnpm --dir web e2e` (it needs ports 7400 and 7401).
+
+| # | Step | Expect | Result |
+| --- | --- | --- | --- |
+| a | Open each project | The current stage and the stage that needs you are obvious at a glance (rail highlight, "Go to" bar when they differ). | |
+| b | Look at each stage panel | The one coral Call to action is the first thing the eye finds, and there is only one per panel (one per Cast card). | |
+| c | Read the stage rail; hover the Cast icons | Name and state are on separate lines, the icon sits beside the name, the rail spans the full width; every Cast icon is understandable from the icon and tooltip alone. | |
+| d | Open the Story stage | The settings summary and the character and scene cards are readable without opening a field; Look, Action and Line show all their text. | |
+| e | Look at the whole app | The colour feels lively and not noisy in both light and dark. | |
+| 1 | Tab through a stage panel and open and close a dialog with Escape | Tab order follows the visual order; Escape closes the dialog and focus returns to the button that opened it; the focus ring is 2 px and visible. | |
+| 2 | Resize from 360 px to 1920 px | No horizontal scroll on any page. | |
+| 3 | Turn on Reduce motion in System Settings | Only the spinner still turns; skeletons, progress bars and the pulse stay still. | |
+| 4 | Run `pnpm --dir web e2e stage-rail` with the app stopped | Six equal cells, gap at most 8 px, spanning the rail at 1440 px and 900 px; "Key frames" on one line. | |
+
+Reviewer: ________  Date: ________

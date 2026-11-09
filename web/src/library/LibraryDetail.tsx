@@ -56,7 +56,7 @@ function DetailForm({ character }: { character: LibraryCharacter }) {
         </fieldset>
       ) : null}
       <div className="actions">
-        <button type="submit" disabled={patch.isPending}>
+        <button type="submit" className="btn btn-primary" disabled={patch.isPending}>
           Save
         </button>
       </div>
@@ -70,8 +70,8 @@ export function LibraryDetail() {
   const { characterId = "" } = useParams();
   const character = useLibraryCharacter(characterId);
 
-  if (character.isPending) return <p>Loading...</p>;
-  if (character.isError) return <p>Couldn't load this character.</p>;
+  if (character.isPending) return <p className="state-message">Loading...</p>;
+  if (character.isError) return <p className="state-message error">Couldn't load this character.</p>;
   return (
     <section>
       <h1>{character.data.name}</h1>

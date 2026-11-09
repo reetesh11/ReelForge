@@ -194,7 +194,7 @@ export function StoryInput({ projectId }: { projectId: string }) {
       </Section>
 
       <div className="actions">
-        <button type="button" disabled={form.storyline.trim() === "" || running} onClick={() => start(answers)}>
+        <button type="button" className="btn btn-primary" disabled={form.storyline.trim() === "" || running} onClick={() => start(answers)}>
           {running ? "Structuring your story…" : "Structure my story"}
         </button>
         <label className="link-button">

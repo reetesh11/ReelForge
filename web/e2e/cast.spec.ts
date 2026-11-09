@@ -45,14 +45,14 @@ test("add an image, approve it, then find the character in the library", async (
   const row = cast.getByLabel("Character: Tamatar");
   // Uploading needs no GPU memory lease, so the flow also runs on a machine with little free
   // memory. Generating four candidates is covered by the backend tests and docs/manual-checks.md.
-  await row.getByLabel("Upload my own image").setInputFiles({
+  await row.getByLabel("Choose an image file").setInputFiles({
     name: "my photo.png",
     mimeType: "image/png",
     buffer: Buffer.from(PNG_BASE64, "base64"),
   });
-  await expect(row.getByRole("radio")).toHaveCount(1, { timeout: 20_000 });
+  await expect(row.locator("button.tile")).toHaveCount(1, { timeout: 20_000 });
 
-  await row.getByRole("radio").first().click();
+  await row.locator("button.tile").first().click();
   await row.getByRole("button", { name: "Approve this one" }).click();
   await page.getByRole("button", { name: "Approve anyway" }).click();
   await expect(row.getByText("Approved", { exact: true })).toBeVisible();

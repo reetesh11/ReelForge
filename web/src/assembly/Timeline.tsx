@@ -83,10 +83,10 @@ export function Timeline({
               <span className="meta">{`${(shot.out_s - shot.in_s).toFixed(2)} s`}</span>
             </header>
             <div className="actions">
-              <button type="button" disabled={index === 0} onClick={() => move(index, -1)}>
+              <button type="button" className="btn btn-secondary" disabled={index === 0} onClick={() => move(index, -1)}>
                 {`Move ${sid} earlier`}
               </button>
-              <button type="button" disabled={index === order.length - 1} onClick={() => move(index, 1)}>
+              <button type="button" className="btn btn-secondary" disabled={index === order.length - 1} onClick={() => move(index, 1)}>
                 {`Move ${sid} later`}
               </button>
               <NumberField
@@ -130,6 +130,7 @@ export function Timeline({
               <div className="actions">
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() =>
                     onEdit({ op: "nudge_dialogue", scene_id: sid, offset_s: Math.max(0, clip.offset_s - FRAME_S) })
                   }
@@ -138,6 +139,7 @@ export function Timeline({
                 </button>
                 <button
                   type="button"
+                  className="btn btn-secondary"
                   onClick={() => onEdit({ op: "nudge_dialogue", scene_id: sid, offset_s: clip.offset_s + FRAME_S })}
                 >
                   {`Nudge ${sid} dialogue later`}

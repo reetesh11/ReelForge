@@ -23,13 +23,14 @@ export function VersionPanel({
             <li key={v.id} className="row">
               <button
                 type="button"
+                className="btn btn-secondary"
                 aria-pressed={selected}
                 onClick={() => onSelect(v.is_current ? null : v.version)}
               >
                 {versionLabel(v)}
               </button>
               {v.is_current ? null : <span className="meta">{new Date(v.created_at).toLocaleString()}</span>}
-              {v.approved_at ? <span className="badge">Approved</span> : null}
+              {v.approved_at ? <span className="chip chip-green">Approved</span> : null}
             </li>
           );
         })}

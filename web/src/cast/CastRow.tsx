@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useApproveCandidate,
   useCancelJob,
@@ -10,6 +10,10 @@ import {
   type CastItem,
 } from "@/api/cast";
 import { useLibraryCharacters } from "@/api/library";
+import { Chip } from "@/components/Chip";
+import { IconButton } from "@/components/IconButton";
+import { Icon } from "@/components/icons";
+import { Notice } from "@/components/Notice";
 import { ProjectVoiceSetup } from "@/voice/VoiceSetup";
 import { ApproveDialog } from "./ApproveDialog";
 import { CandidateGrid } from "./CandidateGrid";
@@ -53,6 +57,7 @@ export function CastRow({
   const [confirming, setConfirming] = useState(false);
   const [picking, setPicking] = useState(false);
   const [ageDraft, setAgeDraft] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const progress = item.progress;
   const generating = item.state === "generating";
@@ -76,11 +81,13 @@ export function CastRow({
   };
 
   return (
-    <li aria-label={`Character: ${item.name}`} className="card">
-      <header className="editor-header">
-        <strong>{item.name}</strong>
-        {item.aliases.length > 0 ? <span className="meta">{item.aliases.join(", ")}</span> : null}
-        <span className={item.approved ? "badge green" : "badge"}>{item.approved ? "Approved" : "Not approved"}</span>
+    <li aria-label={`Character: ${item.name}`} className="card" data-testid="cast-card">
+      <header className="card-header">
+        <span>
+          <strong>{item.name}</strong>
+          {item.aliases.length > 0 ? <span className="meta">{` ${item.aliases.join(", ")}`}</span> : null}
+        </span>
+        <Chip tone={item.approved ? "green" : "grey"}>{item.approved ? "Approved" : "Not approved"}</Chip>
       </header>
       <label className="field">
         Character bible line
@@ -106,6 +113,7 @@ export function CastRow({
         </label>
         <button
           type="button"
+          className="btn btn-secondary"
           disabled={ageDraft === null || setAge.isPending}
           onClick={() =>
             setAge.mutate(
@@ -119,23 +127,21 @@ export function CastRow({
       </div>
 
       {item.approved && item.master_artifact_id ? (
-        <div>
+        <div className="cast-main">
           <img
             src={`/media/${item.master_artifact_id}`}
             alt={`Approved master for ${item.name}`}
             className="master"
           />
+          <div>
           {item.library_character_id ? <p className="meta">{`From library: ${libraryName ?? item.name}`}</p> : null}
           {item.variant_of_library_id ? (
             <p className="meta">This changes a library character, so a copy was made.</p>
           ) : null}
-          <div className="actions">
-            <button type="button" onClick={() => reopen.mutate(item.key)}>
-              Change approval
-            </button>
-            <button type="button" onClick={() => setPicking(true)}>
-              Replace from library
-            </button>
+          <div className="toolbar">
+            <IconButton label="Change approval" icon="reopen" onClick={() => reopen.mutate(item.key)} />
+            <IconButton label="Replace from library" icon="library" onClick={() => setPicking(true)} />
+          </div>
           </div>
         </div>
       ) : null}
@@ -143,8 +149,18 @@ export function CastRow({
       {generating ? (
         <div>
           <p>{`Generating image ${Math.min(completed + 1, total)} of ${total} - ${elapsed} s elapsed`}</p>
+          <div
+            className="progress-bar determinate"
+            role="progressbar"
+            aria-label="Generation progress"
+            aria-valuemin={0}
+            aria-valuemax={total}
+            aria-valuenow={completed}
+          >
+            <span style={{ width: `${(completed / total) * 100}%` }} />
+          </div>
           {item.job_id ? (
-            <button type="button" onClick={() => cancel.mutate(item.job_id as string)}>
+            <button type="button" className="btn btn-secondary" onClick={() => cancel.mutate(item.job_id as string)}>
               Cancel
             </button>
           ) : null}
@@ -152,17 +168,17 @@ export function CastRow({
       ) : null}
       {item.state === "stopped" ? <p>{`Stopped after ${completed} of ${total} images`}</p> : null}
       {item.state === "failed" ? (
-        <div className="notice error">
+        <Notice tone="error">
           <p>Couldn't generate images.</p>
           {item.error ? <p>{item.error}</p> : null}
           {backendDown ? null : (
-            <button type="button" onClick={() => start({})}>
+            <button type="button" className="btn btn-secondary" onClick={() => start({})}>
               Retry
             </button>
           )}
-        </div>
+        </Notice>
       ) : null}
-      {item.state === "empty" ? <p>No candidates yet</p> : null}
+      {item.state === "empty" ? <p className="meta">No candidates yet</p> : null}
 
       {!item.approved && item.candidates.length > 0 ? (
         <CandidateGrid candidates={item.candidates} selectedId={selection} onSelect={setSelected} />
@@ -171,32 +187,35 @@ export function CastRow({
       {!item.approved ? (
         <div className="actions">
           {backendDown || generating ? null : item.state === "empty" ? (
-            <button type="button" onClick={() => start({})}>
+            <button type="button" className="btn btn-primary" onClick={() => start({})}>
               Generate candidates
-            </button>
-          ) : null}
-          {item.candidates.length > 0 ? (
-            <button
-              type="button"
-              disabled={!selection}
-              onClick={() => (licenceWarning ? setConfirming(true) : doApprove())}
-            >
-              Approve this one
             </button>
           ) : null}
           {backendDown || generating || item.candidates.length === 0 ? null : (
             <>
-              <button type="button" onClick={() => start({ regenerate: true })}>
-                Regenerate 4 more
-              </button>
-              <button type="button" onClick={() => start({ look_text: text })}>
-                Edit look text and regenerate
-              </button>
+              <IconButton label="Regenerate 4 more" icon="regenerate" onClick={() => start({ regenerate: true })} />
+              <IconButton
+                label="Edit look text and regenerate"
+                icon="edit"
+                onClick={() => start({ look_text: text })}
+              />
             </>
           )}
-          <button type="button" onClick={() => setPicking(true)}>
-            Use from library
-          </button>
+          <IconButton label="Use from library" icon="library" onClick={() => setPicking(true)} />
+          <IconButton label="Upload my own image" icon="upload" onClick={() => fileInput.current?.click()} />
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="visually-hidden"
+            aria-label="Choose an image file"
+            tabIndex={-1}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) upload.mutate({ key: item.key, file });
+              e.target.value = "";
+            }}
+          />
         </div>
       ) : null}
 
@@ -206,32 +225,36 @@ export function CastRow({
             What small change?
             <input type="text" value={instruction} onChange={(e) => setInstruction(e.target.value)} />
           </label>
-          <button
-            type="button"
+          <IconButton
+            label="Refine selected (img2img)"
+            icon="refine"
             disabled={!selection}
             onClick={() => selection && start({ refine: { from_candidate: selection, instruction } })}
+          />
+        </div>
+      ) : null}
+
+      {!item.approved && item.candidates.length > 0 ? (
+        <div className="card-actions">
+          <button
+            type="button"
+            className="btn btn-cta"
+            aria-label="Approve this one"
+            disabled={!selection}
+            onClick={() => (licenceWarning ? setConfirming(true) : doApprove())}
           >
-            Refine selected (img2img)
+            <Icon name="check" />
+            Approve
           </button>
         </div>
       ) : null}
 
-      {item.approved ? null : (
-        <label className="field">
-          Upload my own image
-          <input
-            type="file"
-            accept="image/png,image/jpeg"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) upload.mutate({ key: item.key, file });
-              e.target.value = "";
-            }}
-          />
-        </label>
-      )}
-
-      {item.approved ? <ProjectVoiceSetup projectId={projectId} characterKey={item.key} /> : null}
+      {item.approved ? (
+        <details className="fold">
+          <summary>Voice setup</summary>
+          <ProjectVoiceSetup projectId={projectId} characterKey={item.key} />
+        </details>
+      ) : null}
 
       {error ? <p role="alert">{error}</p> : null}
       {confirming && licenceWarning ? (

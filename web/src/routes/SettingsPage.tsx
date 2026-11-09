@@ -4,6 +4,8 @@ import { useSetVoiceModel, useVoiceModel } from "@/api/voice";
 type Check = HealthReport["checks"][number];
 type Colour = "green" | "amber" | "red";
 
+const WORDS: Record<Colour, string> = { green: "Ready", amber: "Warning", red: "Missing" };
+
 const DEPENDENCIES: Array<{ label: string; check: string }> = [
   { label: "Draw Things", check: "draw_things" },
   { label: "ltx-2-mlx", check: "ltx" },
@@ -47,25 +49,26 @@ export function SettingsPage() {
     <section>
       <h1>Settings &amp; status</h1>
       {health.isPending ? (
-        <p>Checking dependencies...</p>
+        <p className="state-message">Checking dependencies...</p>
       ) : health.isError ? (
         <div>
-          <p>Couldn't load status.</p>
-          <button type="button" onClick={() => void health.refetch()}>
+          <p className="state-message error">Couldn't load status.</p>
+          <button type="button" className="btn btn-secondary" onClick={() => void health.refetch()}>
             Retry
           </button>
         </div>
       ) : (
-        <ul aria-label="Dependencies" className="list">
+        <ul aria-label="Dependencies" className="status-cards">
           {DEPENDENCIES.flatMap(({ label, check }) => {
             const result = health.data.checks.find((c) => c.name === check);
             if (!result) return [];
             const colour = colourOf(result);
             return [
-              <li key={check} aria-label={`${label}: ${colour}`} className="row">
-                <span>
+              <li key={check} aria-label={`${label}: ${colour}`} className="status-card">
+                <strong>{label}</strong>
+                <span className="status-word">
                   <span className={`dot ${colour}`} aria-hidden="true" />
-                  {label}
+                  {WORDS[colour]}
                 </span>
                 <span className="meta">{result.detail}</span>
                 {colour !== "green" && result.fix ? <span>{`Fix: ${result.fix}`}</span> : null}
@@ -73,10 +76,11 @@ export function SettingsPage() {
             ];
           })}
           {health.data.image_licence_warning ? (
-            <li aria-label="Image model licence: amber" className="row">
-              <span>
+            <li aria-label="Image model licence: amber" className="status-card">
+              <strong>Image model licence</strong>
+              <span className="status-word">
                 <span className="dot amber" aria-hidden="true" />
-                Image model licence
+                Warning
               </span>
               <span className="meta">{health.data.image_licence_warning}</span>
             </li>

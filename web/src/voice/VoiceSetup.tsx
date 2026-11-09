@@ -66,7 +66,7 @@ function EmotionClipRow({
         <div>
           <audio controls src={clip.url} aria-label={`${label} clip audio`} />
           <p>{clip.transcript}</p>
-          <button type="button" onClick={() => onRemove?.(emotion)}>
+          <button type="button" className="btn btn-secondary" onClick={() => onRemove?.(emotion)}>
             {`Remove ${label} clip`}
           </button>
         </div>
@@ -88,6 +88,7 @@ function EmotionClipRow({
         </label>
         <button
           type="button"
+          className="btn btn-secondary"
           disabled={!file || !transcript.trim()}
           onClick={() => {
             if (!file) return;
@@ -152,7 +153,7 @@ export function VoiceSetup({
       {age !== undefined ? (
         <p className="meta">
           {age === null || age === undefined ? "No age set" : `Age ${age}${ageBand ? ` (${ageBand})` : ""}`}
-          {modelKey === "kokoro" ? <span className="badge amber">Experimental</span> : null}
+          {modelKey === "kokoro" ? <span className="chip chip-amber">Experimental</span> : null}
         </p>
       ) : null}
       <div role="radiogroup" aria-label="Voice mode" className="actions">
@@ -183,7 +184,7 @@ export function VoiceSetup({
               ))}
             </select>
           </label>
-          <button type="button" disabled={!preset || previewing} onClick={() => void preview(preset)}>
+          <button type="button" className="btn btn-secondary" disabled={!preset || previewing} onClick={() => void preview(preset)}>
             Preview
           </button>
           {previewing ? <span className="meta">Making a sample...</span> : null}
@@ -216,6 +217,7 @@ export function VoiceSetup({
           </label>
           <button
             type="button"
+            className="btn btn-secondary"
             disabled={busy || !text.trim()}
             onClick={() => onSet({ mode: "cloned", reference_text: text })}
           >
@@ -245,7 +247,7 @@ export function VoiceSetup({
 
       {note ? <p className="meta">{note}</p> : null}
       {voice && onClear ? (
-        <button type="button" onClick={onClear}>
+        <button type="button" className="btn btn-secondary" onClick={onClear}>
           Remove voice
         </button>
       ) : null}

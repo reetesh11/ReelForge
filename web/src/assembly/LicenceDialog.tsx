@@ -1,4 +1,5 @@
 import type { LicenceWarning } from "@/api/assembly";
+import { useDialog } from "@/components/useDialog";
 
 function line(w: LicenceWarning): string {
   if (w.cue_id !== undefined && w.model === undefined) {
@@ -18,6 +19,7 @@ export function LicenceDialog({
   onExport: () => void;
   onCancel: () => void;
 }) {
+  useDialog(onCancel);
   return (
     <div role="dialog" aria-modal="true" aria-label="Licence check before export" className="card">
       <h3>Licence check before export</h3>
@@ -31,10 +33,10 @@ export function LicenceDialog({
         ))}
       </ul>
       <div className="actions">
-        <button type="button" onClick={onExport}>
+        <button type="button" className="btn btn-primary" onClick={onExport}>
           Export anyway
         </button>
-        <button type="button" onClick={onCancel}>
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
           Cancel
         </button>
       </div>

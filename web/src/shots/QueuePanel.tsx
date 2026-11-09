@@ -14,13 +14,14 @@ export function QueuePanel({ projectId, queue }: { projectId: string; queue: Que
     <section aria-label="Render queue" className="card">
       <p>{queue.total_text}</p>
       {running ? <p>{`Rendering shot ${running.index} of ${running.total} - ${elapsed} s elapsed`}</p> : null}
-      <ul className="list">
+      <ul className="card-stack">
         {queue.rows.map((row) => (
           <li key={row.job_id}>
             <span>{`${row.position}. ${row.scene_id} - ${TYPE_LABELS[row.shot_type]} - ${QUALITY_LABELS[row.quality]} - ${row.estimate_text}`}</span>
             <span className="actions">
               <button
                 type="button"
+                className="btn btn-ghost"
                 disabled={!row.can_move || queuedIds[0] === row.job_id}
                 onClick={() => act.mutate({ name: "move", body: { job_id: row.job_id, direction: "up" } })}
               >
@@ -28,6 +29,7 @@ export function QueuePanel({ projectId, queue }: { projectId: string; queue: Que
               </button>
               <button
                 type="button"
+                className="btn btn-ghost"
                 disabled={!row.can_move || queuedIds[queuedIds.length - 1] === row.job_id}
                 onClick={() => act.mutate({ name: "move", body: { job_id: row.job_id, direction: "down" } })}
               >
@@ -39,10 +41,10 @@ export function QueuePanel({ projectId, queue }: { projectId: string; queue: Que
         ))}
       </ul>
       <div className="actions">
-        <button type="button" onClick={() => act.mutate({ name: queue.paused ? "resume" : "pause" })}>
+        <button type="button" className="btn btn-secondary" onClick={() => act.mutate({ name: queue.paused ? "resume" : "pause" })}>
           {queue.paused ? "Resume" : "Pause"}
         </button>
-        <button type="button" onClick={() => act.mutate({ name: "cancel" })}>
+        <button type="button" className="btn btn-secondary" onClick={() => act.mutate({ name: "cancel" })}>
           Cancel
         </button>
       </div>
@@ -54,7 +56,7 @@ export function QueuePanel({ projectId, queue }: { projectId: string; queue: Que
 function RemoveButton({ projectId, sceneId, disabled }: { projectId: string; sceneId: string; disabled: boolean }) {
   const action = useShotAction(projectId);
   return (
-    <button type="button" disabled={disabled} onClick={() => action.mutate({ sceneId, name: "dequeue" })}>
+    <button type="button" className="btn btn-ghost" disabled={disabled} onClick={() => action.mutate({ sceneId, name: "dequeue" })}>
       Remove
     </button>
   );

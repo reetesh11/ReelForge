@@ -9,9 +9,9 @@ export function ProjectsPage() {
 
   return (
     <section>
-      <header className="row">
+      <header className="page-head">
         <h1>Projects</h1>
-        <button type="button" onClick={() => setCreating(true)}>
+        <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
           New project
         </button>
       </header>
@@ -24,13 +24,13 @@ export function ProjectsPage() {
         </div>
       ) : projects.isError ? (
         <div>
-          <p>Couldn't load projects.</p>
-          <button type="button" onClick={() => void projects.refetch()}>
+          <p className="state-message error">Couldn't load projects.</p>
+          <button type="button" className="btn btn-secondary" onClick={() => void projects.refetch()}>
             Retry
           </button>
         </div>
       ) : projects.data.length === 0 ? (
-        <p>No projects yet.</p>
+        <p className="state-message">No projects yet.</p>
       ) : (
         <ul aria-label="Projects" className="list">
           {projects.data.map((p) => (

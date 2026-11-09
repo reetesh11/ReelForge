@@ -8,13 +8,13 @@ export function LibraryPage() {
   return (
     <section>
       <h1>Library</h1>
-      {library.isPending ? <p>Loading...</p> : null}
-      {library.isError ? <p>Couldn't load the library.</p> : null}
+      {library.isPending ? <p className="state-message">Loading...</p> : null}
+      {library.isError ? <p className="state-message error">Couldn't load the library.</p> : null}
       {library.data && library.data.length === 0 ? (
-        <p>No characters in your library yet. Approve a cast to save characters here.</p>
+        <p className="state-message">No characters in your library yet. Approve a cast to save characters here.</p>
       ) : null}
       {library.data && library.data.length > 0 ? (
-        <ul aria-label="Library characters" className="tiles">
+        <ul aria-label="Library characters" className="card-grid">
           {library.data.map((c) => (
             <li key={c.id} aria-label={`Library character: ${c.name}`} className="card">
               {c.master_image_url ? <img src={c.master_image_url} alt={`Master of ${c.name}`} className="master" /> : null}
