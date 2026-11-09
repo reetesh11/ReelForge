@@ -10,6 +10,9 @@ DEGRADED="--allow-degraded"
 [[ "${1:-}" == "--strict" ]] && DEGRADED=""
 
 cd "$ROOT"
+# Real model adapters by default (the app's own default is "mock", which returns canned output,
+# e.g. a tomato/potato story for any input). Override: REELFORGE_BACKEND=mock ./scripts/dev.sh
+export REELFORGE_BACKEND="${REELFORGE_BACKEND:-real}"
 [[ -d web/node_modules ]] || pnpm --dir web install
 
 UP_ARGS=(up)
