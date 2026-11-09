@@ -24,6 +24,7 @@ from reelforge.voice import service, slots
 from reelforge.voice.join import join_wavs
 from reelforge.voice.mapping import MappingError
 from reelforge.voice.plan import LinePlan, plan_line
+from reelforge.voice.translit import needs_devanagari, to_devanagari
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -97,6 +98,9 @@ async def voice_generate(
     emotion_clips = slots.list_emotion_clips(ctx, project_id)
     batch: list[VoiceLine] = []
     runs: dict[str, _LineRun] = {}
+    # Hindi voices read Devanagari; romanised Hinglish gives beeps or wrong sounds (see translit).
+    convert = ctx.settings.llm_backend != "mock"
+    converted_any = False
     for sid in scene_ids:
         li = inputs.get(sid)
         slot = li.slot if li is not None else None
@@ -183,10 +187,14 @@ async def voice_generate(
         many = len(plan.phrases) > 1
         for n, ph in enumerate(plan.phrases, start=1):
             phrase_audio, phrase_text, _ = refs[n - 1]
+            spoken = ph.model_text
+            if convert and needs_devanagari(spoken):
+                spoken = await to_devanagari(ctx.llm, spoken)
+                converted_any = True
             batch.append(
                 VoiceLine(
                     id=f"{sid}#{n}" if many else sid,
-                    text=ph.model_text,
+                    text=spoken,
                     voice=voice_name,
                     ref_audio=phrase_audio,
                     ref_text=phrase_text if slot.mode == "cloned" else None,
@@ -200,6 +208,9 @@ async def voice_generate(
                     edge_pad_s=0.0 if many else EDGE_PAD_S,
                 )
             )
+
+    if converted_any:
+        await ctx.ollama_unload()  # give the memory back before the voice model loads
 
     def on_line(result: VoiceResult) -> None:
         sid, _, number = result.id.partition("#")
