@@ -217,5 +217,5 @@ def apply_edit(ctx: AppContext, project_id: str, op: dict[str, Any]) -> tuple[Ed
     if name not in ("set_caption_text", "set_caption_style") and _fit_dialogue(edl):
         notes.append(TRIMMED)
     edl = Edl.model_validate(edl.model_dump())
-    save_edl(edl, working_edl_path(ctx, project_id))
+    save_edl(edl, working_edl_path(ctx, project_id), full=True)
     return edl, notes

@@ -6,7 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -71,6 +71,27 @@ class EdlMusic(_Strict):
     duck: bool = False
 
 
+class EdlAudio(_Strict):
+    """One sound cue with absolute reel times; silence has no file."""
+
+    cue_id: str
+    kind: Literal["music", "sfx", "ambience", "silence"]
+    artifact: str | None
+    start_s: float
+    end_s: float
+    gain_db: float
+    fade_in_s: float
+    fade_out_s: float
+    duck: bool
+
+
+class EdlMix(_Strict):
+    duck_db: float = 9.0
+    attack_s: float = 0.15
+    release_s: float = 0.4
+    silence_fade_s: float = 0.08
+
+
 class EdlEndCard(_Strict):
     enabled: bool = False
     duration_s: float = 1.5
@@ -89,6 +110,8 @@ class Edl(_Strict):
     caption_style: str = "auto"
     music: EdlMusic = Field(default_factory=EdlMusic)
     end_card: EdlEndCard = Field(default_factory=EdlEndCard)
+    audio: list[EdlAudio] = Field(default_factory=list[EdlAudio])
+    mix: EdlMix = Field(default_factory=EdlMix)
 
     def transition_frames(self, index: int) -> int:
         """Crossfade frames between shot `index - 1` and `index` (0 for a cut or the first)."""
@@ -119,10 +142,17 @@ class Edl(_Strict):
         return self.total_frames / FPS
 
 
+def edl_json(edl: Edl) -> dict[str, Any]:
+    """The EDL as JSON data; `audio` and `mix` are left out while there are no cues."""
+    data = edl.model_dump(mode="json")
+    if not edl.audio:
+        data.pop("audio", None)
+        data.pop("mix", None)
+    return data
+
+
 def edl_hash(edl: Edl) -> str:
-    canonical = json.dumps(
-        edl.model_dump(mode="json"), sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    )
+    canonical = json.dumps(edl_json(edl), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -130,10 +160,13 @@ def load_edl(path: Path) -> Edl:
     return Edl.model_validate_json(path.read_text(encoding="utf-8"))
 
 
-def save_edl(edl: Edl, path: Path) -> None:
+def save_edl(edl: Edl, path: Path, *, full: bool = False) -> None:
+    """Write the EDL; `full` keeps `audio` and `mix` even with no cues (the app's working files)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(f".{path.name}.part")
-    text = json.dumps(edl.model_dump(mode="json"), indent=2, ensure_ascii=False)
+    text = json.dumps(
+        edl.model_dump(mode="json") if full else edl_json(edl), indent=2, ensure_ascii=False
+    )
     with tmp.open("w", encoding="utf-8") as fh:
         fh.write(text)
         fh.flush()

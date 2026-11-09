@@ -8,6 +8,7 @@ import { StageStepper } from "@/components/StageStepper";
 import { StateMessage } from "@/components/StateMessage";
 import { FrameBoard } from "@/frames/FrameBoard";
 import { ShotBoard } from "@/shots/ShotBoard";
+import { SoundScreen } from "@/sound/SoundScreen";
 import { StoryEditor } from "@/story/StoryEditor";
 import { StoryInput } from "@/story/StoryInput";
 import { VoiceBoard } from "@/voice/VoiceBoard";
@@ -16,6 +17,9 @@ import { ProjectHeader } from "@/workspace/ProjectHeader";
 import { resolveStage, type StageKey } from "@/workspace/stages";
 
 type ProjectStage = Project["stage"];
+
+// Sound sits between Shots and Assembly but is not a stage on the rail; it opens once the shots are approved.
+const SOUND_STAGES = new Set<ProjectStage>(["SHOTS_APPROVED", "REEL_EXPORTED", "EXPORTED"]);
 
 export function ProjectPage() {
   const { projectId = "" } = useParams();
@@ -37,19 +41,25 @@ export function ProjectPage() {
     );
   }
 
-  const shown = resolveStage(params, pinned?.stage ?? project.data.stage, stages.data);
+  const landed = pinned?.stage ?? project.data.stage;
+  const wanted = params.get("stage") ?? params.get("screen");
+  const soundOpen = wanted === "sound" && SOUND_STAGES.has(landed);
+  const shown = resolveStage(params, landed, stages.data);
   const go = (key: StageKey) => setParams({ stage: key });
+  const goSound = () => setParams({ stage: "sound" });
+  // Sound is not on the rail, so the rail and the next-up bar treat it as the step before Assembly.
+  const railStage: StageKey = soundOpen ? "assembly" : shown;
 
   return (
     <section>
       <ProjectHeader title={project.data.title} stages={stages.data} />
-      {stages.data ? <StageStepper stages={stages.data} current={shown} onSelect={(key) => go(key as StageKey)} /> : null}
-      {stages.data ? <NextUpBar shown={shown} stages={stages.data} onGo={go} /> : null}
+      {stages.data ? <StageStepper stages={stages.data} current={railStage} onSelect={(key) => go(key as StageKey)} /> : null}
+      {stages.data ? <NextUpBar shown={railStage} stages={stages.data} onGo={go} /> : null}
       {story.error instanceof StoryUnavailableError ? (
         <StateMessage>This stage arrives in a later milestone.</StateMessage>
       ) : null}
-      <section className="stage-panel" data-testid={`stage-panel-${shown}`}>
-        {shown === "story" ? (
+      <section className="stage-panel" data-testid={`stage-panel-${soundOpen ? "sound" : shown}`}>
+        {!soundOpen && shown === "story" ? (
           <>
             {story.isPending ? <StateMessage>Loading...</StateMessage> : null}
             {story.isError && !(story.error instanceof StoryUnavailableError) ? (
@@ -59,15 +69,18 @@ export function ProjectPage() {
             {story.data ? <StoryEditor projectId={projectId} story={story.data} /> : null}
           </>
         ) : null}
-        {shown === "cast" ? <CastScreen projectId={projectId} /> : null}
-        {shown === "voices" ? <VoiceBoard projectId={projectId} onContinue={() => go("frames")} /> : null}
-        {shown === "frames" ? (
+        {!soundOpen && shown === "cast" ? <CastScreen projectId={projectId} /> : null}
+        {!soundOpen && shown === "voices" ? <VoiceBoard projectId={projectId} onContinue={() => go("frames")} /> : null}
+        {!soundOpen && shown === "frames" ? (
           <FrameBoard projectId={projectId} onBack={() => go("voices")} onContinue={() => go("shots")} />
         ) : null}
-        {shown === "shots" ? (
-          <ShotBoard projectId={projectId} onBack={() => go("frames")} onContinue={() => go("assembly")} />
+        {!soundOpen && shown === "shots" ? (
+          <ShotBoard projectId={projectId} onBack={() => go("frames")} onContinue={goSound} />
         ) : null}
-        {shown === "assembly" ? <AssemblyScreen projectId={projectId} onBack={() => go("shots")} /> : null}
+        {soundOpen ? <SoundScreen projectId={projectId} onBack={() => go("shots")} onContinue={() => go("assembly")} /> : null}
+        {!soundOpen && shown === "assembly" ? (
+          <AssemblyScreen projectId={projectId} onBack={goSound} backLabel="Back to Sound" />
+        ) : null}
       </section>
     </section>
   );

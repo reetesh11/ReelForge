@@ -17,7 +17,8 @@
           "owner_type": {
             "enum": [
               "scene",
-              "character"
+              "character",
+              "audio_cue"
             ],
             "title": "Owner Type",
             "type": "string"
@@ -357,6 +358,28 @@
       },
       "AssemblyOut": {
         "properties": {
+          "audio_skipped": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Skipped"
+          },
+          "audio_stale": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Stale"
+          },
           "blocked_reason": {
             "anyOf": [
               {
@@ -515,6 +538,273 @@
           "video_url"
         ],
         "title": "AssemblyTakeOut",
+        "type": "object"
+      },
+      "AudioEngineOut": {
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "title": "AudioEngineOut",
+        "type": "object"
+      },
+      "AudioMoveRequest": {
+        "properties": {
+          "direction": {
+            "enum": [
+              "up",
+              "down"
+            ],
+            "title": "Direction",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction"
+        ],
+        "title": "AudioMoveRequest",
+        "type": "object"
+      },
+      "AudioOut": {
+        "properties": {
+          "cues": {
+            "items": {
+              "$ref": "#/components/schemas/CueOut"
+            },
+            "title": "Cues",
+            "type": "array"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/AudioEngineOut"
+          },
+          "legacy_music_hint": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy Music Hint"
+          },
+          "scenes": {
+            "items": {
+              "$ref": "#/components/schemas/AudioSceneOut"
+            },
+            "title": "Scenes",
+            "type": "array"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/AudioSettingsOut"
+          },
+          "skipped_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipped Count"
+          }
+        },
+        "required": [
+          "engine",
+          "settings",
+          "scenes",
+          "cues"
+        ],
+        "title": "AudioOut",
+        "type": "object"
+      },
+      "AudioSceneOut": {
+        "properties": {
+          "end_s": {
+            "title": "End S",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "start_s": {
+            "title": "Start S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "start_s",
+          "end_s"
+        ],
+        "title": "AudioSceneOut",
+        "type": "object"
+      },
+      "AudioSettingsOut": {
+        "properties": {
+          "attack_s": {
+            "title": "Attack S",
+            "type": "number"
+          },
+          "duck_db": {
+            "title": "Duck Db",
+            "type": "number"
+          },
+          "release_s": {
+            "title": "Release S",
+            "type": "number"
+          },
+          "silence_fade_s": {
+            "title": "Silence Fade S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "duck_db",
+          "attack_s",
+          "release_s",
+          "silence_fade_s"
+        ],
+        "title": "AudioSettingsOut",
+        "type": "object"
+      },
+      "AudioSettingsRequest": {
+        "properties": {
+          "attack_s": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attack S"
+          },
+          "duck_db": {
+            "anyOf": [
+              {
+                "maximum": 40.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duck Db"
+          },
+          "release_s": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release S"
+          },
+          "silence_fade_s": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Silence Fade S"
+          }
+        },
+        "title": "AudioSettingsRequest",
+        "type": "object"
+      },
+      "AudioTakeOut": {
+        "properties": {
+          "duration_s": {
+            "title": "Duration S",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "picked": {
+            "title": "Picked",
+            "type": "boolean"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "take_no": {
+            "title": "Take No",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "take_no",
+          "seed",
+          "model",
+          "prompt",
+          "duration_s",
+          "url",
+          "picked",
+          "stale"
+        ],
+        "title": "AudioTakeOut",
+        "type": "object"
+      },
+      "Body_upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "licence_note": {
+            "default": "",
+            "title": "Licence Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post",
         "type": "object"
       },
       "Body_upload_api_v1_projects__project_id__cast__key__upload_post": {
@@ -1243,6 +1533,348 @@
           "fix"
         ],
         "title": "CheckOut",
+        "type": "object"
+      },
+      "Cue": {
+        "additionalProperties": false,
+        "description": "One sound cue tied to the scenes. Only `suggested` is ever stored as a state.",
+        "properties": {
+          "duck": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duck"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CueTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fade_in_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fade In S"
+          },
+          "fade_out_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fade Out S"
+          },
+          "gain_db": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gain Db"
+          },
+          "id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "source": {
+            "default": "generate",
+            "title": "Source",
+            "type": "string"
+          },
+          "start": {
+            "$ref": "#/components/schemas/CueTime"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "const": "suggested",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "start"
+        ],
+        "title": "Cue",
+        "type": "object"
+      },
+      "CueOut": {
+        "properties": {
+          "duck": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duck"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "duration_s": {
+            "title": "Duration S",
+            "type": "number"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CueTime"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end_s": {
+            "title": "End S",
+            "type": "number"
+          },
+          "fade_in_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fade In S"
+          },
+          "fade_out_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fade Out S"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "flags": {
+            "anyOf": [
+              {
+                "items": {
+                  "const": "ends_after_reel",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flags"
+          },
+          "gain_db": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gain Db"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "order": {
+            "title": "Order",
+            "type": "integer"
+          },
+          "picked_take_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Picked Take Id"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "start": {
+            "$ref": "#/components/schemas/CueTime"
+          },
+          "start_s": {
+            "title": "Start S",
+            "type": "number"
+          },
+          "state": {
+            "enum": [
+              "suggested",
+              "draft",
+              "ready",
+              "stale"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "takes": {
+            "items": {
+              "$ref": "#/components/schemas/AudioTakeOut"
+            },
+            "title": "Takes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "order",
+          "state",
+          "start",
+          "source",
+          "start_s",
+          "end_s",
+          "duration_s",
+          "licence",
+          "picked_take_id",
+          "takes",
+          "job"
+        ],
+        "title": "CueOut",
+        "type": "object"
+      },
+      "CueTime": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "default": "scene_start",
+            "enum": [
+              "scene_start",
+              "scene_end"
+            ],
+            "title": "At",
+            "type": "string"
+          },
+          "offset": {
+            "default": 0.0,
+            "title": "Offset",
+            "type": "number"
+          },
+          "scene": {
+            "title": "Scene",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene"
+        ],
+        "title": "CueTime",
         "type": "object"
       },
       "EmotionClipOut": {
@@ -2393,22 +3025,67 @@
       },
       "LicenceWarningOut": {
         "properties": {
+          "cue_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cue Id"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
           "licence": {
             "title": "Licence",
             "type": "string"
           },
           "model": {
-            "title": "Model",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
           },
           "version": {
-            "title": "Version",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
           }
         },
         "required": [
-          "model",
-          "version",
           "licence"
         ],
         "title": "LicenceWarningOut",
@@ -5466,6 +6143,722 @@
         "summary": "Preview",
         "tags": [
           "assembly"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio": {
+      "get": {
+        "operationId": "get_audio_api_v1_projects__project_id__audio_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Audio",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues": {
+      "post": {
+        "operationId": "add_cue_api_v1_projects__project_id__audio_cues_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cue"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Cue",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}": {
+      "delete": {
+        "operationId": "delete_cue_api_v1_projects__project_id__audio_cues__cue_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Cue",
+        "tags": [
+          "audio"
+        ]
+      },
+      "put": {
+        "operationId": "put_cue_api_v1_projects__project_id__audio_cues__cue_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cue"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Cue",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:approve": {
+      "post": {
+        "operationId": "approve_cue_api_v1_projects__project_id__audio_cues__cue_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Cue",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:dismiss": {
+      "post": {
+        "operationId": "dismiss_cue_api_v1_projects__project_id__audio_cues__cue_id__dismiss_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Cue",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:generate": {
+      "post": {
+        "operationId": "generate_api_v1_projects__project_id__audio_cues__cue_id__generate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:move": {
+      "post": {
+        "operationId": "move_cue_api_v1_projects__project_id__audio_cues__cue_id__move_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudioMoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move Cue",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:select-take": {
+      "post": {
+        "operationId": "select_take_api_v1_projects__project_id__audio_cues__cue_id__select_take_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceSelectTakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Select Take",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:upload": {
+      "post": {
+        "operationId": "upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cue_id",
+            "required": true,
+            "schema": {
+              "title": "Cue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/cues:approve-all": {
+      "post": {
+        "operationId": "approve_all_api_v1_projects__project_id__audio_cues_approve_all_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve All",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio/settings": {
+      "get": {
+        "operationId": "get_settings_api_v1_projects__project_id__audio_settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Settings",
+        "tags": [
+          "audio"
+        ]
+      },
+      "put": {
+        "operationId": "put_settings_api_v1_projects__project_id__audio_settings_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudioSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioSettingsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Settings",
+        "tags": [
+          "audio"
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/audio:preview-mix": {
+      "post": {
+        "operationId": "preview_mix_api_v1_projects__project_id__audio_preview_mix_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Mix",
+        "tags": [
+          "audio"
         ]
       }
     },

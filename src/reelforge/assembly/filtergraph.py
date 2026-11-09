@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from reelforge.assembly.edl import FPS, Edl, EdlShot
+from reelforge.assembly.edl import FPS, Edl, EdlAudio, EdlShot
 
 SAMPLE_RATE = 48000
 TARGET_LUFS = -14.0
@@ -190,21 +190,155 @@ def build_dialogue_graph(edl: Edl) -> FilterGraph:
     return FilterGraph(chains)
 
 
+MIN_RAMP_S = 0.001
+ENVELOPE_SAMPLES = 480  # gain envelopes are evaluated every 10 ms
+
+
+def _num(value: float) -> str:
+    return _text(round(value, 6))
+
+
+def _ramp(start: float, up_s: float, end: float, down_s: float) -> str:
+    """0 before `start`, rising to 1 over `up_s`, holding to `end`, falling to 0 over `down_s`."""
+    up, down = max(up_s, MIN_RAMP_S), max(down_s, MIN_RAMP_S)
+    return f"min(clip((t-{_num(start)})/{_num(up)},0,1),clip(1-(t-{_num(end)})/{_num(down)},0,1))"
+
+
+def _max_of(parts: list[str]) -> str:
+    out = parts[0]
+    for part in parts[1:]:
+        out = f"max({out},{part})"
+    return out
+
+
+def duck_expression(edl: Edl) -> str | None:
+    """Gain of a ducked music cue over reel time: a drop of `duck_db` while dialogue speaks."""
+    if not edl.dialogue or edl.mix.duck_db <= 0:
+        return None
+    depth = 1 - 10 ** (-edl.mix.duck_db / 20)
+    lines = [
+        _ramp(d.offset_s, edl.mix.attack_s, d.offset_s + d.duration_s, edl.mix.release_s)
+        for d in edl.dialogue
+        if d.duration_s > 0
+    ]
+    if not lines:
+        return None
+    return f"1-{_num(depth)}*{_max_of(lines)}"
+
+
+def silence_expression(edl: Edl) -> str | None:
+    """Gain of the music, sound effect and ambience bus: zero inside every silence cue."""
+    fade = edl.mix.silence_fade_s
+    spans = [_ramp(c.start_s, fade, c.end_s, fade) for c in edl.audio if c.kind == "silence"]
+    if not spans:
+        return None
+    return f"1-{_max_of(spans)}"
+
+
+def _envelope(expression: str) -> list[Filter]:
+    return [
+        Filter("asetnsamples", {"n": ENVELOPE_SAMPLES, "p": 0}),
+        Filter("volume", {"volume": expression, "eval": "frame"}),
+    ]
+
+
+def _cue_chain(edl: Edl, cue: EdlAudio, index: int, label: str, duck: str | None) -> Chain:
+    length = max(cue.end_s - cue.start_s, 0.0)
+    filters: list[Filter] = [
+        Filter("aresample", [SAMPLE_RATE]),
+        STEREO,
+        Filter("atrim", {"duration": length}),
+        Filter("asetpts", ["PTS-STARTPTS"]),
+        Filter("apad", {"whole_dur": length}),
+    ]
+    if cue.gain_db:
+        filters.append(Filter("volume", {"volume": f"{_num(cue.gain_db)}dB"}))
+    if cue.fade_in_s > 0:
+        filters.append(Filter("afade", {"t": "in", "st": 0, "d": min(cue.fade_in_s, length)}))
+    if cue.fade_out_s > 0:
+        fade = min(cue.fade_out_s, length)
+        filters.append(Filter("afade", {"t": "out", "st": length - fade, "d": fade}))
+    ms = int(round(cue.start_s * 1000))
+    filters.append(Filter("adelay", {"delays": f"{ms}|{ms}"}))
+    if cue.duck and cue.kind == "music" and duck is not None:
+        filters.append(Filter("asetpts", ["N/SR/TB"]))
+        filters.extend(_envelope(duck))
+    return Chain([f"{index}:a"], filters, [label])
+
+
 def build_mix_graph(edl: Edl) -> FilterGraph:
-    """Dialogue (input 0) is the whole mix while the music slots are empty."""
-    return FilterGraph(
-        [
-            Chain(
-                ["0:a"],
-                [
-                    Filter("apad", {"whole_dur": edl.total_duration_s}),
-                    Filter("atrim", {"duration": edl.total_duration_s}),
-                    STEREO,
-                ],
-                ["mix"],
+    """Dialogue (input 0) plus the cue files (inputs 1..N, in `edl.audio` order, silence has none).
+
+    With no cues the dialogue is the whole mix.
+    """
+    total = edl.total_duration_s
+    if not edl.audio:
+        return FilterGraph(
+            [
+                Chain(
+                    ["0:a"],
+                    [
+                        Filter("apad", {"whole_dur": total}),
+                        Filter("atrim", {"duration": total}),
+                        STEREO,
+                    ],
+                    ["mix"],
+                )
+            ]
+        )
+    duck = duck_expression(edl)
+    chains: list[Chain] = []
+    labels: list[str] = []
+    for cue in edl.audio:
+        if cue.artifact is None or cue.kind == "silence":
+            continue
+        label = f"c{len(labels) + 1}"
+        chains.append(_cue_chain(edl, cue, len(labels) + 1, label, duck))
+        labels.append(label)
+    dialogue = [
+        Filter("aresample", [SAMPLE_RATE]),
+        STEREO,
+        Filter("apad", {"whole_dur": total}),
+        Filter("atrim", {"duration": total}),
+    ]
+    finish = [Filter("apad", {"whole_dur": total}), Filter("atrim", {"duration": total}), STEREO]
+    if not labels:
+        chains.append(Chain(["0:a"], [*dialogue, *finish], ["mix"]))
+        return FilterGraph(chains)
+    chains.append(Chain(["0:a"], dialogue, ["dlg"]))
+    bus_filters: list[Filter] = []
+    if len(labels) > 1:
+        bus_filters.append(
+            Filter(
+                "amix",
+                {
+                    "inputs": len(labels),
+                    "duration": "longest",
+                    "normalize": 0,
+                    "dropout_transition": 0,
+                },
             )
-        ]
+        )
+    gate = silence_expression(edl)
+    if gate is not None:
+        bus_filters.extend(_envelope(gate))
+    if not bus_filters:
+        bus_filters.append(Filter("anull"))
+    chains.append(Chain(labels, bus_filters, ["bus"]))
+    chains.append(
+        Chain(
+            ["dlg", "bus"],
+            [
+                Filter(
+                    "amix",
+                    {"inputs": 2, "duration": "first", "normalize": 0, "dropout_transition": 0},
+                ),
+                *finish,
+            ],
+            ["mix"],
+        )
     )
+    return FilterGraph(chains)
 
 
 def build_loudnorm_graph(measured: dict[str, str] | None = None) -> FilterGraph:

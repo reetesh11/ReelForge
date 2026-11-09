@@ -7,6 +7,12 @@ from reelforge.models_registry import ModelEntry
 _NON_COMMERCIAL_MARKERS = ("non-commercial", "noncommercial", "non commercial", "-nc")
 
 
+def is_non_commercial(text: str) -> bool:
+    """True when a licence text is empty or names a non-commercial marker."""
+    lowered = text.strip().lower()
+    return not lowered or any(marker in lowered for marker in _NON_COMMERCIAL_MARKERS)
+
+
 def licence_warning(entry: ModelEntry) -> str | None:
     if not entry.license.strip():
         return f"Image model licence is not filled in. Check {entry.id} before commercial use."

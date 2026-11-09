@@ -1214,3 +1214,13 @@ audio {
     transition: none;
   }
 }
+
+.takes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.badge.green {
+  padding: 0 0.5rem;
+}

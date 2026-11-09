@@ -136,6 +136,29 @@ Run on the reference Mac with the real OmniVoice model and the Grumpy Uncle proj
 Reviewer: ________  Date: ________
 
 
+## M6c Music, sound effects, ambience and silence (2026-11-05)
+
+Run on the reference Mac with the Gujiya reel (40.7 s), all shots approved. Run `tools/audio_spike.py` first (see `docs/audio-levers.md`) and pick the models. Add the ten reference cues on the Sound screen: three music tracks (one `duck: true`), the five screenplay effects, a `silence` cue over s14, and the wedding ambience. Generate each, then export.
+
+| # | Step | Expect | Result |
+| --- | --- | --- | --- |
+| 1 | Add the ten cues and press Generate on each | Each cue shows a take of its own length, a licence line and the Ready badge. | |
+| 2 | Press Preview full mix and listen | Music, effects and ambience are heard; music dips under each dialogue line and comes back. | |
+| 3 | Listen across the silence cue over s14 | Music, effects and ambience stop for the whole scene (short fades), dialogue stays. | |
+| 4 | Edit one effect's prompt | Only that cue shows Needs update; no job starts; the earlier take still plays. | |
+| 5 | Upload an own file to a file cue, once with and once without a licence note | The file is fitted to the cue length; without a note the cue says "No licence note" and export shows the licence check. | |
+| 6 | Export the reel | The reel is about -14 LUFS, `credits.json` lists every cue, v1 stays unchanged after later cue edits. | |
+
+Levels (music against dialogue), ducking depth and the silence span acceptable? Record the verdict and any changes to the default gains here.
+
+| Item | Verdict |
+| --- | --- |
+| Levels | |
+| Ducking | |
+| Silence | |
+
+Reviewer: ________  Date: ________
+
 ## v2 UI redesign (workspace, stage rail, colour, readable config)
 
 Run on the reference Mac with `reelforge up`. Repeat in light and dark (System Settings, Appearance), at 1440 px and 390 px wide, on four projects: one at DRAFT, one at STORY_APPROVED, one at CAST_APPROVED and one at SHOTS_APPROVED. Stop the app first if you also want to run `pnpm --dir web e2e` (it needs ports 7400 and 7401).

@@ -14,9 +14,9 @@ from reelforge.adapters.base import CancelToken
 from reelforge.assembly import ffmpeg
 from reelforge.assembly.align import ALIGN_MODEL_KEY, MlxWhisperAligner
 from reelforge.assembly.build import assembly_dir
-from reelforge.assembly.edl import FPS, HEIGHT, WIDTH, Edl, save_edl
+from reelforge.assembly.edl import FPS, HEIGHT, WIDTH, Edl
 from reelforge.assembly.state import StepError
-from reelforge.cast.licence import _NON_COMMERCIAL_MARKERS  # pyright: ignore[reportPrivateUsage]
+from reelforge.cast.licence import is_non_commercial
 from reelforge.db.models import Artifact, ArtifactInput, Project, ReelVersion, utcnow
 
 if TYPE_CHECKING:
@@ -48,8 +48,46 @@ def _model_keys(ctx: AppContext, edl: Edl) -> set[str]:
     return keys
 
 
+def _audio_credits(ctx: AppContext, edl: Edl) -> list[dict[str, Any]]:
+    """One entry per cue that has a take: model and licence, or the owner's file and note."""
+    out: list[dict[str, Any]] = []
+    if not any(cue.artifact for cue in edl.audio):
+        return out
+    with ctx.session_factory() as s:
+        for cue in edl.audio:
+            take = s.get(Artifact, cue.artifact) if cue.artifact else None
+            if take is None:
+                continue
+            params: dict[str, Any] = take.params or {}
+            if take.model_key == "upload":
+                out.append(
+                    {
+                        "cue_id": cue.cue_id,
+                        "kind": cue.kind,
+                        "file_name": str(params.get("file_name") or ""),
+                        "licence": str(params.get("licence_note") or "").strip(),
+                    }
+                )
+                continue
+            try:
+                entry = ctx.registry.get(take.model_key)
+                model, version, licence = entry.id, entry.revision, entry.license
+            except KeyError:
+                model, version, licence = str(params.get("model_id") or take.model_key), "", ""
+            out.append(
+                {
+                    "cue_id": cue.cue_id,
+                    "kind": cue.kind,
+                    "model": model,
+                    "version": version,
+                    "licence": licence,
+                }
+            )
+    return out
+
+
 def collect_credits(ctx: AppContext, project_id: str, edl: Edl) -> list[dict[str, Any]]:
-    """One `{model, version, licence}` per distinct model used by the reel."""
+    """One `{model, version, licence}` per distinct model used by the reel, then one per cue."""
     del project_id
     keys = _model_keys(ctx, edl)
     if isinstance(ctx.aligner, MlxWhisperAligner) and any(c.text.strip() for c in edl.captions):
@@ -61,15 +99,16 @@ def collect_credits(ctx: AppContext, project_id: str, edl: Edl) -> list[dict[str
             continue
         seen.add(entry.id)
         out.append({"model": entry.id, "version": entry.revision, "licence": entry.license})
-    return out
+    return [*out, *_audio_credits(ctx, edl)]
 
 
 def licence_warnings(credits: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The credits whose licence is empty or non-commercial."""
+    """The credits whose licence is empty or non-commercial; an upload only needs a note."""
     out: list[dict[str, Any]] = []
     for c in credits:
         text = str(c.get("licence", ""))
-        if not text.strip() or any(m in text.lower() for m in _NON_COMMERCIAL_MARKERS):
+        own_file = "cue_id" in c and "model" not in c
+        if (not text.strip()) if own_file else is_non_commercial(text):
             out.append(c)
     return out
 
@@ -192,7 +231,10 @@ def publish_version(
         (staging / "credits.json").write_text(
             json.dumps(credits, indent=2, ensure_ascii=False), encoding="utf-8"
         )
-        save_edl(edl, staging / "edl.json")
+        # same shape as the working file (audio and mix always present)
+        (staging / "edl.json").write_text(
+            json.dumps(edl.model_dump(mode="json"), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         ass = work_dir / "captions.ass"
         if ass.is_file():
             shutil.copy2(ass, staging / "captions.ass")
