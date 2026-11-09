@@ -3,6 +3,15 @@
 Local-first reel production. This repository holds the M1 backbone: configuration, database,
 job queue, mock backend, HTTP API, `doctor`, and a React shell.
 
+## Quick start (everything, one command)
+
+```sh
+./scripts/dev.sh        # API + worker on :7400, UI on :7401; Ctrl+C stops both
+```
+
+Reads `~/ReelForge/config.toml` (override with `REELFORGE_CONFIG`) for the `[tools.ltx]` and
+`[tools.mlx_audio]` `project_path` values. Open http://127.0.0.1:7401.
+
 ## Backend
 
 ```sh
