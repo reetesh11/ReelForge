@@ -196,11 +196,20 @@ class _Render:
         commit_part(self.dialogue)
 
     async def mix_audio(self) -> None:
+        cue_inputs: list[str] = []
+        for cue in self.edl.audio:
+            if cue.artifact is None or cue.kind == "silence":
+                continue
+            path = _artifact_path(self.ctx, cue.artifact)
+            if path is None:
+                raise StepError(MIXING, f"A sound file is missing: {cue.cue_id}")
+            cue_inputs += ["-i", str(path)]
         script = _write_script(self.dir / "mix.fg", fg.build_mix_graph(self.edl))
         await self.ffmpeg(
             MIXING,
             "-i",
             str(self.dialogue),
+            *cue_inputs,
             *filter_script_args(script),
             "-map",
             "[mix]",

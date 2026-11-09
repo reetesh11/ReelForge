@@ -315,6 +315,212 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/audio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Audio */
+        get: operations["get_audio_api_v1_projects__project_id__audio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Cue */
+        post: operations["add_cue_api_v1_projects__project_id__audio_cues_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Cue */
+        put: operations["put_cue_api_v1_projects__project_id__audio_cues__cue_id__put"];
+        post?: never;
+        /** Delete Cue */
+        delete: operations["delete_cue_api_v1_projects__project_id__audio_cues__cue_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Cue */
+        post: operations["approve_cue_api_v1_projects__project_id__audio_cues__cue_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss Cue */
+        post: operations["dismiss_cue_api_v1_projects__project_id__audio_cues__cue_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate */
+        post: operations["generate_api_v1_projects__project_id__audio_cues__cue_id__generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move Cue */
+        post: operations["move_cue_api_v1_projects__project_id__audio_cues__cue_id__move_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:select-take": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Select Take */
+        post: operations["select_take_api_v1_projects__project_id__audio_cues__cue_id__select_take_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues/{cue_id}:upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload */
+        post: operations["upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/cues:approve-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve All */
+        post: operations["approve_all_api_v1_projects__project_id__audio_cues_approve_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Settings */
+        get: operations["get_settings_api_v1_projects__project_id__audio_settings_get"];
+        /** Put Settings */
+        put: operations["put_settings_api_v1_projects__project_id__audio_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/audio:preview-mix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Mix */
+        post: operations["preview_mix_api_v1_projects__project_id__audio_preview_mix_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/cast": {
         parameters: {
             query?: never;
@@ -1454,7 +1660,7 @@ export interface components {
              * Owner Type
              * @enum {string}
              */
-            owner_type: "scene" | "character";
+            owner_type: "scene" | "character" | "audio_cue";
         };
         /** ArtifactBody */
         ArtifactBody: {
@@ -1566,6 +1772,10 @@ export interface components {
         };
         /** AssemblyOut */
         AssemblyOut: {
+            /** Audio Skipped */
+            audio_skipped?: number | null;
+            /** Audio Stale */
+            audio_stale?: boolean | null;
             /** Blocked Reason */
             blocked_reason: string | null;
             /** Caption Presets */
@@ -1611,6 +1821,96 @@ export interface components {
             take_no: number;
             /** Video Url */
             video_url: string;
+        };
+        /** AudioEngineOut */
+        AudioEngineOut: {
+            /** Message */
+            message: string;
+            /** Ok */
+            ok: boolean;
+        };
+        /** AudioMoveRequest */
+        AudioMoveRequest: {
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "up" | "down";
+        };
+        /** AudioOut */
+        AudioOut: {
+            /** Cues */
+            cues: components["schemas"]["CueOut"][];
+            engine: components["schemas"]["AudioEngineOut"];
+            /** Legacy Music Hint */
+            legacy_music_hint?: boolean | null;
+            /** Scenes */
+            scenes: components["schemas"]["AudioSceneOut"][];
+            settings: components["schemas"]["AudioSettingsOut"];
+            /** Skipped Count */
+            skipped_count?: number | null;
+        };
+        /** AudioSceneOut */
+        AudioSceneOut: {
+            /** End S */
+            end_s: number;
+            /** Id */
+            id: string;
+            /** Start S */
+            start_s: number;
+        };
+        /** AudioSettingsOut */
+        AudioSettingsOut: {
+            /** Attack S */
+            attack_s: number;
+            /** Duck Db */
+            duck_db: number;
+            /** Release S */
+            release_s: number;
+            /** Silence Fade S */
+            silence_fade_s: number;
+        };
+        /** AudioSettingsRequest */
+        AudioSettingsRequest: {
+            /** Attack S */
+            attack_s?: number | null;
+            /** Duck Db */
+            duck_db?: number | null;
+            /** Release S */
+            release_s?: number | null;
+            /** Silence Fade S */
+            silence_fade_s?: number | null;
+        };
+        /** AudioTakeOut */
+        AudioTakeOut: {
+            /** Duration S */
+            duration_s: number;
+            /** Id */
+            id: string;
+            /** Model */
+            model: string;
+            /** Picked */
+            picked: boolean;
+            /** Prompt */
+            prompt: string;
+            /** Seed */
+            seed: number;
+            /** Stale */
+            stale: boolean;
+            /** Take No */
+            take_no: number;
+            /** Url */
+            url: string;
+        };
+        /** Body_upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post */
+        Body_upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post: {
+            /** File */
+            file: string;
+            /**
+             * Licence Note
+             * @default
+             */
+            licence_note: string;
         };
         /** Body_upload_api_v1_projects__project_id__cast__key__upload_post */
         Body_upload_api_v1_projects__project_id__cast__key__upload_post: {
@@ -1844,6 +2144,100 @@ export interface components {
              * @enum {string}
              */
             status: "pass" | "fail";
+        };
+        /**
+         * Cue
+         * @description One sound cue tied to the scenes. Only `suggested` is ever stored as a state.
+         */
+        Cue: {
+            /** Duck */
+            duck?: boolean | null;
+            /** Duration */
+            duration?: number | null;
+            end?: components["schemas"]["CueTime"] | null;
+            /** Fade In S */
+            fade_in_s?: number | null;
+            /** Fade Out S */
+            fade_out_s?: number | null;
+            /** Gain Db */
+            gain_db?: number | null;
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Prompt */
+            prompt?: string | null;
+            /**
+             * Source
+             * @default generate
+             */
+            source: string;
+            start: components["schemas"]["CueTime"];
+            /** State */
+            state?: "suggested" | null;
+        };
+        /** CueOut */
+        CueOut: {
+            /** Duck */
+            duck?: boolean | null;
+            /** Duration */
+            duration?: number | null;
+            /** Duration S */
+            duration_s: number;
+            end?: components["schemas"]["CueTime"] | null;
+            /** End S */
+            end_s: number;
+            /** Fade In S */
+            fade_in_s?: number | null;
+            /** Fade Out S */
+            fade_out_s?: number | null;
+            /** File Name */
+            file_name?: string | null;
+            /** Flags */
+            flags?: "ends_after_reel"[] | null;
+            /** Gain Db */
+            gain_db?: number | null;
+            /** Id */
+            id: string;
+            job: components["schemas"]["JobOut"] | null;
+            /** Kind */
+            kind: string;
+            /** Licence */
+            licence: string;
+            /** Order */
+            order: number;
+            /** Picked Take Id */
+            picked_take_id: string | null;
+            /** Prompt */
+            prompt?: string | null;
+            /** Source */
+            source: string;
+            start: components["schemas"]["CueTime"];
+            /** Start S */
+            start_s: number;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "suggested" | "draft" | "ready" | "stale";
+            /** Takes */
+            takes: components["schemas"]["AudioTakeOut"][];
+        };
+        /** CueTime */
+        CueTime: {
+            /**
+             * At
+             * @default scene_start
+             * @enum {string}
+             */
+            at: "scene_start" | "scene_end";
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /** Scene */
+            scene: string;
         };
         /** EmotionClipOut */
         EmotionClipOut: {
@@ -2202,12 +2596,18 @@ export interface components {
         };
         /** LicenceWarningOut */
         LicenceWarningOut: {
+            /** Cue Id */
+            cue_id?: string | null;
+            /** File Name */
+            file_name?: string | null;
+            /** Kind */
+            kind?: string | null;
             /** Licence */
             licence: string;
             /** Model */
-            model: string;
+            model?: string | null;
             /** Version */
-            version: string;
+            version?: string | null;
         };
         /** PreviewStateOut */
         PreviewStateOut: {
@@ -3606,6 +4006,472 @@ export interface operations {
         };
     };
     preview_api_v1_projects__project_id__assembly_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_audio_api_v1_projects__project_id__audio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_cue_api_v1_projects__project_id__audio_cues_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Cue"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_cue_api_v1_projects__project_id__audio_cues__cue_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Cue"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_cue_api_v1_projects__project_id__audio_cues__cue_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_cue_api_v1_projects__project_id__audio_cues__cue_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dismiss_cue_api_v1_projects__project_id__audio_cues__cue_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_v1_projects__project_id__audio_cues__cue_id__generate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    move_cue_api_v1_projects__project_id__audio_cues__cue_id__move_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AudioMoveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    select_take_api_v1_projects__project_id__audio_cues__cue_id__select_take_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VoiceSelectTakeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+                cue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_api_v1_projects__project_id__audio_cues__cue_id__upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    approve_all_api_v1_projects__project_id__audio_cues_approve_all_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_projects__project_id__audio_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_settings_api_v1_projects__project_id__audio_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AudioSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AudioSettingsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_mix_api_v1_projects__project_id__audio_preview_mix_post: {
         parameters: {
             query?: never;
             header?: never;

@@ -203,7 +203,7 @@ def assembly_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
     digest = edl_hash(edl) if edl is not None else None
     jobs = ctx.queue.list(project_id=project_id)
     warnings = licence_warnings(collect_credits(ctx, project_id, edl)) if edl is not None else []
-    return {
+    body: dict[str, Any] = {
         "stage": project.stage,
         "blocked_reason": blocked_reason(ctx, project_id),
         "edl": edl.model_dump(mode="json") if edl is not None else None,
@@ -216,3 +216,12 @@ def assembly_body(ctx: AppContext, project_id: str) -> dict[str, Any]:
         "licence_warnings": warnings,
         "caption_presets": [{"id": k, "label": v} for k, v in CAPTION_PRESETS.items()],
     }
+    if edl is not None:
+        from reelforge.audio.build import build_audio_section  # noqa: PLC0415
+
+        cues, mix, skipped = build_audio_section(ctx, project_id, edl)
+        if edl.audio != cues or edl.mix != mix:
+            body["audio_stale"] = True
+        if skipped:
+            body["audio_skipped"] = skipped
+    return body

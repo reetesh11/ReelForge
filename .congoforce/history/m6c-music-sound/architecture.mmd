@@ -1,0 +1,25 @@
+flowchart LR
+  ui[web/src/sound/SoundScreen.tsx]:::new -->|/api/v1/projects/id/audio*| routes[api/routes_audio.py]:::new
+  routes --> svc[audio/service.py]:::new
+  svc --> cues[audio/cues.py]:::new
+  cues --> storysvc[story/service.py save_version]
+  storysvc --> diff[story/staleness.py]:::changed
+  storysvc --> yaml[(story.yaml + story_changes)]
+  svc -->|enqueue gen_audio_cue| queue[jobs/queue.py]
+  queue --> worker[jobs/worker.py]:::changed
+  worker --> gen[audio/generate.py]:::new
+  gen --> backends[audio/backends.py]:::new
+  backends --> mock[adapters/mock.py]:::changed
+  backends --> real[adapters/audio_gen.py + audio_worker.py]:::new
+  gen --> fit[audio/fit.py]:::new
+  gen --> store[(artifacts audio_take + audio_slots)]:::changed
+  structure[story/structure.py]:::changed --> seed[audio/seed.py]:::new
+  seed --> cues
+  build[assembly/build.py]:::changed --> abuild[audio/build.py]:::new
+  abuild --> edl[assembly/edl.py EdlAudio, EdlMix]:::changed
+  edl --> fg[assembly/filtergraph.py build_mix_graph]:::changed
+  fg --> render[assembly/render.py mix_audio]:::changed
+  render --> publish[assembly/publish.py credits + licence]:::changed
+  registry[models_registry.py + models.toml]:::changed --> gen
+  classDef new fill:#d1fae5,stroke:#059669
+  classDef changed fill:#fef3c7,stroke:#d97706

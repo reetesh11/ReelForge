@@ -7,6 +7,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from reelforge.story.schema import Cue, CueTime
+
 StageName = Literal[
     "DRAFT",
     "STORY_APPROVED",
@@ -118,7 +120,7 @@ class HealthOut(BaseModel):
 
 
 class AffectedItem(BaseModel):
-    owner_type: Literal["scene", "character"]
+    owner_type: Literal["scene", "character", "audio_cue"]
     owner_id: str
     kinds: list[str]
 
@@ -718,9 +720,12 @@ class ReelVersionOut(BaseModel):
 
 
 class LicenceWarningOut(BaseModel):
-    model: str
-    version: str
+    model: str | None = None
+    version: str | None = None
     licence: str
+    cue_id: str | None = None
+    kind: str | None = None
+    file_name: str | None = None
 
 
 class CaptionPresetOut(BaseModel):
@@ -740,6 +745,8 @@ class AssemblyOut(BaseModel):
     versions: list[ReelVersionOut]
     licence_warnings: list[LicenceWarningOut]
     caption_presets: list[CaptionPresetOut]
+    audio_stale: bool | None = None
+    audio_skipped: int | None = None
 
 
 class AssemblyBuildRequest(BaseModel):
@@ -778,3 +785,84 @@ class AssemblyExportRequest(BaseModel):
 
 class AssemblyOpenVersionRequest(BaseModel):
     version: int
+
+
+# ---- sound cues ----------------------------------------------------------------------------
+
+
+class AudioEngineOut(BaseModel):
+    ok: bool
+    message: str
+
+
+class AudioSettingsOut(BaseModel):
+    duck_db: float
+    attack_s: float
+    release_s: float
+    silence_fade_s: float
+
+
+class AudioSettingsRequest(BaseModel):
+    duck_db: float | None = Field(default=None, ge=0, le=40)
+    attack_s: float | None = Field(default=None, ge=0)
+    release_s: float | None = Field(default=None, ge=0)
+    silence_fade_s: float | None = Field(default=None, ge=0)
+
+
+class AudioTakeOut(BaseModel):
+    id: str
+    take_no: int
+    seed: int
+    model: str
+    prompt: str
+    duration_s: float
+    url: str
+    picked: bool
+    stale: bool
+
+
+class CueOut(BaseModel):
+    id: str
+    kind: str
+    order: int
+    state: Literal["suggested", "draft", "ready", "stale"]
+    start: CueTime
+    end: CueTime | None = None
+    duration: float | None = None
+    prompt: str | None = None
+    source: str
+    gain_db: float | None = None
+    fade_in_s: float | None = None
+    fade_out_s: float | None = None
+    duck: bool | None = None
+    start_s: float
+    end_s: float
+    duration_s: float
+    licence: str
+    file_name: str | None = None
+    picked_take_id: str | None
+    takes: list[AudioTakeOut]
+    job: JobOut | None
+    flags: list[Literal["ends_after_reel"]] | None = None
+
+
+class AudioSceneOut(BaseModel):
+    id: str
+    start_s: float
+    end_s: float
+
+
+class AudioOut(BaseModel):
+    engine: AudioEngineOut
+    legacy_music_hint: bool | None = None
+    settings: AudioSettingsOut
+    scenes: list[AudioSceneOut]
+    skipped_count: int | None = None
+    cues: list[CueOut]
+
+
+class AudioMoveRequest(BaseModel):
+    direction: Literal["up", "down"]
+
+
+__all__ = ["Cue"]

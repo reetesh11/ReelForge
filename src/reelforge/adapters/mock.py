@@ -42,6 +42,9 @@ def _png(width: int, height: int, rgb: tuple[int, int, int]) -> bytes:
     )
 
 
+_AUDIO_KIND_HZ = {"music": 220.0, "sfx": 880.0, "ambience": 330.0}
+
+
 def _colour(seed: int) -> tuple[int, int, int]:
     return ((seed * 67) % 200 + 40, (seed * 131) % 200 + 40, (seed * 197) % 200 + 40)
 
@@ -143,14 +146,15 @@ class MockAdapter:
 
         width = int(hooks.get("width", 320))
         height = int(hooks.get("height", 576))
-        duration = float(hooks.get("duration_s", 1.0))
+        duration = float(hooks.get("duration_s", task.params.get("duration_s", 1.0)))
         if task.kind == "image":
             path = out_dir / "out.png"
             path.write_bytes(_png(width, height, _colour(task.seed)))
             produced = ProducedFile(path=path, ext="png", width=width, height=height)
         elif task.kind == "audio":
             path = out_dir / "out.wav"
-            self._write_wav(path, duration, float(hooks.get("freq_hz", 440.0)))
+            kind_hz = _AUDIO_KIND_HZ.get(str(task.params.get("audio_kind", "")), 440.0)
+            self._write_wav(path, duration, float(hooks.get("freq_hz", kind_hz)))
             produced = ProducedFile(path=path, ext="wav", duration_s=duration)
         elif "frames" in task.params:
             path = out_dir / "out.mp4"

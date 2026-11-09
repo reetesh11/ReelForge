@@ -40,6 +40,7 @@ export interface Edl {
   dialogue: EdlDialogue[];
   captions: EdlCaption[];
   caption_style: string;
+  audio?: unknown[];
 }
 
 export interface AssemblyTake {
@@ -82,9 +83,12 @@ export interface ReelVersion {
 }
 
 export interface LicenceWarning {
-  model: string;
-  version: string;
+  model?: string;
+  version?: string;
   licence: string;
+  cue_id?: string;
+  kind?: string;
+  file_name?: string;
 }
 
 export interface AssemblyState {
@@ -99,6 +103,8 @@ export interface AssemblyState {
   versions: ReelVersion[];
   licence_warnings: LicenceWarning[];
   caption_presets: Array<{ id: string; label: string }>;
+  audio_stale?: boolean;
+  audio_skipped?: number;
 }
 
 export type EditOp = { op: string } & Record<string, unknown>;

@@ -121,4 +121,8 @@ def build_edl(ctx: AppContext, project_id: str) -> Edl:
                     end_s=offset + duration,
                 )
             )
-    return edl.model_copy(update={"dialogue": dialogue, "captions": captions})
+    edl = edl.model_copy(update={"dialogue": dialogue, "captions": captions})
+    from reelforge.audio.build import build_audio_section  # noqa: PLC0415
+
+    cues, mix, _ = build_audio_section(ctx, project_id, edl)
+    return edl.model_copy(update={"audio": cues, "mix": mix})

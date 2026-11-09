@@ -18,7 +18,7 @@ from reelforge.story.age import check_age
 from reelforge.story.errors import StoryInvalid
 from reelforge.story.prompts import REPAIR_PROMPT, STRUCTURE_PROMPT, load_prompt
 from reelforge.story.schema import Story, story_json_schema
-from reelforge.story.yamlio import story_to_yaml, validate_story_data
+from reelforge.story.yamlio import parse_story, story_to_yaml, validate_story_data
 
 if TYPE_CHECKING:
     from reelforge.context import AppContext
@@ -32,6 +32,7 @@ _PATH_TOKEN = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
 
 def response_schema() -> dict[str, Any]:
     story = story_json_schema()
+    story.get("properties", {}).pop("audio", None)  # cues are seeded here, never by the model
     defs: dict[str, Any] = story.pop("$defs", {})
     return {
         "type": "object",
@@ -201,6 +202,30 @@ def evaluate(raw: str, req: StructureRequest) -> Outcome:
     return Outcome(story=story)
 
 
+def with_cues(ctx: AppContext, project_id: str, story: Story, req: StructureRequest) -> Story:
+    """The new story with the current version's cues kept and suggested cues merged in."""
+    from reelforge.audio.seed import merge_suggestions, suggest_cues  # noqa: PLC0415
+
+    current = service.current_version(ctx, project_id)
+    old = None
+    if current is not None:
+        try:
+            old = parse_story(current.yaml_text)
+        except StoryInvalid:
+            old = None
+    carried = list(old.audio or []) if old is not None else []
+    text = "\n".join(p for p in (req.storyline, req.dialogue or "") if p.strip())
+    merged = merge_suggestions(carried, suggest_cues(text, story))
+    if not merged and (old is None or old.audio is None):
+        return story
+    data = story.model_dump(mode="json", exclude_none=True)
+    data["audio"] = [c.model_dump(mode="json", exclude_none=True) for c in merged]
+    try:
+        return validate_story_data(data)
+    except StoryInvalid as exc:
+        raise AdapterError("; ".join(str(e) for e in exc.errors)) from None
+
+
 async def structure_story(
     ctx: AppContext, job: Job, progress: Callable[[int, str], None], cancel: CancelToken
 ) -> None:
@@ -235,7 +260,8 @@ async def structure_story(
     progress(90, "Saving")
     result: dict[str, Any]
     if outcome.story is not None:
-        saved = service.save_version(ctx, project_id, story_to_yaml(outcome.story))
+        story = with_cues(ctx, project_id, outcome.story, req)
+        saved = service.save_version(ctx, project_id, story_to_yaml(story))
         version = StoryVersionOut(
             id=saved.id,
             version=saved.version,
