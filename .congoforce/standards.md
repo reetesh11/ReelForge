@@ -56,6 +56,11 @@ except a bootstrap task, which may fill in the test commands.
 - Push the `--base` branch to origin before the ship stage when it is not `main`; `gh pr create` fails otherwise and the task stays blocked until `congoforce answer`.
 - The verifier does not run vitest. For UI criteria run `pnpm --dir web test --run` and state the result in the PR body.
 - When a frozen test measures exact timing (for example a silence gap), check the default trim or padding in the audio path against its tolerance before implementing.
+- Before freezing, the test-author runs each new vitest file to confirm it parses, and confirms every acceptance file is tracked in git. A file that fails to parse or is untracked blocks the implement stage after the freeze.
+- For a UI task with a Playwright spec, stop the app on ports 7400 and 7401 before the red check and verify stages, and say in the PR body if the spec was not run.
+- For a UI redesign, edit the generated PR body so manual criteria (for example AC-20) are listed as open for the human, not met.
+- When a new frozen test constrains a file shape that frozen tests from an earlier milestone also compare (for example `edl.json` against the API response), the test-author checks the two together before freezing.
+- Manual criteria and tasks that wait on the owner (a spike, a reference-Mac listening check) are marked OPEN in the PR body, never "met"; the generated body gets this wrong.
 
 ## Draft notes
 
