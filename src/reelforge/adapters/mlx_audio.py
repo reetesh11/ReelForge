@@ -52,9 +52,11 @@ PRESETS: dict[str, list[VoicePreset]] = {
         VoicePreset("hm_omega", "Hindi male (Omega)", "hm_omega"),
         VoicePreset("hm_psi", "Hindi male (Psi)", "hm_psi"),
     ],
+    # OmniVoice `instruct` accepts only its fixed words (gender, age, pitch, ...); free text is
+    # not documented to work, so the presets are just the gender. Age and pitch come from the plan.
     "omnivoice": [
-        VoicePreset("asha", "Asha (female)", "A warm adult Indian woman, clear and expressive"),
-        VoicePreset("ravi", "Ravi (male)", "A friendly adult Indian man, clear and steady"),
+        VoicePreset("asha", "Asha (female)", "female"),
+        VoicePreset("ravi", "Ravi (male)", "male"),
     ],
 }
 

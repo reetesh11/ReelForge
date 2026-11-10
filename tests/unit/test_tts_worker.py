@@ -116,3 +116,34 @@ def test_source_never_imports_reelforge():
             assert all(not a.name.startswith("reelforge") for a in node.names)
         elif isinstance(node, ast.ImportFrom):
             assert node.level == 0 and not (node.module or "").startswith("reelforge")
+
+
+def _tone(seconds=1.0, rate=24000, freq=440.0):
+    t = np.arange(int(rate * seconds)) / rate
+    return (0.5 * np.sin(2 * np.pi * freq * t)).astype("float32")
+
+
+def _noise(seconds=1.0, rate=24000):
+    return (0.1 * np.random.default_rng(1).standard_normal(int(rate * seconds))).astype("float32")
+
+
+def test_is_tone_flags_a_beep_but_not_noise_like_speech():
+    assert tts_worker.is_tone(_tone(), 24000)
+    assert not tts_worker.is_tone(_noise(), 24000)
+
+
+def test_render_retries_a_beep_then_returns_speech():
+    outputs = [(_tone(), 24000), (_tone(), 24000), (_noise(), 24000)]
+    calls = []
+
+    def synth(_line):
+        calls.append(1)
+        return outputs[len(calls) - 1]
+
+    samples, _ = tts_worker._render(synth, {}, guard=True)
+    assert len(calls) == 3 and samples.size > 0
+
+
+def test_render_gives_up_after_three_beeps():
+    with pytest.raises(RuntimeError, match="beep"):
+        tts_worker._render(lambda _l: (_tone(), 24000), {}, guard=True)

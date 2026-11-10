@@ -189,6 +189,42 @@ def _real_loader(model_id: str) -> Synth:
     return synth
 
 
+MAX_ATTEMPTS = 3
+TONE_SHARE = 0.8  # speech measured 0.13 to 0.55; a beep puts 0.85 to 0.99 of its energy in one band
+
+
+def is_tone(samples: Any, rate: int) -> bool:
+    """True when nearly all the energy sits in one narrow frequency band (a beep, not speech)."""
+    x = np.asarray(samples, dtype="float64").reshape(-1)
+    if x.size < rate // 4:
+        return False
+    x = x - x.mean()
+    spectrum = np.abs(np.fft.rfft(x * np.hanning(x.size))) ** 2
+    total = float(spectrum.sum())
+    if total <= 0.0:
+        return True  # silence is as useless as a beep
+    freqs = np.fft.rfftfreq(x.size, 1.0 / rate)
+    peak = freqs[int(spectrum.argmax())]
+    share = float(spectrum[np.abs(freqs - peak) < 30.0].sum()) / total
+    return share > TONE_SHARE
+
+
+def _render(synth: Synth, line: dict[str, Any], guard: bool) -> tuple[Any, float | None]:
+    """Synthesise one line at the output rate, retrying when the model makes a beep."""
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        made = synth(line)
+        raw, rate = made[0], int(made[1])
+        requested = float(made[2]) if len(made) > 2 else None
+        samples = resample(np.asarray(raw, dtype="float32").reshape(-1), rate)
+        if samples.size == 0:
+            raise RuntimeError("the model returned no audio")
+        if not guard or not is_tone(samples, OUT_RATE):
+            return samples, requested
+        if attempt == MAX_ATTEMPTS:
+            raise RuntimeError(f"the model made a beep instead of speech {MAX_ATTEMPTS} times")
+    raise RuntimeError("unreachable")
+
+
 def run_batch(
     lines: list[dict[str, Any]],
     out_dir: Path,
@@ -202,18 +238,14 @@ def run_batch(
     loader: LoadModel = load_model or (_mock_loader if backend == "mock" else _real_loader)
     out_dir.mkdir(parents=True, exist_ok=True)
     synths: dict[str, Synth] = {}
+    guard = backend != "mock" and load_model is None  # mock and test loaders make tones
     for line in lines:
         line_id = str(line.get("id", ""))
         model_id = str(line.get("model", ""))
         if model_id not in synths:
             synths[model_id] = loader(model_id)  # a load failure stops the whole batch
         try:
-            made = synths[model_id](line)
-            samples, rate = made[0], int(made[1])
-            requested = float(made[2]) if len(made) > 2 else None
-            samples = resample(np.asarray(samples, dtype="float32").reshape(-1), rate)
-            if samples.size == 0:
-                raise RuntimeError("the model returned no audio")
+            samples, requested = _render(synths[model_id], line, guard)
             path = out_dir / f"{line_id}.wav"
             duration = write_wav(path, samples)
             event: dict[str, Any] = {"id": line_id, "path": str(path), "duration_s": duration}
